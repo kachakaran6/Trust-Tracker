@@ -68,6 +68,19 @@ function Sidebar({ open, setOpen }: SidebarProps) {
         </button>
       </div>
 
+      {/* User info */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center">
+          <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold">
+            {user.name?.charAt(0)?.toUpperCase() || "U"}
+          </div>
+          <div className="ml-3">
+            <p className="font-medium">{user.name}</p>
+            <p className="text-sm text-gray-500">{user.email}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Navigation links */}
       <nav className="p-4 space-y-1">
         {navLinks.map((link) => (
@@ -101,19 +114,6 @@ function Sidebar({ open, setOpen }: SidebarProps) {
           Logout
         </a>
       </nav>
-
-      {/* User info */}
-      {/* <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold">
-            {user.name.charAt(0)}
-          </div>
-          <div className="ml-3">
-            <p className="font-medium">{user.name}</p>
-            <p className="text-sm text-gray-500">{user.email}</p>
-          </div>
-        </div>
-      </div> */}
     </div>
   );
 }
