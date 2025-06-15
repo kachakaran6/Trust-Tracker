@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState } from "react";
 import { useTransactions } from "../contexts/TransactionsContext";
 import { useBudget } from "../contexts/BudgetContext";
 import { useCategories } from "../contexts/CategoriesContext";
@@ -15,7 +16,7 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
+  // Legend,
 } from "recharts";
 import {
   ArrowUpRight,
@@ -24,13 +25,19 @@ import {
   Wallet,
   TrendingUp,
   AlertTriangle,
+  Plus,
 } from "lucide-react";
+import StepByStepTransaction from "../components/transactions/StepByStepTransaction";
+import FloatingAddButton from "../components/transactions/FloatingAddButton";
 
 function Dashboard() {
   const { user } = useAuth();
   const { getRecentTransactions, getMonthlySummary } = useTransactions();
   const { getBudgetSummary } = useBudget();
   const { getCategoryById } = useCategories();
+
+  // State for quick add modal
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   // Get current month in YYYY-MM format
   const currentMonth = format(new Date(), "yyyy-MM");
@@ -57,6 +64,7 @@ function Dashboard() {
 
   // Generate data for the category breakdown chart
   const categoryData = Object.entries(currentMonthSummary.categories)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     .filter(([_, data]) => data.total > 0)
     .map(([categoryId, data]) => {
       const category = getCategoryById(categoryId);
@@ -107,12 +115,21 @@ function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <p className="text-sm text-gray-500">
-          {format(new Date(), "MMMM d, yyyy")}
-        </p>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-sm text-gray-500">
+            {format(new Date(), "MMMM d, yyyy")}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowQuickAdd(true)}
+          className="btn-primary flex items-center"
+        >
+          <Plus size={16} className="mr-2" />
+          Quick Add
+        </button>
       </div>
 
       {/* Summary cards */}
@@ -300,7 +317,16 @@ function Dashboard() {
           <div className="divide-y divide-gray-100">
             {recentTransactions.length === 0 ? (
               <div className="p-6 text-center text-gray-500">
-                No recent transactions
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                  <DollarSign size={24} className="text-gray-400" />
+                </div>
+                <p className="mb-3">No recent transactions</p>
+                <button
+                  onClick={() => setShowQuickAdd(true)}
+                  className="btn-primary text-sm"
+                >
+                  Add Your First Transaction
+                </button>
               </div>
             ) : (
               recentTransactions.map((transaction) => {
@@ -312,13 +338,12 @@ function Dashboard() {
                   >
                     <div className="flex items-center">
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          transaction.type === "income"
-                            ? "bg-green-100 text-green-600"
-                            : "bg-red-100 text-red-600"
-                        }`}
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3"
+                        style={{
+                          backgroundColor: category?.color || "#6B7280",
+                        }}
                       >
-                        <DollarSign size={18} />
+                        {transaction.description.charAt(0).toUpperCase()}
                       </div>
                       <div className="ml-3 flex-1">
                         <p className="font-medium">{transaction.description}</p>
@@ -388,6 +413,15 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Step-by-Step Transaction Modal */}
+      <StepByStepTransaction
+        isOpen={showQuickAdd}
+        onClose={() => setShowQuickAdd(false)}
+      />
+
+      {/* Floating Add Button */}
+      <FloatingAddButton onClick={() => setShowQuickAdd(true)} />
     </div>
   );
 }
