@@ -67,7 +67,8 @@ function Transactions() {
 
       // Date filter
       if (dateFilter) {
-        const date = parseISO(transaction.date);
+        const date = parseISO(transaction.created_at);
+
         let filterStart, filterEnd;
 
         switch (dateFilter) {
@@ -103,7 +104,9 @@ function Transactions() {
 
       switch (sortField) {
         case "date":
-          comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+          comparison =
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+
           break;
         case "amount":
           comparison = a.amount - b.amount;
@@ -389,7 +392,7 @@ function Transactions() {
                     onClick={() => toggleSort("date")}
                   >
                     <div className="flex items-center">
-                      Date
+                      Date & Time
                       {sortField === "date" && (
                         <span className="ml-1">
                           {sortOrder === "asc" ? (
@@ -472,7 +475,10 @@ function Transactions() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {format(parseISO(transaction.date), "MMM d, yyyy")}
+                        {format(
+                          parseISO(transaction.created_at),
+                          "MMM d, yyyy,h:mm a"
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <span
