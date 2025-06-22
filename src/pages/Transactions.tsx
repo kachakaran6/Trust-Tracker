@@ -191,6 +191,8 @@ function Transactions() {
       .filter((txn) => txn.type === "expense")
       .reduce((sum, txn) => sum + txn.amount, 0);
 
+    const netBalance = totalIncome - totalExpense;
+
     // Optional: add budget logic here if you have it
     const budget = 0; // Replace with real value if available
 
@@ -204,6 +206,10 @@ function Transactions() {
       {
         Description: "Total Expense",
         Amount: totalExpense,
+      },
+      {
+        Description: "Net Balance",
+        Amount: netBalance,
       },
       {
         Description: "Remaining Budget",
