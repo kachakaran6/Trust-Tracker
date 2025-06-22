@@ -1,4 +1,3 @@
-import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -21,6 +20,7 @@ import Analytics from "./pages/Analytics";
 import Budget from "./pages/Budget";
 import Settings from "./pages/Settings";
 import Predictions from "./pages/Predictions";
+import Admin from "./pages/Admin";
 import AuthCallback from "./pages/AuthCallback";
 
 function App() {
@@ -45,6 +45,7 @@ function App() {
                     <Route path="/budget" element={<Budget />} />
                     <Route path="/predictions" element={<Predictions />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/admin" element={<Admin />} />
                   </Route>
 
                   {/* Default redirect */}
