@@ -1,4 +1,8 @@
-import React, { useState } from "react";
+/* eslint-disable no-case-declarations */
+import { useState } from "react";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
 import { useTransactions } from "../contexts/TransactionsContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -167,6 +171,58 @@ function Transactions() {
     }
   };
 
+  // excel shhet
+  const exportToExcel = () => {
+    // Format main transaction data
+    const cleanedData = filteredTransactions.map((txn) => ({
+      Date: txn.created_at,
+      Description: txn.description,
+      Category: getCategoryName(txn.category_id),
+      Type: txn.type,
+      Amount: txn.amount,
+    }));
+
+    // Calculate totals
+    const totalIncome = filteredTransactions
+      .filter((txn) => txn.type === "income")
+      .reduce((sum, txn) => sum + txn.amount, 0);
+
+    const totalExpense = filteredTransactions
+      .filter((txn) => txn.type === "expense")
+      .reduce((sum, txn) => sum + txn.amount, 0);
+
+    // Optional: add budget logic here if you have it
+    const budget = 0; // Replace with real value if available
+
+    // Append an empty row and totals row
+    cleanedData.push(
+      {}, // Empty row
+      {
+        Description: "Total Income",
+        Amount: totalIncome,
+      },
+      {
+        Description: "Total Expense",
+        Amount: totalExpense,
+      },
+      {
+        Description: "Remaining Budget",
+        Amount: budget - totalExpense,
+      }
+    );
+
+    // Create and save workbook
+    const worksheet = XLSX.utils.json_to_sheet(cleanedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, "transactions_with_totals.xlsx");
+  };
+
   return (
     <div className="space-y-6 pb-20">
       <div className="flex items-center justify-between mb-6">
@@ -266,7 +322,7 @@ function Transactions() {
 
       {/* Filters and Search */}
       <div className="card p-4 animate-fade-in">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search size={18} className="text-gray-400" />
@@ -340,6 +396,24 @@ function Transactions() {
         </div>
       </div>
 
+      {/* Export to excell button */}
+
+      <button
+        onClick={exportToExcel}
+        className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-green-600 px-4 py-2 text-white shadow-md transition hover:bg-green-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M19 20H5V4h7V2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-9h-2v9z" />
+          <path d="M17 13l-5-5-5 5h3v4h4v-4h3z" />
+        </svg>
+        Export to Excel
+      </button>
+
       {/* Transactions List */}
       <div className="card overflow-hidden animate-slide-up">
         {sortedTransactions.length === 0 ? (
@@ -364,7 +438,7 @@ function Transactions() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-[600px] w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
