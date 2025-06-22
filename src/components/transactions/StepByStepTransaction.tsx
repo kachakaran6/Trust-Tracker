@@ -27,6 +27,13 @@ function StepByStepTransaction({
   onClose,
 }: StepByStepTransactionProps) {
   const { user } = useAuth();
+  const currencyFormatter = new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: user?.currency || "USD",
+    minimumFractionDigits: 0,
+  });
+  const currencySymbol = user?.currency || "$";
+
   const { addTransaction } = useTransactions();
   const { categories } = useCategories();
 
@@ -308,7 +315,7 @@ function StepByStepTransaction({
                           }
                           className="py-2 px-3 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                         >
-                          ${amount}
+                          {currencyFormatter.format(amount)}
                         </button>
                       ))}
                     </div>

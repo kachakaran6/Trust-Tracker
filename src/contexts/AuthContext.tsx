@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (updates: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -97,6 +98,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("🔐 logged out");
   };
 
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!user) throw new Error("No user logged in");
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          name: updates.name ?? user.name,
+          currency: updates.currency ?? user.currency,
+          timezone: updates.timezone ?? user.timezone,
+        },
+      });
+
+      if (error) throw error;
+
+      // Update local user state
+      setUser((prev) => (prev ? { ...prev, ...updates } : null));
+    } catch (error) {
+      console.error("❌ Error updating profile:", error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -106,6 +129,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         login,
         register,
         logout,
+        updateProfile,
       }}
     >
       {children}
