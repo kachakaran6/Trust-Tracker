@@ -76,7 +76,9 @@ function Sidebar({ open, setOpen }: SidebarProps) {
           </div>
           <div className="ml-3">
             <p className="font-medium">{user.name}</p>
-            <p className="text-sm text-gray-500">{user.email}</p>
+            {/* <p className="text-sm text-gray-500">
+              {user.email.split("@gmail.com")}
+            </p> */}
           </div>
         </div>
       </div>
