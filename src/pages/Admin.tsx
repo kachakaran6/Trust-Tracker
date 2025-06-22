@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabase";
 import { format, parseISO } from "date-fns";
 import {
   Users,
-  DollarSign,
+  IndianRupee,
   //   TrendingUp,
   Shield,
   Eye,
@@ -229,7 +229,7 @@ function Admin() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
@@ -351,7 +351,7 @@ function Admin() {
         >
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
-              <DollarSign size={20} className="text-yellow-600" />
+              <IndianRupee size={20} className="text-yellow-600" />
             </div>
             <div>
               <p className="text-sm text-gray-500">Total Volume</p>
