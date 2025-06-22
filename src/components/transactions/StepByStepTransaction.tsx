@@ -32,7 +32,9 @@ function StepByStepTransaction({
     currency: user?.currency || "USD",
     minimumFractionDigits: 0,
   });
-  // const currencySymbol = user?.currency || "$";
+
+  const currencySymbol = user?.currency || "$";
+
 
   const { addTransaction } = useTransactions();
   const { categories } = useCategories();
