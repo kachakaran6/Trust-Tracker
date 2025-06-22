@@ -1,26 +1,34 @@
-// src/pages/AuthCallback.tsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
-export default function AuthCallback() {
+function AuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const finishSignIn = async () => {
-      const { data, error } = await supabase.auth.exchangeCodeForSession();
-      console.log("OAuth callback:", data, error);
+    const checkSession = async () => {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
 
-      if (data?.session) {
+      if (session) {
+        // You can store the user in your context here if needed
         navigate("/dashboard");
       } else {
-        console.error("OAuth callback error:", error);
+        console.error("No session:", error);
         navigate("/login");
       }
     };
 
-    finishSignIn();
+    checkSession();
   }, [navigate]);
 
-  return <div className="text-center mt-20">Loading...</div>;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p className="text-gray-600">Logging you in...</p>
+    </div>
+  );
 }
+
+export default AuthCallback;
