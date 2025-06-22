@@ -44,7 +44,7 @@ function Login() {
     }
   };
 
-  const redirectUrl = import.meta.env.VITE_APP_URL + "/auth/callback";
+  const redirectUrl = "https://fintica.vercel.app" + "/auth/callback";
 
   const handleGoogleLogin = async () => {
     try {
@@ -62,6 +62,7 @@ function Login() {
       setError("Google login error");
       console.error("Google login failed:", err);
     }
+    console.log("Redirecting to:", import.meta.env.VITE_APP_URL);
   };
 
   return (
