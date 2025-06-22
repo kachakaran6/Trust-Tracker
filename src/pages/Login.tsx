@@ -44,12 +44,14 @@ function Login() {
     }
   };
 
+  const redirectUrl = import.meta.env.VITE_APP_URL + "/auth/callback";
+
   const handleGoogleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${import.meta.env.VITE_APP_URL}/auth/callback`, // <- you can choose a safe landing page
+          redirectTo: redirectUrl, // <- you can choose a safe landing page
         },
       });
       if (error) {
