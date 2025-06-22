@@ -6,23 +6,29 @@ const AuthCallback = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const getSession = async () => {
+    const handleRedirect = async () => {
+      // Important: This parses the URL and stores the session
       const { data, error } = await supabase.auth.getSession();
 
       if (error || !data.session) {
-        console.error("OAuth login failed:", error);
-        // Optional: Redirect to /login or show an error
-        return;
+        console.warn("Trying URL hash recovery");
+        // Use this fallback if Supabase hasn't stored session yet
+        const {
+          data: { session },
+          error: hashError,
+        } = await supabase.auth.getSessionFromUrl(); // <== This is critical
+        if (session) {
+          navigate("/dashboard");
+        } else {
+          console.error("OAuth login failed:", hashError);
+          navigate("/login");
+        }
+      } else {
+        navigate("/dashboard");
       }
-
-      // You can now use the session
-      console.log("Session:", data.session);
-
-      // Redirect to dashboard or wherever you want
-      navigate("/dashboard");
     };
 
-    getSession();
+    handleRedirect();
   }, [navigate]);
 
   return <p>Signing you in with Google...</p>;
