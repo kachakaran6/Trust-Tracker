@@ -507,6 +507,7 @@ function Admin() {
                   </td>
                   <td className="px-6 py-4 text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
+                      {/* User details */}
                       <button
                         onClick={() => viewUserDetails(user)}
                         className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
@@ -514,7 +515,7 @@ function Admin() {
                       >
                         <Eye size={16} />
                       </button>
-
+                      {/* Role prmote */}
                       {user.role === "normal" ? (
                         <button
                           onClick={() => handleUserAction(user.id, "promote")}
@@ -534,7 +535,7 @@ function Admin() {
                           </button>
                         )
                       )}
-
+                      {/* Ban unban */}
                       {user.status === "active" ? (
                         <button
                           onClick={() => handleUserAction(user.id, "ban")}
