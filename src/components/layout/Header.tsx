@@ -26,7 +26,7 @@ function Header({ setSidebarOpen }: HeaderProps) {
       </button>
 
       <div className="flex-1">
-        <h1 className="text-xl font-semibold text-gray-800">FinSight</h1>
+        <h1 className="text-xl font-semibold text-gray-800">Fintica</h1>
       </div>
 
       {/* Notifications dropdown */}

@@ -174,12 +174,14 @@ function Settings() {
       case "profile":
         return (
           <div className="animate-fade-in">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Profile Settings</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">
+                Profile Settings
+              </h2>
               {!isEditingProfile && (
                 <button
                   onClick={() => setIsEditingProfile(true)}
-                  className="btn-outline flex items-center"
+                  className="btn-outline flex items-center text-gray-700 hover:text-gray-900 transition duration-200"
                 >
                   <Edit2 size={16} className="mr-1" />
                   Edit Profile
@@ -189,29 +191,32 @@ function Settings() {
 
             {/* Success Message */}
             {showSuccessMessage && (
-              <div className="mb-4 bg-success-50 border border-success-200 text-success-700 px-4 py-3 rounded-lg flex items-center animate-fade-in">
+              <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center animate-fade-in">
                 <Check size={16} className="mr-2" />
                 Profile updated successfully!
               </div>
             )}
 
-            <div className="card p-6 mb-6">
+            <div className="card p-6 mb-6 shadow-lg rounded-lg">
               <form onSubmit={handleProfileSubmit}>
                 <div className="flex flex-col md:flex-row items-start">
-                  <div className="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-2xl mb-4 md:mb-0 md:mr-6">
+                  <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-3xl mb-4 md:mb-0 md:mr-6">
                     {user?.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="name" className="form-label">
+                        <label
+                          htmlFor="name"
+                          className="form-label text-gray-700"
+                        >
                           Full Name
                         </label>
                         <input
                           id="name"
                           name="name"
                           type="text"
-                          className="input-field"
+                          className="input-field border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={profileData.name}
                           onChange={handleProfileInputChange}
                           disabled={!isEditingProfile}
@@ -219,13 +224,16 @@ function Settings() {
                         />
                       </div>
                       <div>
-                        <label htmlFor="email" className="form-label">
+                        <label
+                          htmlFor="email"
+                          className="form-label text-gray-700"
+                        >
                           Email Address
                         </label>
                         <input
                           id="email"
                           type="email"
-                          className="input-field bg-gray-50"
+                          className="input-field bg-gray-50 border border-gray-300 rounded-md p-2 w-full"
                           value={user?.email}
                           disabled
                         />
@@ -234,13 +242,16 @@ function Settings() {
                         </p>
                       </div>
                       <div>
-                        <label htmlFor="timezone" className="form-label">
+                        <label
+                          htmlFor="timezone"
+                          className="form-label text-gray-700"
+                        >
                           Timezone
                         </label>
                         <select
                           id="timezone"
                           name="timezone"
-                          className="select-field"
+                          className="select-field border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={profileData.timezone}
                           onChange={handleProfileInputChange}
                           disabled={!isEditingProfile}
@@ -267,13 +278,16 @@ function Settings() {
                         </select>
                       </div>
                       <div>
-                        <label htmlFor="currency" className="form-label">
+                        <label
+                          htmlFor="currency"
+                          className="form-label text-gray-700"
+                        >
                           Default Currency
                         </label>
                         <select
                           id="currency"
                           name="currency"
-                          className="select-field"
+                          className="select-field border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={profileData.currency}
                           onChange={handleProfileInputChange}
                           disabled={!isEditingProfile}
@@ -295,7 +309,7 @@ function Settings() {
                     </div>
 
                     {isEditingProfile && (
-                      <div className="mt-6 flex justify-end space-x-3">
+                      <div className="mt-6 flex justify-end space-x-4">
                         <button
                           type="button"
                           onClick={() => {
@@ -306,14 +320,14 @@ function Settings() {
                               currency: user?.currency || "USD",
                             });
                           }}
-                          className="btn-outline"
+                          className="btn-outline text-gray-700 hover:text-gray-900 transition duration-200"
                           disabled={isSavingProfile}
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="btn-primary flex items-center"
+                          className="btn-primary flex items-center bg-blue-600 text-white rounded-md px-4 py-2 hover:bg-blue-700 transition duration-200"
                           disabled={isSavingProfile}
                         >
                           {isSavingProfile ? (
@@ -336,9 +350,11 @@ function Settings() {
             </div>
 
             {/* Currency Preview */}
-            <div className="card p-6 mb-6">
-              <h3 className="font-semibold mb-3">Currency Preview</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="card p-6 mb-6 shadow-lg rounded-lg">
+              <h3 className="font-semibold text-lg text-gray-800 mb-4">
+                Currency Preview
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
                 <div>
                   <p className="text-gray-500">Sample Amount</p>
                   <p className="font-semibold text-lg">
@@ -364,21 +380,21 @@ function Settings() {
               </div>
             </div>
 
-            <div className="card p-6">
-              <h3 className="font-semibold text-danger-600 mb-4">
+            <div className="card p-6 shadow-lg rounded-lg">
+              <h3 className="font-semibold text-red-600 text-lg mb-4">
                 Danger Zone
               </h3>
-              <div className="border border-danger-200 rounded-lg p-4 bg-danger-50">
-                <h4 className="font-medium text-danger-800 mb-2">
+              <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+                <h4 className="font-medium text-red-800 mb-2">
                   Delete Account
                 </h4>
-                <p className="text-sm text-danger-700 mb-4">
+                <p className="text-sm text-red-700 mb-4">
                   Once you delete your account, there is no going back. This
                   action cannot be undone and will permanently delete all your
                   financial data.
                 </p>
                 <button
-                  className="btn-danger"
+                  className="btn-danger bg-red-600 text-white rounded-md px-4 py-2 hover:bg-red-700 transition duration-200"
                   onClick={() => {
                     if (
                       window.confirm(
@@ -399,8 +415,10 @@ function Settings() {
       case "categories":
         return (
           <div className="animate-fade-in">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Category Management</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Category Management
+              </h2>
               <button
                 onClick={() => {
                   setEditingCategory(null);
@@ -412,7 +430,7 @@ function Settings() {
                   });
                   setShowCategoryForm(true);
                 }}
-                className="btn-primary"
+                className="btn-primary px-4 py-2 rounded-md shadow hover:bg-primary-700 transition"
               >
                 Add Category
               </button>
@@ -420,16 +438,19 @@ function Settings() {
 
             {/* Category form modal */}
             {showCategoryForm && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg max-w-md w-full p-6 animate-slide-up">
-                  <h2 className="text-xl font-semibold mb-4">
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-lg animate-slide-up">
+                  <h2 className="text-2xl font-semibold mb-5 text-gray-900">
                     {editingCategory ? "Edit Category" : "Add New Category"}
                   </h2>
 
                   <form onSubmit={handleCategorySubmit}>
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       <div>
-                        <label htmlFor="name" className="form-label">
+                        <label
+                          htmlFor="name"
+                          className="form-label font-medium text-gray-700"
+                        >
                           Category Name
                         </label>
                         <input
@@ -437,7 +458,7 @@ function Settings() {
                           name="name"
                           type="text"
                           required
-                          className="input-field"
+                          className="input-field mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                           placeholder="e.g., Groceries, Salary"
                           value={newCategory.name}
                           onChange={handleInputChange}
@@ -445,7 +466,9 @@ function Settings() {
                       </div>
 
                       <div>
-                        <label className="form-label">Category Type</label>
+                        <label className="form-label font-medium text-gray-700 mb-2 block">
+                          Category Type
+                        </label>
                         <div className="grid grid-cols-2 gap-4">
                           <label
                             className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
@@ -462,7 +485,9 @@ function Settings() {
                               onChange={handleInputChange}
                               className="sr-only"
                             />
-                            <span className="font-medium">💸 Expense</span>
+                            <span className="font-semibold text-lg">
+                              💸 Expense
+                            </span>
                           </label>
 
                           <label
@@ -480,50 +505,56 @@ function Settings() {
                               onChange={handleInputChange}
                               className="sr-only"
                             />
-                            <span className="font-medium">💰 Income</span>
+                            <span className="font-semibold text-lg">
+                              💰 Income
+                            </span>
                           </label>
                         </div>
                       </div>
 
                       <div>
-                        <label htmlFor="color" className="form-label">
+                        <label
+                          htmlFor="color"
+                          className="form-label font-medium text-gray-700 mb-2 block"
+                        >
                           Category Color
                         </label>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-4">
                           <input
                             id="color"
                             name="color"
                             type="color"
-                            className="h-12 w-12 rounded-lg border border-gray-300 p-1 cursor-pointer"
+                            className="h-12 w-12 rounded-md border border-gray-300 p-1 cursor-pointer"
                             value={newCategory.color}
                             onChange={handleInputChange}
                           />
-                          <div className="flex-1">
-                            <input
-                              type="text"
-                              className="input-field"
-                              value={newCategory.color}
-                              onChange={handleInputChange}
-                              name="color"
-                              placeholder="#3B82F6"
-                            />
-                          </div>
+                          <input
+                            type="text"
+                            className="input-field flex-1 rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            value={newCategory.color}
+                            onChange={handleInputChange}
+                            name="color"
+                            placeholder="#3B82F6"
+                          />
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex justify-end mt-6 space-x-3">
+                    <div className="flex justify-end mt-8 space-x-3">
                       <button
                         type="button"
                         onClick={() => {
                           setShowCategoryForm(false);
                           setEditingCategory(null);
                         }}
-                        className="btn-outline"
+                        className="btn-outline px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition"
                       >
                         Cancel
                       </button>
-                      <button type="submit" className="btn-primary">
+                      <button
+                        type="submit"
+                        className="btn-primary px-5 py-2 rounded-md shadow hover:bg-primary-700 transition"
+                      >
                         {editingCategory ? "Update Category" : "Add Category"}
                       </button>
                     </div>
@@ -533,30 +564,30 @@ function Settings() {
             )}
 
             {/* Categories list */}
-            <div className="space-y-6">
+            <div className="space-y-10">
               {/* Income Categories */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+              <section>
+                <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4">
                   Income Categories (
                   {categories.filter((cat) => cat.type === "income").length})
                 </h3>
-                <div className="grid gap-3">
+                <div className="grid gap-4">
                   {categories
                     .filter((cat) => cat.type === "income")
                     .map((category) => (
                       <div
                         key={category.id}
-                        className="card p-4 flex items-center justify-between hover:shadow-md transition-shadow"
+                        className="card p-4 flex items-center justify-between rounded-lg shadow-sm hover:shadow-md transition-shadow"
                       >
-                        <div className="flex items-center">
+                        <div className="flex items-center space-x-4">
                           <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center mr-3 text-white font-bold"
+                            className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-xl"
                             style={{ backgroundColor: category.color }}
                           >
                             {category.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <span className="font-medium text-gray-900">
+                            <span className="font-semibold text-gray-900 text-lg">
                               {category.name}
                             </span>
                             <p className="text-sm text-gray-500">
@@ -564,27 +595,27 @@ function Settings() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3">
                           <button
-                            className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-100 rounded-md transition-colors"
                             onClick={() => handleEditCategory(category)}
                             title="Edit category"
                           >
-                            <Edit2 size={16} />
+                            <Edit2 size={18} />
                           </button>
                           <button
-                            className="p-2 text-gray-500 hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-500 hover:text-danger-600 hover:bg-danger-100 rounded-md transition-colors"
                             onClick={() => handleDeleteCategory(category.id)}
                             title="Delete category"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={18} />
                           </button>
                         </div>
                       </div>
                     ))}
                   {categories.filter((cat) => cat.type === "income").length ===
                     0 && (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-10 text-gray-500">
                       <p>No income categories yet.</p>
                       <button
                         onClick={() => {
@@ -594,38 +625,38 @@ function Settings() {
                           }));
                           setShowCategoryForm(true);
                         }}
-                        className="btn-outline mt-2"
+                        className="btn-outline mt-4 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition"
                       >
                         Add Income Category
                       </button>
                     </div>
                   )}
                 </div>
-              </div>
+              </section>
 
               {/* Expense Categories */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+              <section>
+                <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4">
                   Expense Categories (
                   {categories.filter((cat) => cat.type === "expense").length})
                 </h3>
-                <div className="grid gap-3">
+                <div className="grid gap-4">
                   {categories
                     .filter((cat) => cat.type === "expense")
                     .map((category) => (
                       <div
                         key={category.id}
-                        className="card p-4 flex items-center justify-between hover:shadow-md transition-shadow"
+                        className="card p-4 flex items-center justify-between rounded-lg shadow-sm hover:shadow-md transition-shadow"
                       >
-                        <div className="flex items-center">
+                        <div className="flex items-center space-x-4">
                           <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center mr-3 text-white font-bold"
+                            className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-xl"
                             style={{ backgroundColor: category.color }}
                           >
                             {category.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <span className="font-medium text-gray-900">
+                            <span className="font-semibold text-gray-900 text-lg">
                               {category.name}
                             </span>
                             <p className="text-sm text-gray-500">
@@ -633,27 +664,27 @@ function Settings() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-3">
                           <button
-                            className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-100 rounded-md transition-colors"
                             onClick={() => handleEditCategory(category)}
                             title="Edit category"
                           >
-                            <Edit2 size={16} />
+                            <Edit2 size={18} />
                           </button>
                           <button
-                            className="p-2 text-gray-500 hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
+                            className="p-2 text-gray-500 hover:text-danger-600 hover:bg-danger-100 rounded-md transition-colors"
                             onClick={() => handleDeleteCategory(category.id)}
                             title="Delete category"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={18} />
                           </button>
                         </div>
                       </div>
                     ))}
                   {categories.filter((cat) => cat.type === "expense").length ===
                     0 && (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-10 text-gray-500">
                       <p>No expense categories yet.</p>
                       <button
                         onClick={() => {
@@ -663,14 +694,14 @@ function Settings() {
                           }));
                           setShowCategoryForm(true);
                         }}
-                        className="btn-outline mt-2"
+                        className="btn-outline mt-4 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition"
                       >
                         Add Expense Category
                       </button>
                     </div>
                   )}
                 </div>
-              </div>
+              </section>
             </div>
           </div>
         );
@@ -919,7 +950,7 @@ function Settings() {
                 </p>
                 <div className="space-y-2">
                   <a
-                    href="mailto:support@finsight.com"
+                    href="mailto:support@fintica.com"
                     className="btn-primary inline-block w-full text-center"
                   >
                     Email Support
@@ -977,77 +1008,47 @@ function Settings() {
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
         {/* Sidebar navigation */}
-        <div className="w-full lg:w-64 card p-4">
-          <nav>
-            <ul className="space-y-1">
-              <li>
-                <button
-                  onClick={() => setActiveTab("profile")}
-                  className={`flex items-center w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                    activeTab === "profile"
-                      ? "bg-primary-50 text-primary-700 border border-primary-200"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <User size={18} className="mr-3" />
-                  Profile Settings
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setActiveTab("categories")}
-                  className={`flex items-center w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                    activeTab === "categories"
-                      ? "bg-primary-50 text-primary-700 border border-primary-200"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <Shield size={18} className="mr-3" />
-                  Categories
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setActiveTab("notifications")}
-                  className={`flex items-center w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                    activeTab === "notifications"
-                      ? "bg-primary-50 text-primary-700 border border-primary-200"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <Bell size={18} className="mr-3" />
-                  Notifications
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setActiveTab("help")}
-                  className={`flex items-center w-full px-4 py-2.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                    activeTab === "help"
-                      ? "bg-primary-50 text-primary-700 border border-primary-200"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <HelpCircle size={18} className="mr-3" />
-                  Help & Support
-                </button>
-              </li>
-              <li className="pt-4 border-t border-gray-200 mt-4">
+        <aside className="bg-white shadow-md lg:shadow-lg lg:w-72 sticky top-0 z-20 border-r border-gray-200">
+          <nav className="flex lg:flex-col overflow-x-auto lg:overflow-visible">
+            <ul className="flex lg:flex-col w-full">
+              {[
+                { key: "profile", label: "Profile Settings", icon: User },
+                { key: "categories", label: "Categories", icon: Shield },
+                { key: "notifications", label: "Notifications", icon: Bell },
+                { key: "help", label: "Help & Support", icon: HelpCircle },
+              ].map(({ key, label, icon: Icon }) => (
+                <li key={key} className="w-full">
+                  <button
+                    onClick={() => setActiveTab(key)}
+                    className={`flex items-center w-full px-5 py-3 text-sm font-medium rounded-none lg:rounded-r-lg transition-colors duration-200 ${
+                      activeTab === key
+                        ? "bg-primary-50 text-primary-700 border-l-4 border-primary-600"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    <Icon size={18} className="mr-3 flex-shrink-0" />
+                    {label}
+                  </button>
+                </li>
+              ))}
+              <li className="mt-auto w-full border-t border-gray-200">
                 <button
                   onClick={logout}
-                  className="flex items-center w-full px-4 py-2.5 text-sm font-medium rounded-lg text-danger-600 hover:bg-danger-50 transition-colors duration-200"
+                  className="flex items-center w-full px-5 py-3 text-sm font-medium text-danger-600 hover:bg-danger-50 transition-colors duration-200 rounded-none lg:rounded-r-lg"
                 >
                   Logout
                 </button>
               </li>
             </ul>
           </nav>
-        </div>
+        </aside>
 
         {/* Content area */}
-        <div className="flex-1">{renderTabContent()}</div>
+        <main className="flex-1 p-6 lg:p-10 bg-white">
+          {renderTabContent()}
+        </main>
       </div>
     </div>
   );
