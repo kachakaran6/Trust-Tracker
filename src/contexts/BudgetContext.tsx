@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
-import { useTransactions } from './TransactionsContext';
-import { supabase, Budget } from '../lib/supabase';
-import { startOfMonth, endOfMonth, format } from 'date-fns';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
+import { useTransactions } from "./TransactionsContext";
+import { supabase, Budget } from "../lib/supabase";
+// import { startOfMonth, endOfMonth, format } from "date-fns";
 
 interface BudgetSummary {
   totalBudget: number;
@@ -15,16 +16,21 @@ interface BudgetSummary {
       spent: number;
       remaining: number;
       percentage: number;
-    }
-  }
+    };
+  };
 }
 
 interface BudgetContextType {
   budgets: Budget[];
-  addBudget: (budget: Omit<Budget, 'id' | 'user_id' | 'created_at'>) => Promise<void>;
+  addBudget: (
+    budget: Omit<Budget, "id" | "user_id" | "created_at">
+  ) => Promise<void>;
   updateBudget: (id: string, budget: Partial<Budget>) => Promise<void>;
   deleteBudget: (id: string) => Promise<void>;
-  getBudgetByCategory: (categoryId: string, month: string) => Budget | undefined;
+  getBudgetByCategory: (
+    categoryId: string,
+    month: string
+  ) => Budget | undefined;
   getBudgetSummary: (month: string) => BudgetSummary;
   isLoading: boolean;
 }
@@ -34,7 +40,7 @@ const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
 export function useBudget() {
   const context = useContext(BudgetContext);
   if (context === undefined) {
-    throw new Error('useBudget must be used within a BudgetProvider');
+    throw new Error("useBudget must be used within a BudgetProvider");
   }
   return context;
 }
@@ -60,48 +66,43 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('budgets')
-        .select('*')
-        .eq('user_id', user.id);
+        .from("budgets")
+        .select("*")
+        .eq("user_id", user.id);
 
       if (error) throw error;
       setBudgets(data || []);
     } catch (error) {
-      console.error('Error loading budgets:', error);
+      console.error("Error loading budgets:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const addBudget = async (budget: Omit<Budget, 'id' | 'user_id' | 'created_at'>) => {
+  const addBudget = async (
+    budget: Omit<Budget, "id" | "user_id" | "created_at">
+  ) => {
     if (!user) return;
 
     try {
-      // Check if budget already exists for this category and month
       const existingBudget = budgets.find(
-        b => b.category_id === budget.category_id && b.month === budget.month
+        (b) => b.category_id === budget.category_id && b.month === budget.month
       );
 
       if (existingBudget) {
-        // Update existing budget
         return updateBudget(existingBudget.id, budget);
       }
 
       const { data, error } = await supabase
-        .from('budgets')
-        .insert([
-          {
-            ...budget,
-            user_id: user.id
-          }
-        ])
+        .from("budgets")
+        .insert([{ ...budget, user_id: user.id }])
         .select()
         .single();
 
       if (error) throw error;
-      setBudgets(prev => [...prev, data]);
+      setBudgets((prev) => [...prev, data]);
     } catch (error) {
-      console.error('Error adding budget:', error);
+      console.error("Error adding budget:", error);
       throw error;
     }
   };
@@ -111,21 +112,21 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const { data, error } = await supabase
-        .from('budgets')
+        .from("budgets")
         .update(updatedFields)
-        .eq('id', id)
-        .eq('user_id', user.id)
+        .eq("id", id)
+        .eq("user_id", user.id)
         .select()
         .single();
 
       if (error) throw error;
-      setBudgets(prev =>
-        prev.map(budget =>
+      setBudgets((prev) =>
+        prev.map((budget) =>
           budget.id === id ? { ...budget, ...data } : budget
         )
       );
     } catch (error) {
-      console.error('Error updating budget:', error);
+      console.error("Error updating budget:", error);
       throw error;
     }
   };
@@ -135,73 +136,84 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const { error } = await supabase
-        .from('budgets')
+        .from("budgets")
         .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
+        .eq("id", id)
+        .eq("user_id", user.id);
 
       if (error) throw error;
-      setBudgets(prev => prev.filter(budget => budget.id !== id));
+      setBudgets((prev) => prev.filter((budget) => budget.id !== id));
     } catch (error) {
-      console.error('Error deleting budget:', error);
+      console.error("Error deleting budget:", error);
       throw error;
     }
   };
 
-  const getBudgetByCategory = (categoryId: string, month: string): Budget | undefined => {
+  const getBudgetByCategory = (
+    categoryId: string,
+    month: string
+  ): Budget | undefined => {
     return budgets.find(
-      budget => budget.category_id === categoryId && budget.month === month
+      (budget) => budget.category_id === categoryId && budget.month === month
     );
   };
 
   const getBudgetSummary = (month: string): BudgetSummary => {
-    const monthlyBudgets = budgets.filter(budget => budget.month === month);
-    
-    const [year, monthNum] = month.split('-').map(n => parseInt(n));
+    const monthlyBudgets = budgets.filter((budget) => budget.month === month);
+
+    const [year, monthNum] = month.split("-").map((n) => parseInt(n));
     const startDate = new Date(year, monthNum - 1, 1);
     const monthlyTransactions = getTransactionsByMonth(startDate);
-    
+
     const summary: BudgetSummary = {
       totalBudget: 0,
       totalSpent: 0,
       remaining: 0,
       percentage: 0,
-      categories: {}
+      categories: {},
     };
-    
-    summary.totalBudget = monthlyBudgets.reduce((total, budget) => total + budget.amount, 0);
-    
-    monthlyTransactions.forEach(transaction => {
-      if (transaction.type === 'expense') {
+
+    summary.totalBudget = monthlyBudgets.reduce(
+      (total, budget) => total + budget.amount,
+      0
+    );
+
+    // ✅ PRE-FILL CATEGORIES with budget even if no spending
+    monthlyBudgets.forEach((budget) => {
+      summary.categories[budget.category_id] = {
+        budget: budget.amount,
+        spent: 0,
+        remaining: budget.amount,
+        percentage: 0,
+      };
+    });
+
+    // Then calculate spending
+    monthlyTransactions.forEach((transaction) => {
+      if (transaction.type === "expense") {
+        const budget = monthlyBudgets.find(
+          (b) => b.category_id === transaction.category_id
+        );
+        if (!budget) return;
+
         summary.totalSpent += transaction.amount;
-        
-        const budget = monthlyBudgets.find(b => b.category_id === transaction.category_id);
-        
-        if (budget) {
-          if (!summary.categories[budget.category_id]) {
-            summary.categories[budget.category_id] = {
-              budget: budget.amount,
-              spent: 0,
-              remaining: budget.amount,
-              percentage: 0
-            };
-          }
-          
-          summary.categories[budget.category_id].spent += transaction.amount;
-          summary.categories[budget.category_id].remaining = 
-            summary.categories[budget.category_id].budget - summary.categories[budget.category_id].spent;
-          
-          const percentage = (summary.categories[budget.category_id].spent / summary.categories[budget.category_id].budget) * 100;
-          summary.categories[budget.category_id].percentage = Math.min(percentage, 100);
-        }
+
+        const catSummary = summary.categories[budget.category_id];
+        catSummary.spent += transaction.amount;
+        catSummary.remaining = catSummary.budget - catSummary.spent;
+        catSummary.percentage = Math.min(
+          (catSummary.spent / catSummary.budget) * 100,
+          100
+        );
       }
     });
-    
+
     summary.remaining = summary.totalBudget - summary.totalSpent;
-    summary.percentage = summary.totalBudget > 0 
-      ? Math.min((summary.totalSpent / summary.totalBudget) * 100, 100)
-      : 0;
-    
+    summary.percentage =
+      summary.totalBudget > 0
+        ? Math.min((summary.totalSpent / summary.totalBudget) * 100, 100)
+        : 0;
+
     return summary;
   };
 
@@ -212,8 +224,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     deleteBudget,
     getBudgetByCategory,
     getBudgetSummary,
-    isLoading
+    isLoading,
   };
 
-  return <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>;
+  return (
+    <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>
+  );
 }
