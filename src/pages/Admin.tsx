@@ -5,33 +5,35 @@ import { supabase } from "../lib/supabase";
 import { format, parseISO } from "date-fns";
 import {
   Users,
-  IndianRupee,
-  //   TrendingUp,
+  DollarSign,
   Shield,
   Eye,
   Ban,
   CheckCircle,
-  //   AlertTriangle,
   BarChart3,
-  Calendar,
+  // Calendar,
   Search,
   Filter,
   Download,
   UserCheck,
   UserX,
   Crown,
+  Trash2,
+  AlertCircle,
+  RefreshCw,
+  TrendingUp,
 } from "lucide-react";
 
 interface AdminUser {
-  id: string;
+  user_id: string;
   email: string;
-  name: string;
+  full_name: string;
   created_at: string;
   last_sign_in_at: string;
-  role: "normal" | "super_admin";
+  user_role: "normal" | "super_admin";
+  user_status: "active" | "banned";
   total_transactions: number;
   total_amount: number;
-  status: "active" | "banned";
 }
 
 interface AdminStats {
@@ -41,6 +43,7 @@ interface AdminStats {
   newUsersThisMonth: number;
   activeUsers: number;
   bannedUsers: number;
+  superAdmins: number;
 }
 
 function Admin() {
@@ -53,6 +56,7 @@ function Admin() {
     newUsersThisMonth: 0,
     activeUsers: 0,
     bannedUsers: 0,
+    superAdmins: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,6 +64,9 @@ function Admin() {
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Check if user is super admin
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -97,56 +104,64 @@ function Admin() {
 
   const loadAdminData = async () => {
     setIsLoading(true);
+    setError(null);
+
     try {
-      // Fetch user stats from the view
-      const { data: usersWithStats, error } = await supabase
-        .from("admin_user_stats")
-        .select("*");
+      console.log("Loading admin data...");
 
-      if (error) throw error;
+      // Call the admin function
+      const { data: adminUsers, error } = await supabase.rpc("get_admin_users");
 
-      const users = usersWithStats.map((user) => ({
-        id: user.id,
-        email: user.email,
-        name: user.name || "Unknown",
-        created_at: user.created_at,
-        last_sign_in_at: user.last_sign_in_at,
-        role: user.role || "normal",
-        total_transactions: user.total_transactions || 0,
-        total_amount: user.total_amount || 0,
-        status: "active" as const, // You can later derive this from another column
-      }));
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
-      setUsers(users);
+      console.log("Admin users loaded:", adminUsers);
+      setUsers(adminUsers || []);
 
-      // Summary stats
-      const totalUsers = users.length;
-      const totalTransactions = users.reduce(
-        (sum, u) => sum + u.total_transactions,
-        0
-      );
-      const totalAmount = users.reduce((sum, u) => sum + u.total_amount, 0);
+      // Calculate stats
+      if (adminUsers && adminUsers.length > 0) {
+        const totalUsers = adminUsers.length;
+        const totalTransactions = adminUsers.reduce(
+          (sum: number, u: AdminUser) => sum + u.total_transactions,
+          0
+        );
+        const totalAmount = adminUsers.reduce(
+          (sum: number, u: AdminUser) => sum + u.total_amount,
+          0
+        );
 
-      const thisMonth = new Date();
-      thisMonth.setDate(1);
+        const thisMonth = new Date();
+        thisMonth.setDate(1);
 
-      const newUsersThisMonth = users.filter(
-        (u) => new Date(u.created_at) >= thisMonth
-      ).length;
+        const newUsersThisMonth = adminUsers.filter(
+          (u: AdminUser) => new Date(u.created_at) >= thisMonth
+        ).length;
 
-      const activeUsers = users.filter((u) => u.status === "active").length;
-      const bannedUsers = users.filter((u) => u.status === "banned").length;
+        const activeUsers = adminUsers.filter(
+          (u: AdminUser) => u.user_status === "active"
+        ).length;
+        const bannedUsers = adminUsers.filter(
+          (u: AdminUser) => u.user_status === "banned"
+        ).length;
+        const superAdmins = adminUsers.filter(
+          (u: AdminUser) => u.user_role === "super_admin"
+        ).length;
 
-      setStats({
-        totalUsers,
-        totalTransactions,
-        totalAmount,
-        newUsersThisMonth,
-        activeUsers,
-        bannedUsers,
-      });
+        setStats({
+          totalUsers,
+          totalTransactions,
+          totalAmount,
+          newUsersThisMonth,
+          activeUsers,
+          bannedUsers,
+          superAdmins,
+        });
+      }
     } catch (error) {
       console.error("Error loading admin data:", error);
+      setError("Failed to load admin data. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -154,30 +169,114 @@ function Admin() {
 
   const handleUserAction = async (
     userId: string,
-    action: "promote" | "demote" | "ban" | "unban"
+    action: "promote" | "demote" | "ban" | "unban" | "delete"
   ) => {
+    // Special handling for delete action
+    if (action === "delete") {
+      const confirmed = window.confirm(
+        "Are you sure you want to delete this user?\n\n" +
+          "This will permanently delete:\n" +
+          "• All user transactions\n" +
+          "• All user categories\n" +
+          "• All user budgets\n" +
+          "• User profile and settings\n\n" +
+          "This action CANNOT be undone!"
+      );
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    setActionLoading(userId + "-" + action);
+    setError(null);
+    setSuccess(null);
+
     try {
-      if (action === "promote" || action === "demote") {
-        const newRole = action === "promote" ? "super_admin" : "normal";
+      let result;
 
-        const { error } = await supabase
-          .from("user_roles")
-          .upsert({ user_id: userId, role: newRole });
+      console.log(`Attempting to ${action} user:`, userId);
 
-        if (error) throw error;
+      switch (action) {
+        case "promote":
+          result = await supabase.rpc("admin_promote_user", {
+            target_user_id: userId,
+          });
+          break;
+        case "demote":
+          result = await supabase.rpc("admin_demote_user", {
+            target_user_id: userId,
+          });
+          break;
+        case "ban":
+          result = await supabase.rpc("admin_ban_user", {
+            target_user_id: userId,
+            reason: "Banned by admin",
+          });
+          break;
+        case "unban":
+          result = await supabase.rpc("admin_unban_user", {
+            target_user_id: userId,
+          });
+          break;
+        case "delete":
+          result = await supabase.rpc("admin_delete_user", {
+            target_user_id: userId,
+          });
+          break;
       }
 
-      // Reload data
-      await loadAdminData();
+      console.log(`${action} result:`, result);
 
-      alert(`User ${action}d successfully!`);
-    } catch (error) {
+      if (result.error) {
+        console.error(`Error ${action}ing user:`, result.error);
+        throw result.error;
+      }
+
+      const response = result.data;
+      console.log(`${action} response:`, response);
+
+      if (response && response.success) {
+        setSuccess(response.message || `User ${action}ed successfully`);
+
+        // For delete action, remove user from local state immediately
+        if (action === "delete") {
+          setUsers((prevUsers) =>
+            prevUsers.filter((u) => u.user_id !== userId)
+          );
+          // Update stats
+          setStats((prevStats) => ({
+            ...prevStats,
+            totalUsers: prevStats.totalUsers - 1,
+            activeUsers: prevStats.activeUsers - 1,
+          }));
+        } else {
+          // For other actions, reload data to get updated state
+          await loadAdminData();
+        }
+      } else {
+        const errorMessage = response?.error || `Failed to ${action} user`;
+        console.error(`${action} failed:`, errorMessage);
+        setError(errorMessage);
+      }
+    } catch (error: any) {
       console.error(`Error ${action}ing user:`, error);
-      alert(`Failed to ${action} user. Please try again.`);
+
+      // Extract meaningful error message
+      let errorMessage = `Failed to ${action} user`;
+      if (error.message) {
+        errorMessage += `: ${error.message}`;
+      } else if (typeof error === "string") {
+        errorMessage += `: ${error}`;
+      }
+
+      setError(errorMessage);
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  const viewUserDetails = async (user: AdminUser) => {
+  const viewUserDetails = (user: AdminUser) => {
     setSelectedUser(user);
     setShowUserModal(true);
   };
@@ -188,20 +287,20 @@ function Admin() {
         "Email",
         "Name",
         "Role",
+        "Status",
         "Created At",
         "Transactions",
         "Total Amount",
-        "Status",
       ].join(","),
       ...filteredUsers.map((user) =>
         [
           user.email,
-          user.name,
-          user.role,
+          user.full_name,
+          user.user_role,
+          user.user_status,
           format(parseISO(user.created_at), "yyyy-MM-dd"),
           user.total_transactions,
           user.total_amount,
-          user.status,
         ].join(",")
       ),
     ].join("\n");
@@ -219,27 +318,39 @@ function Admin() {
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = !roleFilter || user.role === roleFilter;
-    const matchesStatus = !statusFilter || user.status === statusFilter;
+      user.full_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = !roleFilter || user.user_role === roleFilter;
+    const matchesStatus = !statusFilter || user.user_status === statusFilter;
 
     return matchesSearch && matchesRole && matchesStatus;
   });
 
+  // Format currency using user's preferred currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "INR",
+      currency: user?.currency || "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
   };
 
+  // Clear messages after 5 seconds
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError(null);
+        setSuccess(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
+
   // If not super admin, show access denied
   if (!isSuperAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
+        <div className="text-center animate-fade-in">
           <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
             <Shield size={32} className="text-red-600" />
           </div>
@@ -258,8 +369,12 @@ function Admin() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-pulse flex flex-col items-center">
-          <div className="rounded-full bg-primary-300 h-12 w-12 mb-4"></div>
-          <div className="h-4 bg-gray-300 rounded w-32"></div>
+          <div className="rounded-full bg-primary-300 h-12 w-12 mb-4 animate-spin">
+            <RefreshCw size={24} className="text-white m-3" />
+          </div>
+          <div className="h-4 bg-gray-300 rounded w-32">
+            Loading admin data...
+          </div>
         </div>
       </div>
     );
@@ -270,24 +385,55 @@ function Admin() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-            <Crown size={20} className="text-purple-600" />
+          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center mr-4">
+            <Crown size={24} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-3xl font-bold text-gray-800">
               Admin Dashboard
             </h1>
-            <p className="text-gray-600">Super Admin Panel</p>
+            <p className="text-gray-600">Super Admin Control Panel</p>
           </div>
         </div>
-        <button onClick={exportData} className="btn-primary flex items-center">
-          <Download size={16} className="mr-2" />
-          Export Data
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={loadAdminData}
+            className="btn-outline flex items-center"
+            disabled={isLoading}
+          >
+            <RefreshCw
+              size={16}
+              className={`mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </button>
+          <button
+            onClick={exportData}
+            className="btn-primary flex items-center"
+          >
+            <Download size={16} className="mr-2" />
+            Export Data
+          </button>
+        </div>
       </div>
 
+      {/* Success/Error Messages */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center animate-fade-in">
+          <AlertCircle size={16} className="mr-2" />
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center animate-fade-in">
+          <CheckCircle size={16} className="mr-2" />
+          {success}
+        </div>
+      )}
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
         <div className="card p-4 animate-fade-in">
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
@@ -309,7 +455,7 @@ function Admin() {
               <UserCheck size={20} className="text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Active Users</p>
+              <p className="text-sm text-gray-500">Active</p>
               <p className="text-xl font-bold">{stats.activeUsers}</p>
             </div>
           </div>
@@ -324,7 +470,7 @@ function Admin() {
               <UserX size={20} className="text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Banned Users</p>
+              <p className="text-sm text-gray-500">Banned</p>
               <p className="text-xl font-bold">{stats.bannedUsers}</p>
             </div>
           </div>
@@ -336,11 +482,11 @@ function Admin() {
         >
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-              <BarChart3 size={20} className="text-purple-600" />
+              <Crown size={20} className="text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Transactions</p>
-              <p className="text-xl font-bold">{stats.totalTransactions}</p>
+              <p className="text-sm text-gray-500">Admins</p>
+              <p className="text-xl font-bold">{stats.superAdmins}</p>
             </div>
           </div>
         </div>
@@ -350,8 +496,23 @@ function Admin() {
           style={{ animationDelay: "0.4s" }}
         >
           <div className="flex items-center">
+            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
+              <BarChart3 size={20} className="text-indigo-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Transactions</p>
+              <p className="text-xl font-bold">{stats.totalTransactions}</p>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="card p-4 animate-fade-in"
+          style={{ animationDelay: "0.5s" }}
+        >
+          <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
-              <IndianRupee size={20} className="text-yellow-600" />
+              <DollarSign size={20} className="text-yellow-600" />
             </div>
             <div>
               <p className="text-sm text-gray-500">Total Volume</p>
@@ -364,11 +525,11 @@ function Admin() {
 
         <div
           className="card p-4 animate-fade-in"
-          style={{ animationDelay: "0.5s" }}
+          style={{ animationDelay: "0.6s" }}
         >
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
-              <Calendar size={20} className="text-indigo-600" />
+            <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center mr-3">
+              <TrendingUp size={20} className="text-teal-600" />
             </div>
             <div>
               <p className="text-sm text-gray-500">New This Month</p>
@@ -437,6 +598,9 @@ function Admin() {
                   Role
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Transactions
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -444,9 +608,6 @@ function Admin() {
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Joined
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
                 </th>
                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -456,17 +617,17 @@ function Admin() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredUsers.map((user) => (
                 <tr
-                  key={user.id}
+                  key={user.user_id}
                   className="hover:bg-gray-50 transition-colors"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center mr-3 text-primary-700 font-bold">
-                        {user.name.charAt(0).toUpperCase()}
+                        {user.full_name.charAt(0).toUpperCase()}
                       </div>
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {user.name}
+                          {user.full_name}
                         </div>
                         <div className="text-sm text-gray-500">
                           {user.email}
@@ -477,12 +638,25 @@ function Admin() {
                   <td className="px-6 py-4">
                     <span
                       className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.role === "super_admin"
+                        user.user_role === "super_admin"
                           ? "bg-purple-100 text-purple-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {user.role === "super_admin" ? "Super Admin" : "User"}
+                      {user.user_role === "super_admin"
+                        ? "Super Admin"
+                        : "User"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        user.user_status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {user.user_status}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
@@ -494,20 +668,8 @@ function Admin() {
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {format(parseISO(user.created_at), "MMM d, yyyy")}
                   </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {user.status}
-                    </span>
-                  </td>
                   <td className="px-6 py-4 text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
-                      {/* User details */}
                       <button
                         onClick={() => viewUserDetails(user)}
                         className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
@@ -515,44 +677,85 @@ function Admin() {
                       >
                         <Eye size={16} />
                       </button>
-                      {/* Role prmote */}
-                      {user.role === "normal" ? (
+
+                      {user.user_role === "normal" ? (
                         <button
-                          onClick={() => handleUserAction(user.id, "promote")}
-                          className="text-purple-600 hover:text-purple-900 p-1 hover:bg-purple-50 rounded transition-colors"
+                          onClick={() =>
+                            handleUserAction(user.user_id, "promote")
+                          }
+                          disabled={actionLoading === `${user.user_id}-promote`}
+                          className="text-purple-600 hover:text-purple-900 p-1 hover:bg-purple-50 rounded transition-colors disabled:opacity-50"
                           title="Promote to admin"
                         >
-                          <Crown size={16} />
+                          {actionLoading === `${user.user_id}-promote` ? (
+                            <RefreshCw size={16} className="animate-spin" />
+                          ) : (
+                            <Crown size={16} />
+                          )}
                         </button>
                       ) : (
-                        user.id !== user.id && (
+                        user.user_id !== user.user_id && (
                           <button
-                            onClick={() => handleUserAction(user.id, "demote")}
-                            className="text-gray-600 hover:text-gray-900 p-1 hover:bg-gray-50 rounded transition-colors"
+                            onClick={() =>
+                              handleUserAction(user.user_id, "demote")
+                            }
+                            disabled={
+                              actionLoading === `${user.user_id}-demote`
+                            }
+                            className="text-gray-600 hover:text-gray-900 p-1 hover:bg-gray-50 rounded transition-colors disabled:opacity-50"
                             title="Demote to user"
                           >
-                            <UserCheck size={16} />
+                            {actionLoading === `${user.user_id}-demote` ? (
+                              <RefreshCw size={16} className="animate-spin" />
+                            ) : (
+                              <UserCheck size={16} />
+                            )}
                           </button>
                         )
                       )}
-                      {/* Ban unban */}
-                      {user.status === "active" ? (
+
+                      {user.user_status === "active" ? (
                         <button
-                          onClick={() => handleUserAction(user.id, "ban")}
-                          className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
+                          onClick={() => handleUserAction(user.user_id, "ban")}
+                          disabled={actionLoading === `${user.user_id}-ban`}
+                          className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
                           title="Ban user"
                         >
-                          <Ban size={16} />
+                          {actionLoading === `${user.user_id}-ban` ? (
+                            <RefreshCw size={16} className="animate-spin" />
+                          ) : (
+                            <Ban size={16} />
+                          )}
                         </button>
                       ) : (
                         <button
-                          onClick={() => handleUserAction(user.id, "unban")}
-                          className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded transition-colors"
+                          onClick={() =>
+                            handleUserAction(user.user_id, "unban")
+                          }
+                          disabled={actionLoading === `${user.user_id}-unban`}
+                          className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded transition-colors disabled:opacity-50"
                           title="Unban user"
                         >
-                          <CheckCircle size={16} />
+                          {actionLoading === `${user.user_id}-unban` ? (
+                            <RefreshCw size={16} className="animate-spin" />
+                          ) : (
+                            <CheckCircle size={16} />
+                          )}
                         </button>
                       )}
+
+                      <button
+                        onClick={() => handleUserAction(user.user_id, "delete")}
+                        disabled={actionLoading === `${user.user_id}-delete`}
+                        className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                        title="Delete user"
+                      >
+                        {actionLoading === `${user.user_id}-delete` ? (
+                          <RefreshCw size={16} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={16} />
+                        )}
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -570,7 +773,7 @@ function Admin() {
               <h2 className="text-xl font-semibold">User Details</h2>
               <button
                 onClick={() => setShowUserModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 text-2xl"
               >
                 ×
               </button>
@@ -582,7 +785,7 @@ function Admin() {
                 <div className="space-y-2 text-sm">
                   <div>
                     <span className="font-medium">Name:</span>{" "}
-                    {selectedUser.name}
+                    {selectedUser.full_name}
                   </div>
                   <div>
                     <span className="font-medium">Email:</span>{" "}
@@ -590,11 +793,11 @@ function Admin() {
                   </div>
                   <div>
                     <span className="font-medium">Role:</span>{" "}
-                    {selectedUser.role}
+                    {selectedUser.user_role}
                   </div>
                   <div>
                     <span className="font-medium">Status:</span>{" "}
-                    {selectedUser.status}
+                    {selectedUser.user_status}
                   </div>
                   <div>
                     <span className="font-medium">Joined:</span>{" "}
@@ -632,7 +835,7 @@ function Admin() {
                           selectedUser.total_amount /
                             selectedUser.total_transactions
                         )
-                      : "$0"}
+                      : formatCurrency(0)}
                   </div>
                 </div>
               </div>
