@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-case-declarations */
 import { useState } from "react";
 import * as XLSX from "xlsx";
@@ -6,6 +7,7 @@ import { saveAs } from "file-saver";
 import { useTransactions } from "../contexts/TransactionsContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
+import { Transaction } from "../lib/supabase";
 import {
   format,
   parseISO,
@@ -21,8 +23,9 @@ import {
   Tag,
   ArrowDown,
   ArrowUp,
-  Trash2,
+  Trash,
   Plus,
+  Pencil,
 } from "lucide-react";
 import StepByStepTransaction from "../components/transactions/StepByStepTransaction";
 import FloatingAddButton from "../components/transactions/FloatingAddButton";
@@ -32,11 +35,17 @@ type SortOrder = "asc" | "desc";
 
 function Transactions() {
   const { user } = useAuth();
-  const { transactions, deleteTransaction } = useTransactions();
+  const { transactions, deleteTransaction, updateTransaction } =
+    useTransactions();
   const { categories, getCategoryById } = useCategories();
 
   // State for transaction modal
   const [showAddModal, setShowAddModal] = useState(false);
+
+  //  Edit transaction modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] =
+    useState<Transaction | null>(null);
 
   // State for filters and sorting
   const [searchTerm, setSearchTerm] = useState("");
@@ -171,6 +180,34 @@ function Transactions() {
     }
   };
 
+  //  Function for edit
+  const handleEditClick = (transaction: any) => {
+    setTransactionToEdit(transaction);
+    setShowEditModal(true);
+  };
+
+  // Add this with the others
+
+  const handleSaveEdit = async (transactionToEdit: any) => {
+    if (!transactionToEdit) return;
+
+    try {
+      await updateTransaction(transactionToEdit.id, {
+        description: transactionToEdit.description,
+        amount: transactionToEdit.amount,
+        category_id: transactionToEdit.category_id,
+        created_at: transactionToEdit.created_at,
+        type: transactionToEdit.type,
+      });
+
+      setShowEditModal(false);
+      setTransactionToEdit(null);
+    } catch (err) {
+      console.error("Failed to update transaction:", err);
+      alert("Could not update transaction.");
+    }
+  };
+
   // excel shhet
   const exportToExcel = () => {
     // Format main transaction data
@@ -191,9 +228,7 @@ function Transactions() {
       .filter((txn) => txn.type === "expense")
       .reduce((sum, txn) => sum + txn.amount, 0);
 
-
     const netBalance = totalIncome - totalExpense;
-
 
     // Optional: add budget logic here if you have it
     const budget = 0; // Replace with real value if available
@@ -210,12 +245,10 @@ function Transactions() {
         Amount: totalExpense,
       },
       {
-
         Description: "Net Balance",
         Amount: netBalance,
       },
       {
-
         Description: "Remaining Budget",
         Amount: budget - totalExpense,
       }
@@ -424,6 +457,109 @@ function Transactions() {
         Export to Excel
       </button>
 
+      {showEditModal && transactionToEdit && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center transition-all duration-300">
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-lg animate-fade-in">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+              Edit Transaction
+            </h2>
+
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Description
+                </label>
+                <input
+                  type="text"
+                  value={transactionToEdit.description}
+                  onChange={(e) =>
+                    setTransactionToEdit({
+                      ...transactionToEdit,
+                      description: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. Grocery shopping"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Amount
+                </label>
+                <input
+                  type="number"
+                  value={transactionToEdit.amount}
+                  onChange={(e) =>
+                    setTransactionToEdit({
+                      ...transactionToEdit,
+                      amount: parseFloat(e.target.value),
+                    })
+                  }
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g. 150"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Category
+                </label>
+                <select
+                  value={transactionToEdit.category_id}
+                  onChange={(e) =>
+                    setTransactionToEdit({
+                      ...transactionToEdit,
+                      category_id: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={transactionToEdit.created_at.split("T")[0]}
+                  onChange={(e) =>
+                    setTransactionToEdit({
+                      ...transactionToEdit,
+                      created_at: e.target.value,
+                    })
+                  }
+                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSaveEdit(transactionToEdit)}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Transactions List */}
       <div className="card overflow-hidden animate-slide-up">
         {sortedTransactions.length === 0 ? (
@@ -579,13 +715,18 @@ function Transactions() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
                           <button
+                            onClick={() => handleEditClick(transaction)}
+                            className="btn-sm btn-outline"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
                             onClick={() =>
                               handleDeleteTransaction(transaction.id)
                             }
-                            className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors"
-                            title="Delete transaction"
+                            className="btn-sm btn-danger"
                           >
-                            <Trash2 size={16} />
+                            <Trash size={14} />
                           </button>
                         </div>
                       </td>
