@@ -64,6 +64,7 @@ function Analytics() {
           name: category?.name || "Unknown Category",
           value: data.total,
           color: category?.color || "#6B7280",
+          type: category?.type || "expense", // default to "expense" if unknown
         };
       });
   };
@@ -109,6 +110,8 @@ function Analytics() {
 
   // Prepare chart data
   const categoryData = generateCategoryData();
+  const expenseData = categoryData.filter((item) => item.type === "expense");
+  const incomeData = categoryData.filter((item) => item.type === "income");
   const dailyData = generateDailyData();
   const yearlyTrendData = generateYearlyTrend();
 
@@ -208,8 +211,8 @@ function Analytics() {
 
       {/* Category breakdown pie chart */}
       <div className="card p-6 animate-slide-up">
-        <h2 className="text-lg font-semibold mb-4">Spending by Category</h2>
-        {categoryData.length === 0 ? (
+        <h2 className="text-lg font-semibold mb-4">Expenses by Category</h2>
+        {expenseData.length === 0 ? (
           <div className="h-80 flex items-center justify-center text-gray-500">
             <p>No spending data available for this month</p>
           </div>
@@ -218,7 +221,47 @@ function Analytics() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={categoryData}
+                  data={expenseData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({ name, percent }) =>
+                    `${name} (${(percent * 100).toFixed(0)}%)`
+                  }
+                >
+                  {categoryData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.color || COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value) => formatCurrency(value as number)}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+      {/* Income category */}
+      <div className="card p-6 animate-slide-up">
+        <h2 className="text-lg font-semibold mb-4">Income by Category</h2>
+        {incomeData.length === 0 ? (
+          <div className="h-80 flex items-center justify-center text-gray-500">
+            <p>No spending data available for this month</p>
+          </div>
+        ) : (
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={incomeData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
