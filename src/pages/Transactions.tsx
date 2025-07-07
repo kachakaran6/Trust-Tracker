@@ -5,6 +5,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import pdfMake from "pdfmake/build/pdfmake";
 import * as pdfFonts from "pdfmake/build/vfs_fonts";
+import { supabase } from "../lib/supabase";
 
 pdfMake.vfs = pdfFonts.vfs;
 
@@ -16,6 +17,7 @@ import { useTransactions } from "../contexts/TransactionsContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
 import { Transaction } from "../lib/supabase";
+import { User } from "../lib/supabase";
 import {
   format,
   parseISO,
@@ -37,6 +39,7 @@ import {
 } from "lucide-react";
 import StepByStepTransaction from "../components/transactions/StepByStepTransaction";
 import FloatingAddButton from "../components/transactions/FloatingAddButton";
+// import VisualPdfExport from "../components/VisualPdfExport";
 
 type SortField = "date" | "amount" | "category";
 type SortOrder = "asc" | "desc";
@@ -310,209 +313,209 @@ function Transactions() {
     );
     const netBalance = totalIncome - totalExpense;
 
-    const docDefinition = {
-      content: [
-        {
-          columns: [
-            {
-              image: logoBase64,
-              width: 50,
-            },
-            {
-              stack: [
-                {
-                  text: "Fintica",
-                  style: "brandName",
-                },
-                {
-                  text: "Transactions Report",
-                  style: "reportTitle",
-                },
-                {
-                  text: `Generated on: ${new Date().toLocaleDateString()}`,
-                  style: "reportDate",
-                },
-              ],
-              alignment: "right",
-            },
-          ],
-          columnGap: 10,
-          margin: [0, 0, 0, 15],
-          canvas: [
-            {
-              type: "line",
-              x1: 0,
-              y1: 0,
-              x2: 515,
-              y2: 0,
-              lineWidth: 1,
-              lineColor: "#ccc",
-            },
-          ],
-        },
+    // const ranid = Math.floor(Math.random() * 1000000);
 
-        // Income Section
-        {
-          text: "Income Transactions",
-          style: "sectionHeader",
-        },
-        {
-          style: "card",
-          table: {
-            headerRows: 1,
-            widths: ["auto", "*", "auto", "*"],
-            body: [
-              [
-                { text: "Date", style: "tableHeader" },
-                { text: "Category", style: "tableHeader" },
-                { text: "Amount", style: "tableHeader" },
-                { text: "Description", style: "tableHeader" },
-              ],
-              ...incomeRows.map((row, idx) =>
-                row.map((cell) => ({
-                  text: cell,
-                  margin: [2, 4, 2, 4],
-                  fillColor: idx % 2 === 0 ? "#f5f7fa" : "#ffffff",
-                }))
-              ),
+    async function getUserEmail() {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (error || !user) {
+        console.error("Error fetching auth user:", error);
+        return "Unknown_User";
+      }
+
+      return user.email?.split("@")[0] ?? "Unknown_User";
+    }
+
+    async function main() {
+      const userName = await getUserEmail();
+
+      const docDefinition = {
+        pageMargins: [40, 60, 40, 60],
+
+        content: [
+          {
+            columns: [
+              logoBase64
+                ? { image: logoBase64, width: 60, margin: [0, 0, 20, 0] }
+                : {},
+              {
+                stack: [
+                  { text: "Fintica", style: "brandName" },
+                  { text: "Transactions Report", style: "reportTitle" },
+                  {
+                    text: `Generated on: ${new Date().toLocaleDateString()}`,
+                    style: "reportDate",
+                  },
+                ],
+                alignment: "right",
+              },
+            ],
+            columnGap: 10,
+            margin: [0, 0, 0, 20],
+            canvas: [
+              {
+                type: "line",
+                x1: 0,
+                y1: 0,
+                x2: 515,
+                y2: 0,
+                lineWidth: 1,
+                lineColor: "#ddd",
+              },
             ],
           },
-          layout: {
-            fillColor: (rowIndex: number) =>
-              rowIndex === 0 ? "#e0f2f1" : null,
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0.5,
-            hLineColor: () => "#ccc",
-            vLineColor: () => "#ccc",
-            paddingLeft: () => 8,
-            paddingRight: () => 8,
-            paddingTop: () => 6,
-            paddingBottom: () => 6,
-          },
-        },
-        {
-          text: `Total Income: ${formatCurrency(totalIncome)}`,
-          style: "highlightBox",
-        },
 
-        // Expense Section
-        {
-          text: "Expense Transactions",
-          style: "sectionHeader",
-          margin: [0, 20, 0, 8],
-        },
-        {
-          style: "card",
-          table: {
-            headerRows: 1,
-            widths: ["auto", "*", "auto", "*"],
-            body: [
-              [
-                { text: "Date", style: "tableHeader" },
-                { text: "Category", style: "tableHeader" },
-                { text: "Amount", style: "tableHeader" },
-                { text: "Description", style: "tableHeader" },
+          { text: "Income Transactions", style: "sectionHeader" },
+          {
+            style: "card",
+            table: {
+              headerRows: 1,
+              widths: ["auto", "*", "auto", "*"],
+              body: [
+                [
+                  { text: "Date", style: "tableHeader" },
+                  { text: "Category", style: "tableHeader" },
+                  { text: "Amount", style: "tableHeader" },
+                  { text: "Description", style: "tableHeader" },
+                ],
+                ...incomeRows.map((row, idx) =>
+                  row.map((cell) => ({
+                    text: cell,
+                    margin: [4, 6, 4, 6],
+                    fillColor: idx % 2 === 0 ? "#e3f2fd" : "#ffffff",
+                  }))
+                ),
               ],
-              ...expenseRows.map((row, idx) =>
-                row.map((cell) => ({
-                  text: cell,
-                  margin: [2, 4, 2, 4],
-                  fillColor: idx % 2 === 0 ? "#fdfefe" : "#ffffff",
-                }))
-              ),
-            ],
+            },
+            layout: {
+              fillColor: (rowIndex: number) =>
+                rowIndex === 0 ? "#bbdefb" : null,
+              hLineWidth: () => 0.6,
+              vLineWidth: () => 0.6,
+              hLineColor: () => "#90caf9",
+              vLineColor: () => "#90caf9",
+              paddingLeft: () => 12,
+              paddingRight: () => 12,
+              paddingTop: () => 8,
+              paddingBottom: () => 8,
+            },
           },
-          layout: {
-            fillColor: (rowIndex) => (rowIndex === 0 ? "#fff3e0" : null),
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0.5,
-            hLineColor: () => "#ccc",
-            vLineColor: () => "#ccc",
-            paddingLeft: () => 8,
-            paddingRight: () => 8,
-            paddingTop: () => 6,
-            paddingBottom: () => 6,
+          {
+            text: `Total Income: ${formatCurrency(totalIncome)}`,
+            style: "highlightBox",
           },
-        },
-        {
-          text: `Total Expense: ${formatCurrency(totalExpense)}`,
-          style: "highlightBox",
+
+          {
+            text: "Expense Transactions",
+            style: "sectionHeader",
+            margin: [0, 30, 0, 10],
+          },
+          {
+            style: "card",
+            table: {
+              headerRows: 1,
+              widths: ["auto", "*", "auto", "*"],
+              body: [
+                [
+                  { text: "Date", style: "tableHeader" },
+                  { text: "Category", style: "tableHeader" },
+                  { text: "Amount", style: "tableHeader" },
+                  { text: "Description", style: "tableHeader" },
+                ],
+                ...expenseRows.map((row, idx) =>
+                  row.map((cell) => ({
+                    text: cell,
+                    margin: [4, 6, 4, 6],
+                    fillColor: idx % 2 === 0 ? "#fff3e0" : "#ffffff",
+                  }))
+                ),
+              ],
+            },
+            layout: {
+              fillColor: (rowIndex: number) =>
+                rowIndex === 0 ? "#ffe0b2" : null,
+              hLineWidth: () => 0.6,
+              vLineWidth: () => 0.6,
+              hLineColor: () => "#ffcc80",
+              vLineColor: () => "#ffcc80",
+              paddingLeft: () => 12,
+              paddingRight: () => 12,
+              paddingTop: () => 8,
+              paddingBottom: () => 8,
+            },
+          },
+          {
+            text: `Total Expense: ${formatCurrency(totalExpense)}`,
+            style: "highlightBox",
+          },
+
+          {
+            text: `Net Balance: ${formatCurrency(netBalance)}`,
+            style: netBalance >= 0 ? "successBox" : "warningBox",
+            margin: [0, 30, 0, 0],
+          },
+        ],
+
+        styles: {
+          brandName: { fontSize: 24, bold: true, color: "#0d47a1" },
+          reportTitle: {
+            fontSize: 16,
+            bold: true,
+            color: "#37474f",
+            margin: [0, 6, 0, 2],
+          },
+          reportDate: { fontSize: 11, color: "#757575", margin: [0, 0, 0, 10] },
+          sectionHeader: {
+            fontSize: 18,
+            bold: true,
+            color: "#1565c0",
+            margin: [0, 20, 0, 10],
+          },
+          tableHeader: {
+            bold: true,
+            fontSize: 12,
+            color: "#0d47a1",
+            margin: [0, 5, 0, 5],
+          },
+          card: { margin: [0, 0, 0, 15] },
+          highlightBox: {
+            fontSize: 14,
+            bold: true,
+            color: "#0d47a1",
+            decoration: "underline",
+            margin: [0, 10, 0, 10],
+          },
+          successBox: {
+            fontSize: 14,
+            bold: true,
+            color: "#2e7d32",
+            margin: [0, 20, 0, 0],
+          },
+          warningBox: {
+            fontSize: 14,
+            bold: true,
+            color: "#c62828",
+            margin: [0, 20, 0, 0],
+          },
         },
 
-        // Net Balance
-        {
-          text: `Net Balance: ${formatCurrency(netBalance)}`,
-          style: netBalance >= 0 ? "successBox" : "warningBox",
-        },
-      ],
-
-      styles: {
-        brandName: {
-          fontSize: 18,
-          bold: true,
-          color: "#0d47a1",
-        },
-        reportTitle: {
-          fontSize: 14,
-          color: "#37474f",
-          bold: true,
-          margin: [0, 2, 0, 0],
-        },
-        reportDate: {
-          fontSize: 10,
-          color: "#757575",
-          margin: [0, 2, 0, 0],
-        },
-        title: {
-          fontSize: 22,
-          bold: true,
-          color: "#2c3e50",
-        },
-        sectionHeader: {
-          fontSize: 16,
-          bold: true,
-          color: "#37474f",
-          margin: [0, 20, 0, 10],
-        },
-        tableHeader: {
-          bold: true,
+        defaultStyle: {
           fontSize: 11,
-          color: "#37474f",
-          margin: [2, 4, 2, 4],
+          color: "#333",
         },
-        card: {
-          margin: [0, 0, 0, 10],
-        },
-        highlightBox: {
-          margin: [0, 10, 0, 0],
-          fontSize: 12,
-          color: "#0d47a1",
-          bold: true,
-          decoration: "underline",
-        },
-        successBox: {
-          margin: [0, 12, 0, 0],
-          fontSize: 12,
-          bold: true,
-          color: "#2e7d32", // Green
-        },
-        warningBox: {
-          margin: [0, 12, 0, 0],
-          fontSize: 12,
-          bold: true,
-          color: "#c62828", // Red
-        },
-      },
+      };
 
-      defaultStyle: {
-        fontSize: 10,
-        color: "#333",
-      },
-    };
+      pdfMake
+        .createPdf(docDefinition)
+        .download(
+          `Fintica_Transactions_Report of ${userName} as on ${new Date().toLocaleString()}.pdf`
+        );
+    }
 
-    pdfMake
-      .createPdf(docDefinition)
-      .download("Fintica_Transactions_Report.pdf");
+    main();
   };
 
   // const handleExport = (type) => {
@@ -742,8 +745,6 @@ function Transactions() {
               >
                 Export to Excel
               </button>
-
-              {/* Optional: keep old PDF export button if you want */}
               <button
                 onClick={() =>
                   generateTransactionPDF(sortedTransactions, getCategoryName)
@@ -753,6 +754,13 @@ function Transactions() {
                 Export to PDF
               </button>
             </div>
+            {/* <VisualPdfExport
+              totalIncome={totalIncome}
+              totalExpense={totalExpense}
+              filteredTransactions={filteredTransactions}
+              formatCurrency={formatCurrency}
+              getCategoryName={getCategoryName}
+            /> */}
           </div>
         )}
       </div>
