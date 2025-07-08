@@ -134,7 +134,9 @@ const TransactionsPDFReport: React.FC<TransactionsPDFReportProps> = ({
               <span className="block">Account Holder</span>
             </h3>
           </div>
-          <p className="text-neutral-700">{user?.full_name || "User"}</p>
+          <p className="text-neutral-700">
+            {user?.name || user?.displayName || "User"}
+          </p>
           <p className="text-sm text-neutral-500">{user?.email}</p>
         </div>
         <div className="bg-neutral-50 p-4 rounded-lg">
