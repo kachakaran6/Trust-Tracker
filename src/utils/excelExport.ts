@@ -245,12 +245,12 @@ export const exportTransactionsToExcel = ({
               new Date(
                 Math.min(...transactions.map((t) => new Date(t.date).getTime()))
               ),
-              "dd/MM/yyyy"
+              "dd/MM/yyyy, hh:mm:ss a"
             )} to ${format(
               new Date(
                 Math.max(...transactions.map((t) => new Date(t.date).getTime()))
               ),
-              "dd/MM/yyyy"
+              "dd/MM/yyyy, hh:mm:ss a"
             )}`
           : "No transactions",
     },
@@ -267,7 +267,7 @@ export const exportTransactionsToExcel = ({
   // Generate filename
   const defaultFilename = `financial-report-${format(
     new Date(),
-    "yyyy-MM-dd, hh:mm:ss A"
+    "yyyy-MM-dd, hh:mm:ss a"
   )}.xlsx`;
   const finalFilename = filename || defaultFilename;
 
@@ -294,7 +294,7 @@ export const exportSimpleTransactionsToExcel = (
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .map((transaction, index) => ({
       "S.No": index + 1,
-      Date: format(new Date(transaction.date), "dd/MM/yyyy"),
+      Date: format(new Date(transaction.date), "dd/MM/yyyy, hh:mm:ss a"),
       Description: transaction.description,
       Category: getCategoryName(transaction.category_id),
       Type:
@@ -318,7 +318,7 @@ export const exportSimpleTransactionsToExcel = (
 
   const defaultFilename = `transactions-${format(
     new Date(),
-    "yyyy-MM-dd"
+    "yyyy-MM-dd, hh:mm:ss a"
   )}.xlsx`;
   const finalFilename = filename || defaultFilename;
 
