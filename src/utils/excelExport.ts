@@ -267,7 +267,7 @@ export const exportTransactionsToExcel = ({
   // Generate filename
   const defaultFilename = `financial-report-${format(
     new Date(),
-    "yyyy-MM-dd"
+    "yyyy-MM-dd, hh:mm:ss A"
   )}.xlsx`;
   const finalFilename = filename || defaultFilename;
 
