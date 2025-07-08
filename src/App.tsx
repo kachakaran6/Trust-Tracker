@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import Predictions from "./pages/Predictions";
 import Admin from "./pages/Admin";
 import AuthCallback from "./pages/AuthCallback";
+import Preview from "./pages/Preview";
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
                     <Route path="/predictions" element={<Predictions />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/admin" element={<Admin />} />
+                    <Route path="/preview" element={<Preview />} />
                   </Route>
 
                   {/* Default redirect */}
