@@ -23,6 +23,7 @@ import Predictions from "./pages/Predictions";
 import Admin from "./pages/Admin";
 import AuthCallback from "./pages/AuthCallback";
 import Preview from "./pages/Preview";
+import UpdatePassword from "./pages/UpdatePassword";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/update-password" element={<UpdatePassword />} />
 
                   {/* Protected routes */}
                   <Route element={<ProtectedRoute />}>

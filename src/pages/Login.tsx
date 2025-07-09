@@ -65,6 +65,23 @@ function Login() {
     console.log("Redirecting to:", import.meta.env.VITE_APP_URL);
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    const email = prompt("Enter your email to reset password:");
+
+    if (!email) return;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "https://fintica.vercel.app/update-password",
+    });
+
+    if (error) {
+      alert("Error sending reset email: " + error.message);
+    } else {
+      alert("Reset email sent! Check your inbox.");
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E3F2FD] via-[#4d88c2] to-[#e19ec0] px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background visual effects */}
@@ -164,6 +181,7 @@ function Login() {
 
             <a
               href="#"
+              onClick={handleForgotPassword}
               className="text-primary-600 hover:text-primary-500 hover:underline"
             >
               Forgot password?
