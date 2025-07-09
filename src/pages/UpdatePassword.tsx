@@ -13,11 +13,18 @@ const UpdatePassword = () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
+
       if (!session) {
-        navigate("/login"); // If no token/auth session, redirect
-      } else {
-        setSessionChecked(true);
+        // Try to use token from URL
+        const { error } = await supabase.auth.refreshSession();
+        if (error) {
+          console.error("Error refreshing session:", error.message);
+          navigate("/login"); // Fallback
+          return;
+        }
       }
+
+      setSessionChecked(true);
     };
 
     checkSession();
@@ -28,14 +35,15 @@ const UpdatePassword = () => {
     setLoading(true);
 
     const { error } = await supabase.auth.updateUser({ password });
+
+    setLoading(false);
+
     if (error) {
       alert(error.message);
     } else {
       alert("Password updated successfully!");
       navigate("/login");
     }
-
-    setLoading(false);
   };
 
   if (!sessionChecked) return <p>Loading...</p>;
