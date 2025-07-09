@@ -5,6 +5,7 @@ import { useBudget } from "../contexts/BudgetContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
 import { format, parseISO, subMonths } from "date-fns";
+import CountUp from "react-countup";
 import {
   LineChart,
   Line,
@@ -139,7 +140,13 @@ function Dashboard() {
             <div>
               <p className="text-sm text-gray-500 mb-1">Income</p>
               <p className="text-2xl font-bold">
-                {formatCurrency(currentMonthSummary.totalIncome)}
+                <CountUp
+                  end={currentMonthSummary.totalIncome}
+                  duration={1.25}
+                  formattingFn={(val) => formatCurrency(val)}
+                  separator=","
+                  decimals={2}
+                />
               </p>
             </div>
             <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
@@ -157,7 +164,13 @@ function Dashboard() {
             <div>
               <p className="text-sm text-gray-500 mb-1">Expenses</p>
               <p className="text-2xl font-bold">
-                {formatCurrency(currentMonthSummary.totalExpense)}
+                <CountUp
+                  end={currentMonthSummary.totalExpense}
+                  duration={1.25}
+                  formattingFn={(val) => formatCurrency(val)}
+                  separator=","
+                  decimals={2}
+                />
               </p>
             </div>
             <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
@@ -175,7 +188,13 @@ function Dashboard() {
             <div>
               <p className="text-sm text-gray-500 mb-1">Balance</p>
               <p className="text-2xl font-bold">
-                {formatCurrency(currentMonthSummary.balance)}
+                <CountUp
+                  end={currentMonthSummary.balance}
+                  duration={1.25}
+                  formattingFn={(val) => formatCurrency(val)}
+                  separator=","
+                  decimals={2}
+                />
               </p>
             </div>
             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
