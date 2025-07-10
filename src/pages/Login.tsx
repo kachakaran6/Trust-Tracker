@@ -131,17 +131,23 @@ function Login() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: redirectUrl, // <- you can choose a safe landing page
+          redirectTo: redirectUrl,
         },
       });
+
       if (error) {
         setError("Google sign-in failed");
         console.error("OAuth error:", error.message);
+        toast.error(error.message || "OAuth error");
+      } else {
+        toast.success("Redirecting to Google...");
       }
-    } catch (err) {
+    } catch (err: any) {
       setError("Google login error");
       console.error("Google login failed:", err);
+      toast.error(err.message || "Google login failed");
     }
+
     console.log("Redirecting to:", import.meta.env.VITE_APP_URL);
   };
 
