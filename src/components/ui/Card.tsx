@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 
 interface CardProps {
-  variant?: "default" | "glass";
+  variant?: "default" | "glass" | "gradient";
   title?: string;
   subtitle?: string;
   icon?: React.ReactNode;
@@ -24,24 +24,45 @@ const Card: React.FC<CardProps> = ({
   hoverEffect = false,
   isLoading = false,
 }) => {
-  const baseClasses =
-    "rounded-lg overflow-hidden p-6 transition-all duration-300 shadow-lg";
-  const variantClasses = {
-    default: "bg-white border border-white/80 shadow-sm shadow-white/20",
+  // const baseClasses =
+  //   "rounded-lg overflow-hidden p-6 transition-all duration-300 shadow-lg";
+  // const variantClasses = {
+  //   default: "bg-white border border-white/80 shadow-sm shadow-white/20",
 
-    glass:
-      "bg-white/70 backdrop-blur-md border border-white/50 shadow-md shadow-white/30",
+  //   glass:
+  //     "bg-white/70 backdrop-blur-md border border-white/50 shadow-md shadow-white/30",
+  // };
+
+  // const classes = `${baseClasses} ${variantClasses[variant]} ${
+  //   hoverEffect
+  //     ? "cursor-pointer hover:shadow-xl dark:hover:shadow-xl transform hover:-translate-y-1"
+  //     : ""
+  // } ${className}`;
+
+  const getCardStyles = () => {
+    const baseStyles =
+      "rounded-2xl overflow-hidden p-6 transition-all duration-300";
+
+    switch (variant) {
+      case "glass":
+        return `${baseStyles} bg-white/70 backdrop-blur-lg backdrop-blur-xl border-2 border-white/20 shadow-lg shadow-white/30`;
+      // glass-card backdrop-blur-lg  backdrop-blur-xl border-2 border-white/20"
+      case "gradient":
+        return `${baseStyles} gradient-border bg-white`;
+      default:
+        return `${baseStyles} bg-white border border-white/80 shadow-sm shadow-white/20`;
+    }
   };
 
-  const classes = `${baseClasses} ${variantClasses[variant]} ${
+  const cardStyles = `${getCardStyles()} ${
     hoverEffect
-      ? "cursor-pointer hover:shadow-xl dark:hover:shadow-xl transform hover:-translate-y-1"
+      ? "hover:shadow-card-hover dark:hover:shadow-card-hover-dark transform hover:-translate-y-1"
       : ""
   } ${className}`;
 
   return (
     <motion.div
-      className={classes}
+      className={cardStyles}
       onClick={onClick}
       whileHover={
         hoverEffect ? { y: -4, boxShadow: "0 15px 30px rgba(0,0,0,0.15)" } : {}
@@ -52,7 +73,7 @@ const Card: React.FC<CardProps> = ({
       transition={{ duration: 0.3 }}
     >
       {isLoading ? (
-        <div className="animate-pulse space-y-4">
+        <div className="flex flex-col space-y-4 animate-pulse">
           <div className="h-6 bg-neutral-200  rounded w-3/4"></div>
           <div className="h-4 bg-neutral-200  rounded w-1/2"></div>
           <div className="h-24 bg-neutral-200  rounded"></div>

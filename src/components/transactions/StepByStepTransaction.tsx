@@ -3,15 +3,21 @@ import { useTransactions } from "../../contexts/TransactionsContext";
 import { useCategories } from "../../contexts/CategoriesContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { format } from "date-fns";
+import Button from "../ui/Button";
+import Card from "../ui/Card";
+import { motion, AnimatePresence } from "framer-motion";
+
 import {
   X,
-  ArrowRight,
-  ArrowLeft,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
+  // ArrowRight,
+  // ArrowLeft,
+  // TrendingUp,
+  // TrendingDown,
+  ArrowUpRight,
+  ArrowDownRight,
+  // DollarSign,
   FileText,
-  Tag,
+  // Tag,
   Calendar,
   Check,
   Zap,
@@ -33,6 +39,20 @@ function StepByStepTransaction({
     minimumFractionDigits: 0,
   });
 
+  const getCurrencySymbol = (currency: string): string => {
+    return (0)
+      .toLocaleString(undefined, {
+        style: "currency",
+        currency,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })
+      .replace(/\d/g, "")
+      .trim(); // removes digits, keeps symbol
+  };
+
+  const currencySymbol = getCurrencySymbol(user?.currency || "USD");
+
   // const currencySymbol = user?.currency || "$";
   const { addTransaction } = useTransactions();
   const { categories } = useCategories();
@@ -40,6 +60,7 @@ function StepByStepTransaction({
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isModalOpen, setModalOpen] = useState(true);
 
   const [formData, setFormData] = useState({
     type: "" as "income" | "expense" | "",
@@ -63,6 +84,24 @@ function StepByStepTransaction({
       "Gift",
       "Side Hustle",
     ],
+  };
+
+  const resetForm = () => {
+    setFormData({
+      type: "expense",
+      category_id: "",
+      amount: "",
+      description: "",
+      date: format(new Date(), "yyyy-MM-dd"),
+    });
+    setCurrentStep(1);
+    setShowSuccess(false);
+  };
+
+  const handleClose = () => {
+    // isOpen(false);
+    setModalOpen(false);
+    setTimeout(resetForm, 300);
   };
 
   const handleSubmit = async () => {
@@ -107,34 +146,34 @@ function StepByStepTransaction({
     }
   };
 
-  const nextStep = () => {
-    if (currentStep < 4) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      handleSubmit();
-    }
-  };
+  // const nextStep = () => {
+  //   if (currentStep < 4) {
+  //     setCurrentStep(currentStep + 1);
+  //   } else {
+  //     handleSubmit();
+  //   }
+  // };
 
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
+  // const prevStep = () => {
+  //   if (currentStep > 1) {
+  //     setCurrentStep(currentStep - 1);
+  //   }
+  // };
 
-  const canProceed = () => {
-    switch (currentStep) {
-      case 1:
-        return formData.type !== "";
-      case 2:
-        return formData.amount !== "" && parseFloat(formData.amount) > 0;
-      case 3:
-        return formData.category_id !== "";
-      case 4:
-        return formData.description !== "";
-      default:
-        return false;
-    }
-  };
+  // const canProceed = () => {
+  //   switch (currentStep) {
+  //     case 1:
+  //       return formData.type !== "";
+  //     case 2:
+  //       return formData.amount !== "" && parseFloat(formData.amount) > 0;
+  //     case 3:
+  //       return formData.category_id !== "";
+  //     case 4:
+  //       return formData.description !== "";
+  //     default:
+  //       return false;
+  //   }
+  // };
 
   const filteredCategories = categories.filter(
     (cat) => cat.type === formData.type
@@ -143,347 +182,417 @@ function StepByStepTransaction({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-slide-up">
-        {showSuccess ? (
-          <div className="text-center p-8 animate-fade-in">
-            <div className="w-16 h-16 rounded-full bg-success-100 flex items-center justify-center mx-auto mb-4">
-              <Check size={32} className="text-success-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Success!</h3>
-            <p className="text-gray-600">
-              Your transaction has been added successfully.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <div className="flex items-center">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-                  <Zap size={20} className="text-blue-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Quick Add</h2>
-                  <p className="text-sm text-gray-500">
-                    Step {currentStep} of 4
+    // <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    // <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-slide-up">
+    <AnimatePresence>
+      {isModalOpen && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={handleClose}
+        >
+          <motion.div
+            className="w-full max-w-md"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Card
+              variant="glass"
+              className="backdrop-blur-xl border-2 border-white/20"
+            >
+              {showSuccess ? (
+                <div className="p-8 text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                  >
+                    <Check size={32} className="text-success-600" />
+                  </motion.div>
+                  <h3 className="text-xl font-semibold text-neutral-800 mb-2">
+                    Transaction Added!
+                  </h3>
+                  <p className="text-neutral-600">
+                    Your transaction has been successfully recorded.
                   </p>
                 </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X size={20} className="text-gray-500" />
-              </button>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="px-6 py-4 bg-gray-50">
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
-                  style={{ width: `${(currentStep / 4) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Step Content */}
-            <div className="p-6 min-h-[300px] flex flex-col">
-              {/* Step 1: Transaction Type */}
-              {currentStep === 1 && (
-                <div className="flex-1 flex flex-col animate-fade-in">
-                  <div className="text-center mb-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
-                      Transaction Type
-                    </h3>
-                    <p className="text-gray-600">
-                      Choose whether this is money coming in or going out
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      onClick={() =>
-                        setFormData((prev) => ({ ...prev, type: "income" }))
-                      }
-                      className={`aspect-square p-4 rounded-xl border-2 transition-all duration-200 flex flex-col justify-center items-center ${
-                        formData.type === "income"
-                          ? "border-green-300 bg-green-50 shadow-md"
-                          : "border-gray-200 hover:border-green-200 hover:bg-green-25"
-                      }`}
-                    >
-                      <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${
-                          formData.type === "income"
-                            ? "bg-green-100"
-                            : "bg-gray-100"
-                        }`}
-                      >
-                        <TrendingUp
-                          size={24}
-                          className={
-                            formData.type === "income"
-                              ? "text-green-600"
-                              : "text-gray-500"
-                          }
-                        />
+              ) : (
+                <div className="p-6">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center mr-3">
+                        <Zap size={20} className="text-primary-600" />
                       </div>
-                      <h4 className="font-semibold text-gray-900">Income</h4>
-                      <p className="text-xs text-gray-600">
-                        Money you received
-                      </p>
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        setFormData((prev) => ({ ...prev, type: "expense" }))
-                      }
-                      className={`aspect-square p-4 rounded-xl border-2 transition-all duration-200 flex flex-col justify-center items-center ${
-                        formData.type === "expense"
-                          ? "border-red-300 bg-red-50 shadow-md"
-                          : "border-gray-200 hover:border-red-200 hover:bg-red-25"
-                      }`}
-                    >
-                      <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${
-                          formData.type === "expense"
-                            ? "bg-red-100"
-                            : "bg-gray-100"
-                        }`}
-                      >
-                        <TrendingDown
-                          size={24}
-                          className={
-                            formData.type === "expense"
-                              ? "text-red-600"
-                              : "text-gray-500"
-                          }
-                        />
+                      <div>
+                        <h3 className="text-lg font-semibold text-neutral-800">
+                          Quick Add
+                        </h3>
+                        <p className="text-sm text-neutral-500">
+                          Step {currentStep} of 4
+                        </p>
                       </div>
-                      <h4 className="font-semibold text-gray-900">Expense</h4>
-                      <p className="text-xs text-gray-600">Money you spent</p>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Amount */}
-              {currentStep === 2 && (
-                <div className="flex-1 flex flex-col animate-fade-in">
-                  <div className="text-center mb-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
-                      Amount
-                    </h3>
-                    <p className="text-gray-600">
-                      Enter the amount for this {formData.type}
-                    </p>
-                  </div>
-
-                  <div className="flex-1 flex flex-col justify-center">
-                    <div className="relative mb-4">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <DollarSign size={24} className="text-gray-400" />
-                      </div>
-                      <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        className="w-full pl-12 pr-4 py-4 text-2xl font-bold border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-center"
-                        placeholder="0.00"
-                        value={formData.amount}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            amount: e.target.value,
-                          }))
-                        }
-                        autoFocus
-                      />
                     </div>
-
-                    <div className="grid grid-cols-3 gap-2">
-                      {quickAmounts.map((amount) => (
-                        <button
-                          key={amount}
-                          type="button"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              amount: amount.toString(),
-                            }))
-                          }
-                          className="py-2 px-3 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                        >
-                          {currencyFormatter.format(amount)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Category */}
-              {currentStep === 3 && (
-                <div className="flex-1 flex flex-col animate-fade-in">
-                  <div className="text-center mb-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
-                      Category
-                    </h3>
-                    <p className="text-gray-600">
-                      Choose a category for this transaction
-                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<X size={20} />}
+                      onClick={onClose}
+                      className="text-neutral-400 hover:text-neutral-600"
+                      children={undefined}
+                    />
                   </div>
 
-                  <div className="flex-1 flex flex-col justify-center">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Tag size={20} className="text-gray-400" />
-                      </div>
-                      <select
-                        className="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white"
-                        value={formData.category_id}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            category_id: e.target.value,
-                          }))
-                        }
-                        autoFocus
+                  {/* Progress Bar */}
+                  <div className="w-full bg-neutral-200 rounded-full h-2 mb-6">
+                    <motion.div
+                      className="bg-gradient-to-r from-primary-600 to-primary-700 h-2 rounded-full"
+                      initial={{ width: "25%" }}
+                      animate={{ width: `${(currentStep / 4) * 100}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+
+                  {/* Step Content */}
+                  <AnimatePresence mode="wait">
+                    {/* <div className="p-6 min-h-[300px] flex flex-col"> */}
+                    {/* Step 1: Transaction Type */}
+                    {currentStep === 1 && (
+                      <motion.div
+                        key="step1"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4"
                       >
-                        <option value="">Select a category</option>
-                        {filteredCategories.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 4: Description & Date */}
-              {currentStep === 4 && (
-                <div className="flex-1 flex flex-col animate-fade-in">
-                  <div className="text-center mb-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
-                      Description & Date
-                    </h3>
-                    <p className="text-gray-600">
-                      Add details to remember this transaction
-                    </p>
-                  </div>
-
-                  <div className="flex-1 flex flex-col justify-center space-y-4">
-                    <div>
-                      <div className="relative mb-3">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <FileText size={20} className="text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          className="w-full pl-12 pr-4 py-3 text-lg border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                          placeholder="e.g., Grocery shopping"
-                          value={formData.description}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              description: e.target.value,
-                            }))
-                          }
-                          autoFocus
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        {(formData.type
-                          ? commonDescriptions[formData.type]
-                          : []
-                        )
-                          .slice(0, 4)
-                          .map((desc) => (
+                        <h4 className="font-medium text-neutral-800 mb-4">
+                          Transaction Type
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            {
+                              type: "income",
+                              icon: ArrowUpRight,
+                              label: "Income",
+                              color: "success",
+                            },
+                            {
+                              type: "expense",
+                              icon: ArrowDownRight,
+                              label: "Expense",
+                              color: "danger",
+                            },
+                          ].map(({ type, icon: Icon, label, color }) => (
                             <button
-                              key={desc}
-                              type="button"
-                              onClick={() =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  description: desc,
-                                }))
-                              }
-                              className="py-2 px-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left"
+                              key={type}
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  type: type as "income" | "expense",
+                                  category_id: "",
+                                });
+                                setCurrentStep(2);
+                              }}
+                              className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                                formData.type === type
+                                  ? `border-${color}-300 bg-${color}-50`
+                                  : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
+                              }`}
                             >
-                              {desc}
+                              <Icon
+                                size={24}
+                                className={`mx-auto mb-2 text-${color}-600`}
+                              />
+                              <p className="font-medium text-neutral-800">
+                                {label}
+                              </p>
                             </button>
                           ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <Calendar size={20} className="text-gray-400" />
                         </div>
-                        <input
-                          type="date"
-                          className="w-full pl-12 pr-4 py-3 text-lg border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                          value={formData.date}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              date: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
+                      </motion.div>
+                    )}
+
+                    {/* Step 2: Category */}
+                    {currentStep === 2 && (
+                      <motion.div
+                        key="step2"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-neutral-800">
+                            Select Category
+                          </h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCurrentStep(1)}
+                            className="text-neutral-500"
+                          >
+                            Back
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                          {filteredCategories.map((category) => (
+                            <button
+                              key={category.id}
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  category_id: category.id,
+                                });
+                                setCurrentStep(3);
+                              }}
+                              className={`p-3 rounded-lg border transition-all duration-200 text-left ${
+                                formData.category_id === category.id
+                                  ? "border-primary-300 bg-primary-50"
+                                  : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
+                              }`}
+                            >
+                              <div className="flex items-center">
+                                <span
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center text-sm mr-2"
+                                  style={{
+                                    backgroundColor: category.color + "20",
+                                    color: category.color,
+                                  }}
+                                >
+                                  {category.icon}
+                                </span>
+                                <span className="font-medium text-sm text-neutral-800">
+                                  {category.name}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Step 3: Amount */}
+                    {currentStep === 3 && (
+                      <motion.div
+                        key="step3"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-neutral-800">
+                            Amount
+                          </h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCurrentStep(2)}
+                            className="text-neutral-500"
+                          >
+                            Back
+                          </Button>
+                        </div>
+
+                        {/* Quick Amount Buttons */}
+                        <div className="grid grid-cols-3 gap-2 mb-4">
+                          {quickAmounts.map((amount) => (
+                            <button
+                              key={amount}
+                              onClick={() =>
+                                setFormData({
+                                  ...formData,
+                                  amount: amount.toString(),
+                                })
+                              }
+                              className="p-2 text-sm rounded-lg border border-neutral-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-200"
+                            >
+                              {currencyFormatter.format(amount)}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Custom Amount Input */}
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 text-sm">
+                            {currencySymbol}
+                          </span>
+
+                          <input
+                            type="number"
+                            value={formData.amount}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                amount: e.target.value,
+                              })
+                            }
+                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+                            placeholder="Enter amount"
+                            min="0.01"
+                            step="0.01"
+                          />
+                        </div>
+
+                        <Button
+                          variant="primary"
+                          onClick={() => setCurrentStep(4)}
+                          disabled={!formData.amount}
+                          className="w-full"
+                        >
+                          Continue
+                        </Button>
+                      </motion.div>
+                    )}
+
+                    {/* Step 4: Description & Date */}
+                    {currentStep === 4 && (
+                      <motion.div
+                        key="step4"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        className="space-y-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-neutral-800">
+                            Final Details
+                          </h4>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setCurrentStep(3)}
+                            className="text-neutral-500"
+                          >
+                            Back
+                          </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="relative">
+                            <FileText
+                              size={20}
+                              className="absolute left-3 top-3 text-neutral-400"
+                            />
+                            <input
+                              type="text"
+                              value={formData.description}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  description: e.target.value,
+                                })
+                              }
+                              className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+                              placeholder="Description (optional)"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            {(formData.type
+                              ? commonDescriptions[formData.type]
+                              : []
+                            )
+                              .slice(0, 4)
+                              .map((desc) => (
+                                <button
+                                  key={desc}
+                                  type="button"
+                                  onClick={() =>
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      description: desc,
+                                    }))
+                                  }
+                                  className="py-2 px-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left"
+                                >
+                                  {desc}
+                                </button>
+                              ))}
+                          </div>
+
+                          <div className="relative">
+                            <Calendar
+                              size={20}
+                              className="absolute left-3 top-3 text-neutral-400"
+                            />
+                            <input
+                              type="date"
+                              value={formData.date}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  date: e.target.value,
+                                })
+                              }
+                              className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+                            />
+                          </div>
+
+                          {/* Summary */}
+                          <div className="bg-neutral-50 rounded-xl p-4">
+                            <h5 className="font-medium text-neutral-800 mb-2">
+                              Summary
+                            </h5>
+                            <div className="space-y-1 text-sm text-neutral-600">
+                              <div className="flex justify-between">
+                                <span>Type:</span>
+                                <span className="capitalize">
+                                  {formData.type}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Category:</span>
+                                <span>
+                                  {
+                                    categories.find(
+                                      (c) => c.id === formData.category_id
+                                    )?.name
+                                  }
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Amount:</span>
+                                <span className="font-medium">
+                                  {/* ₹{formData.amount} */}
+                                  {currencyFormatter.format(
+                                    Number(formData.amount)
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <Button
+                            variant="gradient"
+                            onClick={handleSubmit}
+                            isLoading={isSubmitting}
+                            className="w-full"
+                            icon={<Check size={16} />}
+                          >
+                            {isSubmitting
+                              ? "Adding Transaction..."
+                              : "Add Transaction"}
+                          </Button>
+                        </div>
+                      </motion.div>
+                    )}
+                    {/* </div> */}
+                  </AnimatePresence>
                 </div>
               )}
-            </div>
+            </Card>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
 
-            {/* Navigation Buttons */}
-            <div className="p-6 border-t border-gray-100 bg-gray-50">
-              <div className="flex gap-3">
-                {currentStep > 1 && (
-                  <button
-                    onClick={prevStep}
-                    className="flex-1 py-3 px-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center"
-                  >
-                    <ArrowLeft size={18} className="mr-2" />
-                    Back
-                  </button>
-                )}
-
-                <button
-                  onClick={nextStep}
-                  disabled={!canProceed() || isSubmitting}
-                  className="flex-1 py-3 px-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Adding...
-                    </>
-                  ) : currentStep === 4 ? (
-                    <>
-                      <Check size={18} className="mr-2" />
-                      Add Transaction
-                    </>
-                  ) : (
-                    <>
-                      Next
-                      <ArrowRight size={18} className="ml-2" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+    // </div>
+    // </div>
   );
 }
 
