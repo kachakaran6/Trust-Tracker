@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { toast } from "react-hot-toast";
+import { Toaster } from "sonner";
 
 function Register() {
   const { register, isAuthenticated, isLoading } = useAuth();
@@ -12,6 +15,87 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showModal, setShowModal] = useState<"terms" | "privacy" | null>(null);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  // const [confirmPassword, setConfirmPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  const handleConfirmPasswordChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setConfirmPassword(value);
+
+    if (value !== password) {
+      setConfirmPasswordError("Passwords do not match");
+    } else {
+      setConfirmPasswordError("");
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+
+    if (value.includes(" ")) {
+      setPasswordError("Password cannot contain spaces");
+    } else if (value.length < 8) {
+      setPasswordError("Password must be at least 8 characters long");
+    } else {
+      setPasswordError(""); // no error
+    }
+  };
+
+  // Generate random password
+  function generateRandomPassword(length = 14) {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+    return Array.from(crypto.getRandomValues(new Uint32Array(length)))
+      .map((x) => chars[x % chars.length])
+      .join("");
+  }
+  // Insert pass for google auth user
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const user = session?.user;
+        const provider = user?.app_metadata?.provider;
+
+        // Check if Google login and user has no password
+        if (event === "SIGNED_IN" && provider === "google") {
+          const passwordAlreadySet = user?.user_metadata?.password_initialized;
+
+          if (!passwordAlreadySet) {
+            const randomPassword = generateRandomPassword();
+
+            // Set password via Supabase
+            const { error: updateError } = await supabase.auth.updateUser({
+              password: randomPassword,
+              data: {
+                password_initialized: true, // mark as handled
+              },
+            });
+
+            if (updateError) {
+              console.error(
+                "Failed to set random password:",
+                updateError.message
+              );
+            } else {
+              console.log("Random password set successfully");
+            }
+          }
+        }
+      }
+    );
+
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
 
   // Redirect if already authenticated
   if (isAuthenticated) {
@@ -22,7 +106,6 @@ function Register() {
     e.preventDefault();
     setError("");
 
-    // Validate passwords match
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -32,8 +115,21 @@ function Register() {
 
     try {
       await register(name, email, password);
-    } catch (err) {
-      setError("Error creating account");
+      toast.success(
+        "Registration successful! Please check your email to verify."
+      );
+    } catch (err: any) {
+      // Show specific toast for invalid email from Supabase
+      if (
+        err.name === "AuthApiError" &&
+        err.message?.toLowerCase().includes("invalid")
+      ) {
+        toast.error("Invalid email. Please use a valid email address.");
+      } else {
+        toast.error(err.message || "Error creating account.");
+      }
+
+      setError("Error creating account"); // optional: for inline display
     } finally {
       setIsSubmitting(false);
     }
@@ -62,6 +158,8 @@ function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E3F2FD] via-[#4d88c2] to-[#e19ec0] px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      <Toaster position="top-right" />
+
       {/* Background visual effects */}
       <div className="absolute top-[-100px] left-[-100px] w-[300px] h-[300px] bg-primary-100 rounded-full blur-3xl opacity-30 z-0" />
       <div className="absolute bottom-[-120px] right-[-100px] w-[280px] h-[280px] bg-primary-200 rounded-full blur-2xl opacity-20 z-0" />
@@ -119,7 +217,7 @@ function Register() {
                 />
               </div>
             </div>
-
+            {/* Email */}
             <div>
               <label
                 htmlFor="email-address"
@@ -127,24 +225,42 @@ function Register() {
               >
                 Email address
               </label>
-              <div className="relative mt-1">
+              <div className="relative mt-1 h-12">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail size={18} className="text-primary-400" />
+                  <Mail size={22} className="text-primary-400" />
                 </div>
+
                 <input
                   id="email-address"
                   name="email"
                   type="email"
                   autoComplete="email"
                   required
-                  className="input-field pl-10 focus:ring-2 focus:ring-primary-400 focus:border-primary-500"
+                  className={`input-field pl-10 focus:ring-2 ${
+                    emailError
+                      ? "focus:ring-red-400 focus:border-red-500"
+                      : "focus:ring-primary-400 focus:border-primary-500"
+                  }`}
                   placeholder="you@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setEmail(value);
+
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(value)) {
+                      setEmailError("Please enter a valid email address");
+                    } else {
+                      setEmailError("");
+                    }
+                  }}
                 />
+                {emailError && (
+                  <p className="text-red-500 text-xs mt-1">{emailError}</p>
+                )}
               </div>
             </div>
-
+            {/* Password */}
             <div>
               <label
                 htmlFor="password"
@@ -152,47 +268,88 @@ function Register() {
               >
                 Password
               </label>
-              <div className="relative mt-1">
+              <div className="relative mt-1 h-12">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock size={18} className="text-primary-400" />
                 </div>
+
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"} // ✅ toggle visibility
                   autoComplete="new-password"
                   required
-                  className="input-field pl-10 focus:ring-2 focus:ring-primary-400 focus:border-primary-500"
+                  className={`input-field pl-10 pr-10 h-full focus:ring-2 focus:ring-primary-400 focus:border-primary-500 ${
+                    passwordError ? "border-red-500" : ""
+                  }`}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handlePasswordChange}
                 />
+
+                {/* Eye Icon */}
+                <div
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </div>
               </div>
+
+              {passwordError && (
+                <p className="text-sm mt-1 text-red-600">{passwordError}</p>
+              )}
             </div>
 
-            <div>
+            {/* Confirm Password */}
+            <div className="mt-4">
               <label
                 htmlFor="confirm-password"
                 className="form-label text-sm font-medium text-gray-700"
               >
                 Confirm Password
               </label>
-              <div className="relative mt-1">
+              <div className="relative mt-1 h-12">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock size={18} className="text-primary-400" />
                 </div>
+
                 <input
                   id="confirm-password"
                   name="confirm-password"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
-                  className="input-field pl-10 focus:ring-2 focus:ring-primary-400 focus:border-primary-500"
+                  className={`input-field pl-10 pr-10 h-full focus:ring-2 focus:ring-primary-400 focus:border-primary-500 ${
+                    confirmPasswordError ? "border-red-500" : ""
+                  }`}
                   placeholder="••••••••"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={handleConfirmPasswordChange}
                 />
+
+                {/* Eye Icon */}
+                <div
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-gray-600"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </div>
               </div>
+
+              {confirmPasswordError && (
+                <p className="text-sm text-red-600 mt-1">
+                  {confirmPasswordError}
+                </p>
+              )}
             </div>
           </div>
 
@@ -224,17 +381,58 @@ function Register() {
 
             <p className="text-xs text-center text-gray-500">
               By creating an account, you agree to our{" "}
-              <a href="#" className="text-primary-600 hover:underline">
+              <button
+                type="button"
+                onClick={() => setShowModal("terms")}
+                className="text-primary-600 hover:underline"
+              >
                 Terms of Service
-              </a>{" "}
+              </button>{" "}
               and{" "}
-              <a href="#" className="text-primary-600 hover:underline">
+              <button
+                type="button"
+                onClick={() => setShowModal("privacy")}
+                className="text-primary-600 hover:underline"
+              >
                 Privacy Policy
-              </a>
+              </button>
             </p>
           </div>
         </form>
       </div>
+      {/* Terms and condition - Privacy Policy */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-lg animate-fade-in">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">
+              {showModal === "terms" ? "Terms of Service" : "Privacy Policy"}
+            </h2>
+            <div className="text-sm text-gray-600 max-h-64 overflow-y-auto">
+              {showModal === "terms" ? (
+                <p>
+                  These Terms of Service govern your use of our platform. By
+                  signing up, you agree to comply with all terms including
+                  responsible use, account security, and fair conduct.
+                </p>
+              ) : (
+                <p>
+                  We respect your privacy. Your data will be handled in
+                  accordance with applicable privacy laws and only used to
+                  enhance your experience.
+                </p>
+              )}
+            </div>
+            <div className="mt-6 text-right">
+              <button
+                onClick={() => setShowModal(null)}
+                className="text-primary-600 hover:underline text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

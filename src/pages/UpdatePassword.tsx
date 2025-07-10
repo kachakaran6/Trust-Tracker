@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { toast } from "react-hot-toast";
+import { Toaster } from "sonner";
 
 const UpdatePassword = () => {
   const [password, setPassword] = useState("");
@@ -30,7 +32,7 @@ const UpdatePassword = () => {
     checkSession();
   }, [navigate]);
 
-  const handleUpdate = async (e) => {
+  const handleUpdate = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     setLoading(true);
 
@@ -39,34 +41,65 @@ const UpdatePassword = () => {
     setLoading(false);
 
     if (error) {
-      alert(error.message);
+      toast.error(error.message || "Failed to update password.");
     } else {
-      alert("Password updated successfully!");
-      navigate("/login");
+      toast.success("Password updated successfully!");
+
+      // Delay navigation slightly to allow toast to display
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000); // 1 second delay
     }
   };
 
   if (!sessionChecked) return <p>Loading...</p>;
 
   return (
-    <form onSubmit={handleUpdate} className="max-w-md mx-auto mt-10">
-      <h2 className="text-xl mb-4">Set a New Password</h2>
-      <input
-        type="password"
-        required
-        placeholder="New password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full border p-2 rounded mb-4"
-      />
-      <button
-        type="submit"
-        className="bg-blue-600 text-white p-2 rounded w-full"
-        disabled={loading}
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <Toaster position="top-right" />
+      <form
+        onSubmit={handleUpdate}
+        className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8"
       >
-        {loading ? "Updating..." : "Update Password"}
-      </button>
-    </form>
+        <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+          🔒 Reset Your Password
+        </h2>
+
+        <div className="mb-4">
+          <label
+            htmlFor="new-password"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            New Password
+          </label>
+          <input
+            id="new-password"
+            type="password"
+            required
+            placeholder="Enter a strong password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className={`w-full py-2 px-4 text-white rounded-lg font-medium transition ${
+            loading
+              ? "bg-blue-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          }`}
+          disabled={loading}
+        >
+          {loading ? "Updating..." : "Update Password"}
+        </button>
+
+        <p className="text-sm text-center text-gray-500 mt-4">
+          You’ll be redirected to login after updating.
+        </p>
+      </form>
+    </div>
   );
 };
 

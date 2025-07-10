@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Lock, Mail } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { toast } from "react-hot-toast";
+import { Toaster } from "sonner";
 
 function Login() {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -11,7 +14,73 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+
+  // Generate random password
+  function generateRandomPassword(length = 14) {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+    return Array.from(crypto.getRandomValues(new Uint32Array(length)))
+      .map((x) => chars[x % chars.length])
+      .join("");
+  }
+  // Insert random password in db
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const user = session?.user;
+        const provider = user?.app_metadata?.provider;
+
+        // Check if Google login and user has no password
+        if (event === "SIGNED_IN" && provider === "google") {
+          const passwordAlreadySet = user?.user_metadata?.password_initialized;
+
+          if (!passwordAlreadySet) {
+            const randomPassword = generateRandomPassword();
+
+            // Set password via Supabase
+            const { error: updateError } = await supabase.auth.updateUser({
+              password: randomPassword,
+              data: {
+                password_initialized: true, // mark as handled
+              },
+            });
+
+            if (updateError) {
+              console.error(
+                "Failed to set random password:",
+                updateError.message
+              );
+            } else {
+              console.log("Random password set successfully");
+            }
+          }
+        }
+      }
+    );
+
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
+  // succes toast
+  useEffect(() => {
+    if (isAuthenticated) {
+      toast.success("Login successful!"); // or move this from login()
+      const timeout = setTimeout(() => {
+        setShouldRedirect(true);
+      }, 1000); // wait 1 sec for toast to show
+      return () => clearTimeout(timeout);
+    }
+  }, [isAuthenticated]);
+
+  if (shouldRedirect) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // Wait for auth status before rendering or redirecting
   if (isLoading) {
@@ -25,10 +94,6 @@ function Login() {
     );
   }
 
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -36,9 +101,15 @@ function Login() {
 
     try {
       await login(email, password);
-      navigate("/dashboard");
+      toast.success("Login successful!");
+
+      // ✅ Delay before redirect
+      // setTimeout(() => {
+      //   navigate("/dashboard");
+      // }, 800); // 800ms works better than 50,000ms (50 seconds!)
     } catch (err: any) {
-      setError(err.message || "Invalid email or password");
+      toast.error(err.message || "Invalid email or password");
+      // setError(err.message || "Invalid email or password");
     } finally {
       setIsSubmitting(false);
     }
@@ -65,15 +136,27 @@ function Login() {
     console.log("Redirecting to:", import.meta.env.VITE_APP_URL);
   };
 
-  const handleForgotPassword = async (e) => {
+  // Forgot Password
+
+  const handleForgotPassword = (e: { preventDefault: () => void }) => {
     e.preventDefault();
-    const email = prompt("Enter your email to reset password:");
+    setShowResetModal(true);
+  };
 
-    if (!email) return;
+  const sendResetEmail = async () => {
+    if (!resetEmail) {
+      alert("Please enter your email.");
+      return;
+    }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    setResetLoading(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
       redirectTo: "https://fintica.vercel.app/update-password",
     });
+
+    setResetLoading(false);
+    setShowResetModal(false);
 
     if (error) {
       alert("Error sending reset email: " + error.message);
@@ -84,6 +167,7 @@ function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E3F2FD] via-[#4d88c2] to-[#e19ec0] px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      <Toaster position="top-right" />
       {/* Background visual effects */}
       <div className="absolute top-[-100px] left-[-100px] w-[300px] h-[300px] bg-primary-100 rounded-full blur-3xl opacity-30 z-0" />
       <div className="absolute bottom-[-120px] right-[-100px] w-[280px] h-[280px] bg-primary-200 rounded-full blur-2xl opacity-20 z-0" />
@@ -216,6 +300,39 @@ function Login() {
           </div>
         </form>
       </div>
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
+            <h2 className="text-lg font-semibold mb-4 text-gray-800">
+              🔐 Reset Your Password
+            </h2>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+            />
+            <div className="flex justify-between">
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="px-4 py-2 rounded-md text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={sendResetEmail}
+                disabled={resetLoading}
+                className={`px-4 py-2 rounded-md text-white ${
+                  resetLoading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+                }`}
+              >
+                {resetLoading ? "Sending..." : "Send Link"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

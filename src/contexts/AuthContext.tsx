@@ -1,6 +1,9 @@
+/* eslint-disable react-refresh/only-export-components */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase, User } from "../lib/supabase";
+import { toast } from "sonner";
 
 interface AuthContextType {
   user: User | null;
@@ -69,26 +72,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     console.log("🚪 login attempt:", email);
-    setIsLoading(true);
+    // setIsLoading(true);
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
     console.log("🧾 login result:", data, error);
     setIsLoading(false);
-    if (error) throw error;
+
+    if (error) {
+      toast.error(error.message || "Login failed");
+      throw error;
+    }
+
+    // ✅ Success toast (optional if already handled in handleSubmit)
+    toast.success("Login successful!");
   };
 
   const register = async (name: string, email: string, password: string) => {
-    setIsLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { name, currency: "USD", timezone: "UTC" } },
-    });
-    console.log("👤 register result:", data, error);
-    setIsLoading(false);
-    if (error) throw error;
+    try {
+      setIsLoading(true);
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name, currency: "USD", timezone: "UTC" } },
+      });
+
+      console.log("👤 register result:", data, error);
+      setIsLoading(false);
+
+      if (error) {
+        if (
+          error.name === "AuthApiError" &&
+          error.message?.toLowerCase().includes("invalid")
+        ) {
+          toast.error("Invalid email. Please use a valid email address.");
+        } else {
+          toast.error(error.message || "Registration failed.");
+        }
+        return;
+      }
+
+      toast.success("Registration successful! Check your email to verify.");
+    } catch (err: any) {
+      console.error("🚨 Unexpected error during registration:", err);
+      toast.error("Something went wrong. Please try again.");
+      setIsLoading(false);
+    }
   };
 
   const logout = async () => {
