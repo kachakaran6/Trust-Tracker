@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
@@ -72,7 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     console.log("🚪 login attempt:", email);
-    setIsLoading(true);
+    // setIsLoading(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
