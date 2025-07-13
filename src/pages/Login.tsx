@@ -5,8 +5,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { Lock, Mail } from "lucide-react";
 // import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { toast } from "react-hot-toast";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "react-hot-toast";
+// import { Toaster } from "sonner";
 
 function Login() {
   const { login, isAuthenticated, isLoading } = useAuth();
@@ -73,7 +73,7 @@ function Login() {
       toast.success("Login successful!"); // or move this from login()
       const timeout = setTimeout(() => {
         setShouldRedirect(true);
-      }, 1000); // wait 1 sec for toast to show
+      }, 2000); // wait 1 sec for toast to show
       return () => clearTimeout(timeout);
     }
   }, [isAuthenticated]);
@@ -160,7 +160,7 @@ function Login() {
 
   const sendResetEmail = async () => {
     if (!resetEmail) {
-      alert("Please enter your email.");
+      toast.error("Please enter your email.");
       return;
     }
 
@@ -174,9 +174,9 @@ function Login() {
     setShowResetModal(false);
 
     if (error) {
-      alert("Error sending reset email: " + error.message);
+      toast.error("Error sending reset email: " + error.message);
     } else {
-      alert("Reset email sent! Check your inbox.");
+      toast.success("Reset email sent! Check your inbox.");
     }
   };
 
