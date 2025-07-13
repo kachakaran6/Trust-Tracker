@@ -379,24 +379,26 @@ function Admin() {
 
   return (
     <div className="space-y-6">
-      {/* <Toaster /> */}
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {/* Left: Title + Icon */}
         <div className="flex items-center">
           <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center mr-4">
             <Crown size={24} className="text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
               Admin Dashboard
             </h1>
-            <p className="text-gray-600">Super Admin Control Panel</p>
+            <p className="text-gray-600 text-sm">Super Admin Control Panel</p>
           </div>
         </div>
-        <div className="flex items-center space-x-3">
+
+        {/* Right: Buttons */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:space-x-3 gap-2">
           <button
             onClick={loadAdminData}
-            className="btn-outline flex items-center"
+            className="btn-outline flex items-center justify-center"
             disabled={isLoading}
           >
             <RefreshCw
@@ -404,13 +406,6 @@ function Admin() {
               className={`mr-2 ${isLoading ? "animate-spin" : ""}`}
             />
             Refresh
-          </button>
-          <button
-            onClick={exportData}
-            className="btn-primary flex items-center"
-          >
-            <Download size={16} className="mr-2" />
-            Export Data
           </button>
         </div>
       </div>
@@ -554,6 +549,14 @@ function Admin() {
             <Filter size={16} className="mr-2" />
             {filteredUsers.length} of {users.length} users
           </div>
+
+          <button
+            onClick={exportData}
+            className="btn-primary flex items-center justify-center"
+          >
+            <Download size={16} className="mr-2" />
+            Export Data
+          </button>
         </div>
       </div>
 
