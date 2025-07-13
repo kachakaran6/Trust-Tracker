@@ -201,17 +201,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         const catSummary = summary.categories[budget.category_id];
         catSummary.spent += transaction.amount;
         catSummary.remaining = catSummary.budget - catSummary.spent;
-        catSummary.percentage = Math.min(
-          (catSummary.spent / catSummary.budget) * 100,
-          100
-        );
+        catSummary.percentage = (catSummary.spent / catSummary.budget) * 100;
       }
     });
-
     summary.remaining = summary.totalBudget - summary.totalSpent;
     summary.percentage =
       summary.totalBudget > 0
-        ? Math.min((summary.totalSpent / summary.totalBudget) * 100, 100)
+        ? (summary.totalSpent / summary.totalBudget) * 100
         : 0;
 
     return summary;

@@ -97,13 +97,15 @@ function Budget() {
     }).format(value);
   };
 
-  const formatPercentage = (value: number) => Math.round(value) + "%";
+  // const formatPercentage = (value: number) => Math.round(value) + "%";
 
   const getStatusColor = (percentage: number) => {
     if (percentage >= 90) return "bg-danger-500";
     if (percentage >= 75) return "bg-warning-500";
     return "bg-success-500";
   };
+
+  const formatPercentage = (value: number) => `${value.toFixed(0)}%`;
 
   return (
     <div className="space-y-6">
@@ -299,6 +301,7 @@ function Budget() {
                   </div>
                   <div className="flex justify-between text-xs text-gray-500 mt-1">
                     <span>{formatPercentage(data.percentage)} used</span>
+
                     <span>{formatCurrency(data.remaining)} left</span>
                   </div>
                 </div>

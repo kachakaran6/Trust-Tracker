@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import { format } from "date-fns";
@@ -48,10 +49,10 @@ const TransactionsPDFReport: React.FC<TransactionsPDFReportProps> = ({
     return category ? category.name : "Unknown Category";
   };
 
-  const getCategoryIcon = (categoryId: string) => {
-    const category = categories.find((c) => c.id === categoryId);
-    return category ? category.icon : "💰";
-  };
+  // const getCategoryIcon = (categoryId: string) => {
+  //   const category = categories.find((c) => c.id === categoryId);
+  //   return category ? category.icon : "💰";
+  // };
 
   // Calculate statistics
   const totalIncome = transactions
@@ -284,13 +285,13 @@ const TransactionsPDFReport: React.FC<TransactionsPDFReportProps> = ({
         </div>
       </div>
 
-      {/* Recent Transactions */}
+      {/* Income */}
       <div
         style={{ pageBreakBefore: "always", breakBefore: "page" }}
         className="mb-8 break-before-page print:break-before-page"
       >
         <h3 className="text-lg font-bold text-neutral-800 mb-4">
-          Transactions
+          Income Transactions
         </h3>
 
         <div className="border border-neutral-200 rounded-lg overflow-hidden">
@@ -307,11 +308,12 @@ const TransactionsPDFReport: React.FC<TransactionsPDFReportProps> = ({
 
             <tbody className="divide-y divide-neutral-200 bg-white">
               {transactions
+                .filter((transaction) => transaction.type === "income") // ✅ only income
                 .sort(
                   (a, b) =>
                     new Date(b.date).getTime() - new Date(a.date).getTime()
                 )
-                .map((transaction, index) => (
+                .map((transaction) => (
                   <tr
                     key={transaction.id}
                     className="hover:bg-neutral-50 transition-colors"
@@ -326,34 +328,19 @@ const TransactionsPDFReport: React.FC<TransactionsPDFReportProps> = ({
 
                     <td className="px-4 py-3 text-neutral-600">
                       <div className="flex items-center gap-2">
-                        {getCategoryIcon(transaction.category_id)}
+                        {/* {getCategoryIcon(transaction.category_id)} */}
                         {getCategoryName(transaction.category_id)}
                       </div>
                     </td>
 
                     <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold
-                    ${
-                      transaction.type === "income"
-                        ? " text-green-700"
-                        : " text-red-700"
-                    }`}
-                      >
-                        {transaction.type === "income"
-                          ? "↗ Income"
-                          : "↘ Expense"}
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold text-green-700">
+                        ↗ Income
                       </span>
                     </td>
 
-                    <td
-                      className={`px-4 py-3 text-right font-bold ${
-                        transaction.type === "income"
-                          ? "text-green-700"
-                          : "text-red-700"
-                      }`}
-                    >
-                      {transaction.type === "income" ? "+" : "-"}
+                    <td className="px-4 py-3 text-right font-bold text-green-700">
+                      +
                       {formatCurrency(
                         parseFloat(transaction.amount.toString())
                       )}
@@ -364,10 +351,99 @@ const TransactionsPDFReport: React.FC<TransactionsPDFReportProps> = ({
           </table>
         </div>
 
-        {transactions.length > 0 && (
+        {transactions.filter((t) => t.type === "income").length > 0 ? (
           <p className="text-sm text-neutral-500 mt-2 text-center">
-            Showing {transactions.length} transaction
-            {transactions.length > 1 ? "s" : ""}
+            Showing {transactions.filter((t) => t.type === "income").length}{" "}
+            income transaction
+            {transactions.filter((t) => t.type === "income").length > 1
+              ? "s"
+              : ""}
+          </p>
+        ) : (
+          <p className="text-sm text-neutral-400 mt-2 text-center italic">
+            No income transactions to show.
+          </p>
+        )}
+      </div>
+      {/* income */}
+
+      {/* Expenses */}
+      <div
+        style={{ pageBreakBefore: "always", breakBefore: "page" }}
+        className="mb-8 break-before-page print:break-before-page"
+      >
+        <h3 className="text-lg font-bold text-neutral-800 mb-4">
+          Expense Transactions
+        </h3>
+
+        <div className="border border-neutral-200 rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-neutral-100 text-neutral-600 uppercase text-xs">
+              <tr>
+                <th className="text-left px-4 py-3">Date</th>
+                <th className="text-left px-4 py-3">Description</th>
+                <th className="text-left px-4 py-3">Category</th>
+                <th className="text-left px-4 py-3">Type</th>
+                <th className="text-right px-4 py-3">Amount</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-neutral-200 bg-white">
+              {transactions
+                .filter((transaction) => transaction.type === "expense") // ✅ filter only expenses
+                .sort(
+                  (a, b) =>
+                    new Date(b.date).getTime() - new Date(a.date).getTime()
+                )
+                .map((transaction) => (
+                  <tr
+                    key={transaction.id}
+                    className="hover:bg-neutral-50 transition-colors"
+                  >
+                    <td className="px-4 py-3 text-neutral-700 whitespace-nowrap">
+                      {format(new Date(transaction.date), "MMM dd, yyyy")}
+                    </td>
+
+                    <td className="px-4 py-3 font-medium text-neutral-800">
+                      {transaction.description}
+                    </td>
+
+                    <td className="px-4 py-3 text-neutral-600">
+                      <div className="flex items-center gap-2">
+                        {/* {getCategoryIcon(transaction.category_id)} */}
+                        {getCategoryName(transaction.category_id)}
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold text-red-700">
+                        ↘ Expense
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-3 text-right font-bold text-red-700">
+                      -
+                      {formatCurrency(
+                        parseFloat(transaction.amount.toString())
+                      )}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+
+        {transactions.filter((t) => t.type === "expense").length > 0 ? (
+          <p className="text-sm text-neutral-500 mt-2 text-center">
+            Showing {transactions.filter((t) => t.type === "expense").length}{" "}
+            expense transaction
+            {transactions.filter((t) => t.type === "expense").length > 1
+              ? "s"
+              : ""}
+          </p>
+        ) : (
+          <p className="text-sm text-neutral-400 mt-2 text-center italic">
+            No expense transactions to show.
           </p>
         )}
       </div>
