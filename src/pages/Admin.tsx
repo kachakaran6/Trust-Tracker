@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { format, parseISO } from "date-fns";
@@ -21,6 +21,9 @@ import {
   AlertCircle,
   RefreshCw,
   TrendingUp,
+  ShieldOff,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 import { AnimatePresence, motion } from "framer-motion";
@@ -74,6 +77,43 @@ function Admin() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [sortField, setSortField] = React.useState<string>("created_at");
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc");
+
+  const toggleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  // Filter users
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.full_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = !roleFilter || user.user_role === roleFilter;
+    const matchesStatus = !statusFilter || user.user_status === statusFilter;
+
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    if (sortField === "created_at") {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    }
+    if (sortField === "total_transactions") {
+      return sortOrder === "asc"
+        ? a.total_transactions - b.total_transactions
+        : b.total_transactions - a.total_transactions;
+    }
+    // add other sort fields if needed
+    return 0;
+  });
 
   // Check if user is super admin
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
@@ -295,17 +335,6 @@ function Admin() {
     window.URL.revokeObjectURL(url);
   };
 
-  // Filter users
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.full_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = !roleFilter || user.user_role === roleFilter;
-    const matchesStatus = !statusFilter || user.user_status === statusFilter;
-
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
   // Format currency using user's preferred currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -326,6 +355,8 @@ function Admin() {
       return () => clearTimeout(timer);
     }
   }, [error, success]);
+
+  const currentUserId = user?.id;
 
   if (isSuperAdmin === null) {
     return (
@@ -581,22 +612,52 @@ function Admin() {
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Transactions
+                <th
+                  className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => toggleSort("total_transactions")}
+                >
+                  <div className="flex items-center">
+                    Transactions
+                    {sortField === "total_transactions" && (
+                      <span className="ml-1">
+                        {sortOrder === "asc" ? (
+                          <ArrowUp size={14} />
+                        ) : (
+                          <ArrowDown size={14} />
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </th>
+
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Total Amount
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Joined
+                <th
+                  className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => toggleSort("created_at")}
+                >
+                  <div className="flex items-center">
+                    Joined
+                    {sortField === "created_at" && (
+                      <span className="ml-1">
+                        {sortOrder === "asc" ? (
+                          <ArrowUp size={14} />
+                        ) : (
+                          <ArrowDown size={14} />
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </th>
+
                 <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
+              {sortedUsers.map((user) => (
                 <tr
                   key={user.user_id}
                   className="hover:bg-gray-50 transition-colors"
@@ -608,11 +669,11 @@ function Admin() {
                       </div>
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {user.full_name && user.full_name !== "Unknown"
-                            ? user.full_name
-                            : user.raw_user_meta_data?.full_name ||
-                              user.raw_user_meta_data?.name ||
-                              "Anonymous"}
+                          {user.raw_user_meta_data?.full_name ||
+                            user.raw_user_meta_data?.name ||
+                            (user.full_name && user.full_name !== "Anonymous"
+                              ? user.full_name
+                              : "Anonymous")}
                         </div>
                         <div className="text-sm text-gray-500">
                           {user.email}
@@ -679,7 +740,8 @@ function Admin() {
                           )}
                         </button>
                       ) : (
-                        user.user_id !== user.user_id && (
+                        user.user_role === "super_admin" &&
+                        user.user_id !== currentUserId && (
                           <button
                             onClick={() =>
                               handleUserAction(user.user_id, "demote")
@@ -693,7 +755,7 @@ function Admin() {
                             {actionLoading === `${user.user_id}-demote` ? (
                               <RefreshCw size={16} className="animate-spin" />
                             ) : (
-                              <UserCheck size={16} />
+                              <ShieldOff size={16} />
                             )}
                           </button>
                         )
@@ -760,7 +822,8 @@ function Admin() {
                   <div className="space-y-2 text-sm text-gray-600">
                     <div>
                       <span className="font-medium text-gray-800">Name:</span>{" "}
-                      {selectedUser.full_name}
+                      {selectedUser.raw_user_meta_data?.full_name ||
+                        "Unknown User"}
                     </div>
                     <div>
                       <span className="font-medium text-gray-800">Email:</span>{" "}
