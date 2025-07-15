@@ -110,6 +110,9 @@ function Sidebar({ open, setOpen }: SidebarProps) {
           <NavLink
             key={link.path}
             to={link.path}
+            onClick={() => {
+              setOpen(false);
+            }}
             className={({ isActive }) =>
               `flex items-center px-4 py-2.5 text-sm font-medium rounded-lg ${
                 isActive
