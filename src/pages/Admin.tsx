@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { format, parseISO } from "date-fns";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 
 import {
   Users,
@@ -183,6 +183,8 @@ function Admin() {
     if (!userId || !action) return;
 
     if (action === "delete") {
+      console.log("Delete i wroking but not showing in ui......");
+
       toast.warning("Are you sure you want to permanently delete this user?", {
         description: (
           <>
@@ -379,6 +381,7 @@ function Admin() {
 
   return (
     <div className="space-y-6">
+      <Toaster position="top-right" />
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         {/* Left: Title + Icon */}
