@@ -747,11 +747,15 @@ function Transactions() {
                               backgroundColor: category?.color || "#6B7280",
                             }}
                           >
-                            {transaction.description.charAt(0).toUpperCase()}
+                            {transaction.description
+                              ? transaction.description.charAt(0).toUpperCase()
+                              : transaction.category_id
+                                  ?.charAt(0)
+                                  .toUpperCase()}
                           </div>
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {transaction.description}
+                              {transaction.description || "No Description..."}
                             </div>
                             <div
                               className={`text-xs ${

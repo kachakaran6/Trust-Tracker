@@ -36,7 +36,7 @@ export interface Transaction {
   amount: number;
   type: "income" | "expense";
   category_id: string | null;
-  description: string;
+  description: string | null;
   date: string;
   created_at: string;
 }

@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import StepByStepTransaction from "../components/transactions/StepByStepTransaction";
 import FloatingAddButton from "../components/transactions/FloatingAddButton";
+import { Toaster } from "sonner";
 
 function Dashboard() {
   const { user } = useAuth();
@@ -117,6 +118,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-6 pb-20">
+      <Toaster position="top-right" />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
@@ -362,12 +364,20 @@ function Dashboard() {
                           backgroundColor: category?.color || "#6B7280",
                         }}
                       >
-                        {transaction.description.charAt(0).toUpperCase()}
+                        {transaction.description
+                          ? transaction.description.charAt(0).toUpperCase()
+                          : transaction.category_id?.charAt(0).toUpperCase()}
                       </div>
                       <div className="ml-3 flex-1">
-                        <p className="font-medium">{transaction.description}</p>
+                        <p className="font-medium">
+                          {transaction.description
+                            ? transaction.description
+                            : category?.name}
+                        </p>
                         <p className="text-xs text-gray-500">
-                          {category?.name || "Unknown"} •{" "}
+                          {transaction.description ? (
+                            <>{category?.name || "Unknown"} </>
+                          ) : null}
                           {format(parseISO(transaction.date), "MMM d, yyyy")}
                         </p>
                       </div>

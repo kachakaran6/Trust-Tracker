@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 import { motion, AnimatePresence } from "framer-motion";
+// import { Toaster } from "sonner";
 
 import {
   X,
@@ -22,6 +23,7 @@ import {
   Check,
   Zap,
 } from "lucide-react";
+import { Toaster, toast } from "react-hot-toast";
 
 interface StepByStepTransactionProps {
   isOpen: boolean;
@@ -108,8 +110,8 @@ function StepByStepTransaction({
     if (
       !formData.type ||
       !formData.amount ||
-      !formData.category_id ||
-      !formData.description
+      !formData.category_id
+      // !formData.description
     )
       return;
 
@@ -119,7 +121,7 @@ function StepByStepTransaction({
       await addTransaction({
         amount: parseFloat(formData.amount),
         category_id: formData.category_id,
-        description: formData.description,
+        description: formData.description?.trim() || null,
         date: formData.date,
         type: formData.type as "income" | "expense",
       });
@@ -140,10 +142,11 @@ function StepByStepTransaction({
       }, 2000);
     } catch (error) {
       console.error("Error adding transaction:", error);
-      alert("Failed to add transaction. Please try again.");
+      toast.error("Failed to add transaction. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
+    console.log("description value: ", JSON.stringify(formData.description));
   };
 
   // const nextStep = () => {
@@ -222,6 +225,7 @@ function StepByStepTransaction({
                 </div>
               ) : (
                 <div className="p-6">
+                  <Toaster position="top-center" />
                   {/* Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center">
