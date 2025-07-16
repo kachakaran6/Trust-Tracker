@@ -353,14 +353,14 @@ function StepByStepTransaction({
                                 });
                                 setCurrentStep(3);
                               }}
-                              className={`p-3 rounded-lg border transition-all duration-200 text-left ${
+                              className={`p-3 rounded-lg border transition-all duration-200 text-left cursor-pointer ${
                                 formData.category_id === category.id
-                                  ? "border-primary-300 bg-primary-50"
-                                  : "border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50"
+                                  ? "border-primary-500 bg-primary-50"
+                                  : "border-neutral-200 bg-white hover:border-sky-300 hover:bg-sky-50"
                               }`}
                             >
                               <div className="flex items-center">
-                                <span
+                                {/* <span
                                   className="w-8 h-8 rounded-lg flex items-center justify-center text-sm mr-2"
                                   style={{
                                     backgroundColor: category.color + "20",
@@ -368,7 +368,7 @@ function StepByStepTransaction({
                                   }}
                                 >
                                   {category.icon}
-                                </span>
+                                </span> */}
                                 <span className="font-medium text-sm text-neutral-800">
                                   {category.name}
                                 </span>

@@ -24,6 +24,8 @@ import Admin from "./pages/Admin";
 import AuthCallback from "./pages/AuthCallback";
 import Preview from "./pages/Preview";
 import UpdatePassword from "./pages/UpdatePassword";
+import Groups from "./pages/Group";
+import GroupDetail from "./pages/GroupDetail";
 
 function App() {
   return (
@@ -50,6 +52,8 @@ function App() {
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/preview" element={<Preview />} />
+                    <Route path="/group" element={<Groups />} />
+                    <Route path="/group/:groupId" element={<GroupDetail />} />
                   </Route>
 
                   {/* Default redirect */}

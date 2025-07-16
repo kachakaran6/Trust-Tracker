@@ -11,6 +11,7 @@ import {
   LogOut,
   X,
   Shield,
+  Users,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
@@ -60,6 +61,11 @@ function Sidebar({ open, setOpen }: SidebarProps) {
       name: "Predictions",
       path: "/predictions",
       icon: <TrendingUp size={20} />,
+    },
+    {
+      name: "Groups",
+      path: "/group",
+      icon: <Users size={20} />,
     },
     { name: "Settings", path: "/settings", icon: <Settings size={20} /> },
   ];
