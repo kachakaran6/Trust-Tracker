@@ -840,7 +840,7 @@ const Predictions: React.FC = () => {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center">
-                      <div
+                      {/* <div
                         className="w-10 h-10 rounded-lg flex items-center justify-center text-lg mr-3"
                         style={{
                           backgroundColor: category.color + "20",
@@ -848,7 +848,7 @@ const Predictions: React.FC = () => {
                         }}
                       >
                         {category.icon}
-                      </div>
+                      </div> */}
                       <div>
                         <h4 className="font-semibold text-neutral-800">
                           {category.name}
@@ -951,7 +951,7 @@ const Predictions: React.FC = () => {
                       key={category.id}
                       className="flex items-start p-3 bg-neutral-50 rounded-lg"
                     >
-                      <div
+                      {/* <div
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-sm mr-3 mt-0.5"
                         style={{
                           backgroundColor: category.color + "20",
@@ -959,7 +959,7 @@ const Predictions: React.FC = () => {
                         }}
                       >
                         {category.icon}
-                      </div>
+                      </div> */}
                       <div className="flex-1">
                         <p className="text-sm text-neutral-800">
                           <strong>{category.name}</strong> spending is predicted
