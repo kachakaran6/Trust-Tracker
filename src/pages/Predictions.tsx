@@ -208,62 +208,65 @@ const Predictions: React.FC = () => {
 
   // Train TensorFlow.js model
   const trainModel = async () => {
-    if (transactions.length < 10) return; // Need minimum data
+    if (transactions.length < 10) return;
 
     setIsTraining(true);
 
     try {
       const trainingData = prepareTrainingData();
 
-      // Prepare features (month index, previous expense, income)
-      const features = [];
-      const labels = [];
+      // Normalization constants
+      const maxExpense = Math.max(...trainingData.map((d) => d.expense), 1);
+      const maxIncome = Math.max(...trainingData.map((d) => d.income), 1);
+      const maxTxCount = Math.max(
+        ...trainingData.map((d) => d.transactionCount),
+        1
+      );
 
-      for (let i = 1; i < trainingData.length; i++) {
+      const features: number[][] = [];
+      const labels: number[][] = [];
+
+      for (let i = 2; i < trainingData.length; i++) {
         features.push([
-          trainingData[i].month,
-          trainingData[i - 1].expense,
-          trainingData[i].income,
-          trainingData[i].transactionCount,
+          trainingData[i - 2].expense / maxExpense,
+          trainingData[i - 1].expense / maxExpense,
+          trainingData[i].income / maxIncome,
+          trainingData[i].transactionCount / maxTxCount,
         ]);
-        labels.push([trainingData[i].expense]);
+        labels.push([trainingData[i].expense / maxExpense]);
       }
 
       if (features.length < 3) return;
 
-      // Convert to tensors
       const xs = tf.tensor2d(features);
       const ys = tf.tensor2d(labels);
 
-      // Create model
       const model = tf.sequential({
         layers: [
-          tf.layers.dense({ inputShape: [4], units: 16, activation: "relu" }),
+          tf.layers.dense({ inputShape: [4], units: 32, activation: "relu" }),
           tf.layers.dropout({ rate: 0.2 }),
-          tf.layers.dense({ units: 8, activation: "relu" }),
+          tf.layers.dense({ units: 16, activation: "relu" }),
           tf.layers.dense({ units: 1, activation: "linear" }),
         ],
       });
 
-      // Compile model
       model.compile({
         optimizer: tf.train.adam(0.01),
         loss: "meanSquaredError",
         metrics: ["mae"],
       });
 
-      // Train model
       const history = await model.fit(xs, ys, {
-        epochs: 100,
+        epochs: 120,
         batchSize: 2,
         validationSplit: 0.2,
         verbose: 0,
         callbacks: {
           onEpochEnd: (epoch, logs) => {
-            if (epoch % 20 === 0) {
+            if (epoch % 20 === 0 && logs?.loss !== undefined) {
               const accuracy = Math.max(
                 0,
-                Math.min(100, (1 - (logs?.loss || 1)) * 100)
+                Math.min(100, (1 - logs.loss) * 100)
               );
               setModelAccuracy(accuracy);
             }
@@ -273,20 +276,12 @@ const Predictions: React.FC = () => {
 
       setMlModel(model);
 
-      // Calculate final accuracy
-      const finalAccuracy = Math.max(
-        0,
-        Math.min(
-          100,
-          (1 -
-            (history.history.loss[history.history.loss.length - 1] as number) /
-              1000000) *
-            100
-        )
-      );
+      const finalLoss = history.history.loss[
+        history.history.loss.length - 1
+      ] as number;
+      const finalAccuracy = Math.max(0, Math.min(100, (1 - finalLoss) * 100));
       setModelAccuracy(finalAccuracy);
 
-      // Clean up tensors
       xs.dispose();
       ys.dispose();
     } catch (error) {
@@ -297,10 +292,16 @@ const Predictions: React.FC = () => {
   };
 
   const generateMLPredictions = async (): Promise<PredictionData[]> => {
-    const historicalData = [];
+    const historicalData: PredictionData[] = [];
     const currentDate = new Date();
 
-    // Get historical data (last 6 months)
+    const last6Months: number[] = [];
+    const maxExpense = Math.max(...transactions.map((t) => t.amount), 1);
+    const incomeTransactions = transactions.filter((t) => t.type === "income");
+    const avgIncome =
+      incomeTransactions.reduce((sum, t) => sum + t.amount, 0) /
+      (incomeTransactions.length || 1);
+
     for (let i = 5; i >= 0; i--) {
       const month = subMonths(currentDate, i);
       const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
@@ -317,6 +318,7 @@ const Predictions: React.FC = () => {
         (sum, t) => sum + t.amount,
         0
       );
+      last6Months.push(totalExpense);
 
       historicalData.push({
         month: format(month, "MMM"),
@@ -326,55 +328,54 @@ const Predictions: React.FC = () => {
       });
     }
 
-    // Generate future predictions
-    if (mlModel && historicalData.length > 0) {
-      const lastMonth = historicalData[historicalData.length - 1];
-      const lastIncome =
-        transactions
-          .filter((t) => t.type === "income")
-          .slice(0, 10)
-          .reduce((sum, t) => sum + t.amount, 0) / 10;
+    if (!mlModel) return historicalData;
 
-      for (let i = 1; i <= predictionRange; i++) {
-        const futureMonth = addMonths(currentDate, i);
+    for (let i = 1; i <= predictionRange; i++) {
+      const futureMonth = addMonths(currentDate, i);
+      const last1 = last6Months[last6Months.length - 1] || 0;
+      const last2 = last6Months[last6Months.length - 2] || last1;
 
-        try {
-          // Prepare input for prediction
-          const input = tf.tensor2d([
-            [
-              historicalData.length + i - 1,
-              lastMonth.actual || 0,
-              lastIncome,
-              transactions.length / 12, // avg transactions per month
-            ],
-          ]);
+      const txCount = transactions.length / 12; // avg monthly txs
+      const input = tf.tensor2d([
+        [
+          last2 / maxExpense,
+          last1 / maxExpense,
+          avgIncome / maxExpense,
+          txCount / 100,
+        ],
+      ]);
 
-          const prediction = mlModel.predict(input) as tf.Tensor;
-          const predictionValue = await prediction.data();
+      try {
+        const predictionTensor = mlModel.predict(input) as tf.Tensor;
+        const predictionValue = (await predictionTensor.data())[0];
+        const denormalized = predictionValue * maxExpense;
 
-          const variance = 0.9;
-          const finalPrediction = Math.max(0, predictionValue[0] * variance);
+        // Add smoothing
+        const smooth = (a: number, b: number) => a * 0.6 + b * 0.4;
+        const smoothed = smooth(denormalized, last1);
 
-          historicalData.push({
-            month: format(futureMonth, "MMM"),
-            actual: null,
-            predicted: Math.round(finalPrediction),
-            confidence: Math.round(modelAccuracy),
-          });
+        // Confidence based on volatility
+        const stdDev = Math.sqrt(
+          last6Months.reduce((sum, val) => sum + Math.pow(val - last1, 2), 0) /
+            last6Months.length
+        );
+        const confidence = Math.max(
+          60,
+          Math.min(95, 100 - (stdDev / (last1 || 1)) * 100)
+        );
 
-          input.dispose();
-          prediction.dispose();
-        } catch (error) {
-          console.error("Prediction error:", error);
-          const fallbackPrediction =
-            (lastMonth.actual || 0) * (0.95 + Math.random() * 0.1);
-          historicalData.push({
-            month: format(futureMonth, "MMM"),
-            actual: null,
-            predicted: Math.round(fallbackPrediction),
-            confidence: 60,
-          });
-        }
+        historicalData.push({
+          month: format(futureMonth, "MMM"),
+          actual: null,
+          predicted: Math.round(smoothed),
+          confidence: Math.round(confidence),
+        });
+
+        last6Months.push(denormalized);
+        input.dispose();
+        predictionTensor.dispose();
+      } catch (error) {
+        console.error("Prediction failed:", error);
       }
     }
 
