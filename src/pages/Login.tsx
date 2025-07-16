@@ -6,6 +6,7 @@ import { Lock, Mail } from "lucide-react";
 // import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Toaster, toast } from "react-hot-toast";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 // import { Toaster } from "sonner";
 
 function Login() {
@@ -19,6 +20,7 @@ function Login() {
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const [shouldRedirect, setShouldRedirect] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Generate random password
   function generateRandomPassword(length = 14) {
@@ -181,7 +183,7 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E3F2FD] via-[#4d88c2] to-[#e19ec0] px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#E3F2FD] via-[#4d88c2] to-[#cdabbc] px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
       <Toaster position="top-right" />
       {/* Background visual effects */}
       <div className="absolute top-[-100px] left-[-100px] w-[300px] h-[300px] bg-primary-100 rounded-full blur-3xl opacity-30 z-0" />
@@ -249,20 +251,41 @@ function Login() {
                 Password
               </label>
               <div className="relative mt-1">
+                {/* Lock icon (left side) */}
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock size={18} className="text-primary-400" />
                 </div>
+
+                {/* Password input */}
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
-                  className="input-field pl-10 focus:ring-2 focus:ring-primary-400 focus:border-primary-500"
+                  className="input-field pl-10 pr-10 focus:ring-2 focus:ring-primary-400 focus:border-primary-500"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+
+                {/* Toggle visibility icon (right side) */}
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeSlashIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
