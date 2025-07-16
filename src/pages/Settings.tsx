@@ -1,19 +1,22 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "../lib/supabase";
 import { useCategories } from "../contexts/CategoriesContext";
 import {
   User,
   Shield,
-  Bell,
-  HelpCircle,
   Edit2,
   Trash2,
   Save,
   Check,
+  Eye,
+  EyeOff,
 } from "lucide-react";
+// import { toast } from "react-hot-toast";
 
 function Settings() {
-  const { user, logout, updateProfile } = useAuth();
+  const { user, updateProfile } = useAuth();
   const { categories, addCategory, updateCategory, deleteCategory } =
     useCategories();
 
@@ -39,13 +42,41 @@ function Settings() {
     icon: "Tag",
   });
 
-  // State for notifications settings
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    budgetAlerts: true,
-    weeklyReports: true,
-    savingsTips: true,
-  });
+  const [newPassword, setNewPassword] = useState("");
+  const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
+  const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(false);
+  const [passwordUpdateError, setPasswordUpdateError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handlePasswordChange = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    setPasswordUpdateSuccess(false);
+    setPasswordUpdateError("");
+
+    if (newPassword.length < 6) {
+      setPasswordUpdateError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    setIsPasswordUpdating(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setIsPasswordUpdating(false);
+
+    if (error) {
+      setPasswordUpdateError(error.message);
+    } else {
+      setPasswordUpdateSuccess(true);
+      setNewPassword("");
+    }
+  };
+
+  // // State for notifications settings
+  // const [notificationSettings, setNotificationSettings] = useState({
+  //   emailNotifications: true,
+  //   budgetAlerts: true,
+  //   weeklyReports: true,
+  //   savingsTips: true,
+  // });
 
   // State for success message
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -148,15 +179,15 @@ function Settings() {
     setProfileData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle notification toggle
-  const handleNotificationToggle = (
-    setting: keyof typeof notificationSettings
-  ) => {
-    setNotificationSettings((prev) => ({
-      ...prev,
-      [setting]: !prev[setting],
-    }));
-  };
+  // // Handle notification toggle
+  // const handleNotificationToggle = (
+  //   setting: keyof typeof notificationSettings
+  // ) => {
+  //   setNotificationSettings((prev) => ({
+  //     ...prev,
+  //     [setting]: !prev[setting],
+  //   }));
+  // };
 
   // Format currency display
   const formatCurrency = (amount: number) => {
@@ -348,6 +379,59 @@ function Settings() {
                 </div>
               </form>
             </div>
+            {/* Update Password */}
+            <div className="card p-6 mb-6 shadow-lg rounded-lg">
+              <h3 className="font-semibold text-lg text-gray-800 mb-4">
+                Change Password
+              </h3>
+
+              <form onSubmit={handlePasswordChange}>
+                <div className="mb-4 relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    New Password
+                  </label>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-9 text-gray-500"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+
+                {passwordUpdateError && (
+                  <p className="text-red-600 text-sm mb-2">
+                    {passwordUpdateError}
+                  </p>
+                )}
+                {passwordUpdateSuccess && (
+                  <p className="text-green-600 text-sm mb-2">
+                    Password updated successfully!
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  className={`w-full py-2 px-4 rounded-md text-white font-medium transition ${
+                    isPasswordUpdating
+                      ? "bg-blue-400 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  }`}
+                  disabled={isPasswordUpdating}
+                >
+                  {isPasswordUpdating ? "Updating..." : "Update Password"}
+                </button>
+              </form>
+            </div>
 
             {/* Currency Preview */}
             <div className="card p-6 mb-6 shadow-lg rounded-lg">
@@ -380,7 +464,7 @@ function Settings() {
               </div>
             </div>
 
-            <div className="card p-6 shadow-lg rounded-lg">
+            {/* <div className="card p-6 shadow-lg rounded-lg">
               <h3 className="font-semibold text-red-600 text-lg mb-4">
                 Danger Zone
               </h3>
@@ -408,7 +492,7 @@ function Settings() {
                   Delete Account
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
         );
 
@@ -706,294 +790,6 @@ function Settings() {
           </div>
         );
 
-      case "notifications":
-        return (
-          <div className="animate-fade-in">
-            <h2 className="text-lg font-semibold mb-4">
-              Notification Preferences
-            </h2>
-
-            <div className="card p-6">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between py-4 border-b border-gray-200">
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">
-                      Email Notifications
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Receive important alerts and updates via email
-                    </p>
-                  </div>
-                  <div className="ml-4">
-                    <button
-                      type="button"
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                        notificationSettings.emailNotifications
-                          ? "bg-primary-600"
-                          : "bg-gray-200"
-                      }`}
-                      onClick={() =>
-                        handleNotificationToggle("emailNotifications")
-                      }
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          notificationSettings.emailNotifications
-                            ? "translate-x-5"
-                            : "translate-x-0"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between py-4 border-b border-gray-200">
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">Budget Alerts</h3>
-                    <p className="text-sm text-gray-500">
-                      Get notified when you're approaching or exceeding budget
-                      limits
-                    </p>
-                  </div>
-                  <div className="ml-4">
-                    <button
-                      type="button"
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                        notificationSettings.budgetAlerts
-                          ? "bg-primary-600"
-                          : "bg-gray-200"
-                      }`}
-                      onClick={() => handleNotificationToggle("budgetAlerts")}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          notificationSettings.budgetAlerts
-                            ? "translate-x-5"
-                            : "translate-x-0"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between py-4 border-b border-gray-200">
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">
-                      Weekly Reports
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Receive a summary of your financial activity each week
-                    </p>
-                  </div>
-                  <div className="ml-4">
-                    <button
-                      type="button"
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                        notificationSettings.weeklyReports
-                          ? "bg-primary-600"
-                          : "bg-gray-200"
-                      }`}
-                      onClick={() => handleNotificationToggle("weeklyReports")}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          notificationSettings.weeklyReports
-                            ? "translate-x-5"
-                            : "translate-x-0"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between py-4">
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">
-                      Savings Tips & Insights
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Get personalized recommendations for saving money and
-                      improving your finances
-                    </p>
-                  </div>
-                  <div className="ml-4">
-                    <button
-                      type="button"
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                        notificationSettings.savingsTips
-                          ? "bg-primary-600"
-                          : "bg-gray-200"
-                      }`}
-                      onClick={() => handleNotificationToggle("savingsTips")}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          notificationSettings.savingsTips
-                            ? "translate-x-5"
-                            : "translate-x-0"
-                        }`}
-                      />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <button
-                  className="btn-primary"
-                  onClick={() => {
-                    console.log(
-                      "Saving notification preferences:",
-                      notificationSettings
-                    );
-                    alert("Notification preferences saved!");
-                  }}
-                >
-                  Save Preferences
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "help":
-        return (
-          <div className="animate-fade-in">
-            <h2 className="text-lg font-semibold mb-4">Help & Support</h2>
-
-            <div className="card p-6 mb-6">
-              <h3 className="font-medium mb-4">Frequently Asked Questions</h3>
-              <div className="space-y-4">
-                <details className="group">
-                  <summary className="flex items-center justify-between w-full text-left font-medium py-2 cursor-pointer focus:outline-none">
-                    <span>How does the AI prediction feature work?</span>
-                    <span className="ml-6 h-7 flex items-center group-open:rotate-45 transition-transform">
-                      +
-                    </span>
-                  </summary>
-                  <div className="mt-2 text-sm text-gray-600 pl-4 border-l-2 border-primary-100">
-                    <p>
-                      Our AI-powered prediction feature analyzes your historical
-                      spending patterns using machine learning algorithms to
-                      forecast future expenses. The system considers factors
-                      like seasonal trends, recurring payments, and spending
-                      habits to provide increasingly accurate predictions as it
-                      learns from your financial behavior over time.
-                    </p>
-                  </div>
-                </details>
-
-                <details className="group border-t border-gray-200 pt-4">
-                  <summary className="flex items-center justify-between w-full text-left font-medium py-2 cursor-pointer focus:outline-none">
-                    <span>Is my financial data secure and private?</span>
-                    <span className="ml-6 h-7 flex items-center group-open:rotate-45 transition-transform">
-                      +
-                    </span>
-                  </summary>
-                  <div className="mt-2 text-sm text-gray-600 pl-4 border-l-2 border-primary-100">
-                    <p>
-                      Yes, your financial data is protected with bank-level
-                      security. We use end-to-end encryption, secure cloud
-                      storage, and never share your personal financial
-                      information with third parties. All data is stored in
-                      compliance with financial privacy regulations.
-                    </p>
-                  </div>
-                </details>
-
-                <details className="group border-t border-gray-200 pt-4">
-                  <summary className="flex items-center justify-between w-full text-left font-medium py-2 cursor-pointer focus:outline-none">
-                    <span>How do I export my financial data?</span>
-                    <span className="ml-6 h-7 flex items-center group-open:rotate-45 transition-transform">
-                      +
-                    </span>
-                  </summary>
-                  <div className="mt-2 text-sm text-gray-600 pl-4 border-l-2 border-primary-100">
-                    <p>
-                      You can export your data from the Settings page. We
-                      support CSV and PDF formats for transactions, budgets, and
-                      reports. This feature is useful for tax preparation or
-                      switching to another financial management tool.
-                    </p>
-                  </div>
-                </details>
-
-                <details className="group border-t border-gray-200 pt-4">
-                  <summary className="flex items-center justify-between w-full text-left font-medium py-2 cursor-pointer focus:outline-none">
-                    <span>
-                      Can I connect my bank account for automatic transaction
-                      import?
-                    </span>
-                    <span className="ml-6 h-7 flex items-center group-open:rotate-45 transition-transform">
-                      +
-                    </span>
-                  </summary>
-                  <div className="mt-2 text-sm text-gray-600 pl-4 border-l-2 border-primary-100">
-                    <p>
-                      Bank account integration is coming soon! Currently, you
-                      can manually add transactions or import them via CSV.
-                      We're working on secure bank connections to automatically
-                      sync your transactions while maintaining the highest
-                      security standards.
-                    </p>
-                  </div>
-                </details>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="card p-6">
-                <h3 className="font-medium mb-3">Contact Support</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Need help with something not covered in the FAQs? Our support
-                  team is ready to assist you.
-                </p>
-                <div className="space-y-2">
-                  <a
-                    href="mailto:support@fintica.com"
-                    className="btn-primary inline-block w-full text-center"
-                  >
-                    Email Support
-                  </a>
-                  <p className="text-xs text-gray-500 text-center">
-                    We typically respond within 24 hours
-                  </p>
-                </div>
-              </div>
-
-              <div className="card p-6">
-                <h3 className="font-medium mb-3">Resources</h3>
-                <div className="space-y-3">
-                  <a
-                    href="#"
-                    className="block text-sm text-primary-600 hover:text-primary-700"
-                  >
-                    📚 User Guide & Tutorials
-                  </a>
-                  <a
-                    href="#"
-                    className="block text-sm text-primary-600 hover:text-primary-700"
-                  >
-                    🎥 Video Walkthroughs
-                  </a>
-                  <a
-                    href="#"
-                    className="block text-sm text-primary-600 hover:text-primary-700"
-                  >
-                    💡 Financial Tips & Best Practices
-                  </a>
-                  <a
-                    href="#"
-                    className="block text-sm text-primary-600 hover:text-primary-700"
-                  >
-                    🔄 What's New & Updates
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
       default:
         return null;
     }
@@ -1001,54 +797,43 @@ function Settings() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
-        <p className="text-sm text-gray-500">
-          Manage your account and preferences
-        </p>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-1">Settings</h1>
+        <p className="text-gray-500">Manage your account and preferences</p>
       </div>
 
-      <div className="flex flex-col lg:flex-row min-h-screen bg-gray-50">
-        {/* Sidebar navigation */}
-        <aside className="bg-white shadow-md lg:shadow-lg lg:w-72 sticky top-0 z-20 border-r border-gray-200">
-          <nav className="flex lg:flex-col overflow-x-auto lg:overflow-visible">
-            <ul className="flex lg:flex-col w-full">
-              {[
-                { key: "profile", label: "Profile Settings", icon: User },
-                { key: "categories", label: "Categories", icon: Shield },
-                { key: "notifications", label: "Notifications", icon: Bell },
-                { key: "help", label: "Help & Support", icon: HelpCircle },
-              ].map(({ key, label, icon: Icon }) => (
-                <li key={key} className="w-full">
-                  <button
-                    onClick={() => setActiveTab(key)}
-                    className={`flex items-center w-full px-5 py-3 text-sm font-medium rounded-none lg:rounded-r-lg transition-colors duration-200 ${
-                      activeTab === key
-                        ? "bg-primary-50 text-primary-700 border-l-4 border-primary-600"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    <Icon size={18} className="mr-3 flex-shrink-0" />
-                    {label}
-                  </button>
-                </li>
-              ))}
-              <li className="mt-auto w-full border-t border-gray-200">
-                <button
-                  onClick={logout}
-                  className="flex items-center w-full px-5 py-3 text-sm font-medium text-danger-600 hover:bg-danger-50 transition-colors duration-200 rounded-none lg:rounded-r-lg"
-                >
-                  Logout
-                </button>
-              </li>
-            </ul>
-          </nav>
-        </aside>
+      {/* Tab Navigation */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {[
+          { key: "profile", label: "Profile", icon: User },
+          { key: "categories", label: "Categories", icon: Shield },
+        ].map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${
+              activeTab === key
+                ? "bg-primary-100 text-primary-700"
+                : "bg-white border text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <Icon size={16} />
+            {label}
+          </button>
+        ))}
 
-        {/* Content area */}
-        <main className="flex-1 p-6 lg:p-10 bg-white">
-          {renderTabContent()}
-        </main>
+        {/* <button
+          onClick={logout}
+          className="ml-auto text-sm text-red-600 hover:underline"
+        >
+          Logout
+        </button> */}
+      </div>
+
+      {/* Tab Content */}
+      <div className="bg-white p-6 rounded-xl shadow-md">
+        {renderTabContent()}
       </div>
     </div>
   );

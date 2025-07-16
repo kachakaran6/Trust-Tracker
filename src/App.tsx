@@ -26,10 +26,12 @@ import Preview from "./pages/Preview";
 import UpdatePassword from "./pages/UpdatePassword";
 import Groups from "./pages/Group";
 import GroupDetail from "./pages/GroupDetail";
+import { Toaster } from "sonner";
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" />
       <AuthProvider>
         <TransactionsProvider>
           <CategoriesProvider>
