@@ -27,7 +27,7 @@ function Header({ setSidebarOpen }: HeaderProps) {
 
       <div className="flex-1">
         <a href="/" className=" cursor-default ">
-          <h1 className="text-xl font-semibold text-gray-800">Fintica</h1>
+          <h1 className="text-xl font-semibold text-gray-800">Trust Tracker</h1>
         </a>
       </div>
 

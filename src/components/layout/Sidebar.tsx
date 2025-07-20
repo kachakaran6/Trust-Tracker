@@ -89,7 +89,9 @@ function Sidebar({ open, setOpen }: SidebarProps) {
     >
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
         <div className="flex items-center">
-          <span className="text-primary-600 font-bold text-2xl">Fintica</span>
+          <span className="text-primary-600 font-bold text-2xl">
+            Trust Tracker
+          </span>
         </div>
         <button
           onClick={() => setOpen(false)}
