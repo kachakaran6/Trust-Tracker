@@ -135,7 +135,7 @@ function Register() {
     }
   };
 
-  const redirectUrl = "https://fintica.vercel.app" + "/auth/callback";
+  const redirectUrl = "https://trust-tracker.vercel.app" + "/auth/callback";
 
   const handleGoogleLogin = async () => {
     try {
@@ -168,7 +168,7 @@ function Register() {
         <div className="text-center space-y-1">
           <h1 className="text-4xl font-extrabold text-primary-700 tracking-tight">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-400">
-              Fintica
+              Trust Tracker
             </span>
           </h1>
           <h2 className="text-xl text-gray-800 font-medium">
