@@ -30,6 +30,40 @@ function Login() {
       .map((x) => chars[x % chars.length])
       .join("");
   }
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const user = session?.user;
+        const provider = user?.app_metadata?.provider;
+
+        if (event === "SIGNED_IN" && provider === "google") {
+          console.log("Google user signed in:", user.email);
+
+          // Immediately sign out
+          await supabase.auth.signOut();
+
+          // Send magic link
+          const { error } = await supabase.auth.signInWithOtp({
+            email: user.email,
+            options: {
+              emailRedirectTo: "https://trust-tracker.vercel.app/dashboard",
+            },
+          });
+
+          if (error) {
+            console.error("Failed to send magic link:", error.message);
+          } else {
+            toast.success("A verification link has been sent to your email.");
+          }
+        }
+      }
+    );
+
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
+
   // Insert random password in db
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(

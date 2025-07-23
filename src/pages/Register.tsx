@@ -57,6 +57,62 @@ function Register() {
       .map((x) => chars[x % chars.length])
       .join("");
   }
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const user = session?.user;
+        const provider = user?.app_metadata?.provider;
+
+        if (event === "SIGNED_IN" && provider === "google") {
+          console.log("Google user signed in (from Register):", user.email);
+
+          // Step 1: Set a random password if needed
+          const passwordAlreadySet = user?.user_metadata?.password_initialized;
+          if (!passwordAlreadySet) {
+            const randomPassword = generateRandomPassword();
+            const { error: updateError } = await supabase.auth.updateUser({
+              password: randomPassword,
+              data: {
+                password_initialized: true,
+              },
+            });
+
+            if (updateError) {
+              console.error(
+                "Failed to set random password:",
+                updateError.message
+              );
+            } else {
+              console.log("Random password set");
+            }
+          }
+
+          // Step 2: Immediately log them out
+          await supabase.auth.signOut();
+
+          // Step 3: Send magic link
+          const { error } = await supabase.auth.signInWithOtp({
+            email: user.email,
+            options: {
+              emailRedirectTo: "https://trust-tracker.vercel.app/dashboard",
+            },
+          });
+
+          if (error) {
+            toast.error("Failed to send verification link: " + error.message);
+            console.error("Magic link error:", error.message);
+          } else {
+            toast.success("Check your email to verify your account.");
+          }
+        }
+      }
+    );
+
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
+
   // Insert pass for google auth user
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
