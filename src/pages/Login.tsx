@@ -126,7 +126,7 @@ function Login() {
     }
   };
 
-  const redirectUrl = "https://trust-tracker.vercel.app" + "/auth/callback";
+  const redirectUrl = "https://trusttracker.live" + "/auth/callback";
 
   const handleGoogleLogin = async () => {
     try {
