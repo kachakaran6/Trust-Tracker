@@ -36,6 +36,47 @@ function Register() {
     }
   };
 
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const user = session?.user;
+        if (!user) return;
+
+        const isEmailConfirmed = !!user.email_confirmed_at;
+
+        if (
+          (event === "SIGNED_IN" && isEmailConfirmed) ||
+          (event === "USER_UPDATED" && isEmailConfirmed)
+        ) {
+          try {
+            await fetch(
+              "https://mvpmvpdjtwuoiomokfjf.functions.supabase.co/welcome-email",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  email: user.email,
+                  name:
+                    user.user_metadata?.full_name ||
+                    user.user_metadata?.name ||
+                    "User",
+                }),
+              }
+            );
+
+            console.log("✅ Welcome email sent");
+          } catch (err) {
+            console.error("❌ Failed to send welcome email:", err);
+          }
+        }
+      }
+    );
+
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
+
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPassword(value);
@@ -116,6 +157,20 @@ function Register() {
 
     try {
       await register(name, email, password);
+
+      // // Send welcome email
+      // await fetch(
+      //   "https://mvpmvpdjtwuoiomokfjf.functions.supabase.co/welcome-email",
+      //   {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({
+      //       email: email,
+      //       name: name,
+      //     }),
+      //   }
+      // );
+
       toast.success(
         "Registration successful! Please check your email to verify."
       );

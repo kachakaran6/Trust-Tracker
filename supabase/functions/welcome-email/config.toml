@@ -1,0 +1,4 @@
+[functions.welcome-email]
+verify_jwt = false
+import_map = "./functions/welcome-email/deno.json"
+entrypoint = "./functions/welcome-email/index.ts"

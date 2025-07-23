@@ -31,6 +31,47 @@ function Login() {
       .join("");
   }
 
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const user = session?.user;
+        if (!user) return;
+
+        const isEmailConfirmed = !!user.email_confirmed_at;
+
+        if (
+          (event === "SIGNED_IN" && isEmailConfirmed) ||
+          (event === "USER_UPDATED" && isEmailConfirmed)
+        ) {
+          try {
+            await fetch(
+              "https://mvpmvpdjtwuoiomokfjf.functions.supabase.co/welcome-email",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  email: user.email,
+                  name:
+                    user.user_metadata?.full_name ||
+                    user.user_metadata?.name ||
+                    "User",
+                }),
+              }
+            );
+
+            console.log("✅ Welcome email sent");
+          } catch (err) {
+            console.error("❌ Failed to send welcome email:", err);
+          }
+        }
+      }
+    );
+
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
+
   // Insert random password in db
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
@@ -114,11 +155,6 @@ function Login() {
     try {
       await login(email, password);
       toast.success("Login successful!");
-
-      // ✅ Delay before redirect
-      // setTimeout(() => {
-      //   navigate("/dashboard");
-      // }, 800); // 800ms works better than 50,000ms (50 seconds!)
     } catch (err: any) {
       toast.error(err.message || "Invalid email or password");
       // setError(err.message || "Invalid email or password");
