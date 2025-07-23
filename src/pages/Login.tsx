@@ -169,7 +169,7 @@ function Login() {
     setResetLoading(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: "https://trust-tracker.vercel.app/update-password",
+      redirectTo: "https://trusttracker.live/update-password",
     });
 
     setResetLoading(false);
