@@ -7,6 +7,7 @@ import { Lock, Mail } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Toaster, toast } from "react-hot-toast";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { log } from "@tensorflow/tfjs";
 // import { Toaster } from "sonner";
 
 function Login() {
@@ -173,7 +174,7 @@ function Login() {
       await login(email, password);
       toast.success("Login successful!");
     } catch (err: any) {
-      toast.error(err.message || "Invalid email or password");
+      log(err.message || "Invalid email or password");
       // setError(err.message || "Invalid email or password");
     } finally {
       setIsSubmitting(false);

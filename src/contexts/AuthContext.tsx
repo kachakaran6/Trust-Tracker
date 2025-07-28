@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase, User } from "../lib/supabase";
 import { toast } from "sonner";
+// import { log } from "@tensorflow/tfjs";
 
 interface AuthContextType {
   user: User | null;
@@ -84,6 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(false);
 
     if (error) {
+      // toast.error(error.message || "Login failed");
       toast.error(error.message || "Login failed");
       throw error;
     }
