@@ -28,6 +28,7 @@ export interface User {
   avatar_url?: string;
   currency?: string;
   timezone?: string;
+  welcome_email_sent?: boolean;
 }
 
 export interface Transaction {

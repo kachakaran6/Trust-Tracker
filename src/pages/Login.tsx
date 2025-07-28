@@ -38,13 +38,18 @@ function Login() {
         if (!user) return;
 
         const isEmailConfirmed = !!user.email_confirmed_at;
+        const alreadyWelcomed = user.user_metadata?.welcome_email_sent === true;
 
         if (
-          (event === "SIGNED_IN" && isEmailConfirmed) ||
-          (event === "USER_UPDATED" && isEmailConfirmed)
+          isEmailConfirmed &&
+          !alreadyWelcomed &&
+          (event === "SIGNED_IN" || event === "USER_UPDATED")
         ) {
           try {
-            await fetch(
+            console.log("📤 Sending welcome email to:", user.email);
+            console.log("👤 User metadata:", user.user_metadata);
+
+            const response = await fetch(
               "https://mvpmvpdjtwuoiomokfjf.functions.supabase.co/welcome-email",
               {
                 method: "POST",
@@ -59,7 +64,19 @@ function Login() {
               }
             );
 
-            console.log("✅ Welcome email sent");
+            const result = await response.json();
+            console.log("📨 Welcome email response:", result);
+
+            await supabase.auth.updateUser({
+              data: { welcome_email_sent: true },
+            });
+
+            const welcome_email_sent =
+              session?.user?.user_metadata?.welcome_email_sent;
+            console.log("✅ welcome_email_sent:", welcome_email_sent);
+
+            // 🔄 Refresh session to pull updated metadata
+            await supabase.auth.refreshSession();
           } catch (err) {
             console.error("❌ Failed to send welcome email:", err);
           }
