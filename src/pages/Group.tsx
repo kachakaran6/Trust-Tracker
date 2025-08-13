@@ -124,7 +124,7 @@ const Groups: React.FC = () => {
           <div className="relative">
             <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
             <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-primary-600">
-              F
+              
             </div>
           </div>
           <p className="text-sm text-neutral-500">Loading groups...</p>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
-import { Bell, Menu } from "lucide-react";
+import {  Menu } from "lucide-react";
 
 interface HeaderProps {
   setSidebarOpen: (open: boolean) => void;
@@ -10,7 +10,7 @@ interface HeaderProps {
 
 function Header({ setSidebarOpen }: HeaderProps) {
   const { user } = useAuth();
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+  // const { notifications, unreadCount, markAsRead } = useNotifications();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -35,17 +35,13 @@ function Header({ setSidebarOpen }: HeaderProps) {
       <div className="relative">
         <button
           onClick={() => setNotificationsOpen(!notificationsOpen)}
-          className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full"
+          // className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full"
         >
-          <Bell size={20} />
-          {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 h-5 w-5 text-xs flex items-center justify-center bg-primary-600 text-white rounded-full">
-              {unreadCount}
-            </span>
-          )}
+        
+          
         </button>
 
-        {notificationsOpen && (
+        {/* {notificationsOpen && (
           <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg border border-gray-200 z-50">
             <div className="p-3 border-b border-gray-200">
               <h3 className="text-sm font-semibold">Notifications</h3>
@@ -92,7 +88,7 @@ function Header({ setSidebarOpen }: HeaderProps) {
               )}
             </div>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* User dropdown (simplified for now) */}

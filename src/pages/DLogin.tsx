@@ -87,7 +87,7 @@ function Login() {
           <div className="relative">
             <div className="w-12 h-12 border-4 border-primary-400 border-t-transparent rounded-full animate-spin-fast"></div>
             <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-primary-600">
-              F
+              
             </div>
           </div>
           <p className="text-sm text-white/90">Loading your dashboard...</p>

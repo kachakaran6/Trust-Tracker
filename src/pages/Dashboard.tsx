@@ -409,7 +409,7 @@ function Dashboard() {
       </div>
 
       {/* Financial Insights */}
-      <div
+      {/* <div
         className="card p-6 animate-slide-up"
         style={{ animationDelay: "0.3s" }}
       >
@@ -441,7 +441,7 @@ function Dashboard() {
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Step-by-Step Transaction Modal */}
       <StepByStepTransaction
