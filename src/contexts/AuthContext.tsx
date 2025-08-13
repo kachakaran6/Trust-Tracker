@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase, User } from "../lib/supabase";
 import { toast } from "sonner";
+// import { log } from "@tensorflow/tfjs";
 
 interface AuthContextType {
   user: User | null;
@@ -39,6 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           avatar_url: u.user_metadata.avatar_url,
           currency: u.user_metadata.currency || "USD",
           timezone: u.user_metadata.timezone || "UTC",
+          welcome_email_sent: u.user_metadata?.welcome_email_sent ?? false,
         });
       }
       setIsLoading(false);
@@ -56,6 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             avatar_url: u.user_metadata.avatar_url,
             currency: u.user_metadata.currency || "USD",
             timezone: u.user_metadata.timezone || "UTC",
+            welcome_email_sent: u.user_metadata?.welcome_email_sent ?? false,
           });
         } else {
           setUser(null);
@@ -82,6 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(false);
 
     if (error) {
+      // toast.error(error.message || "Login failed");
       toast.error(error.message || "Login failed");
       throw error;
     }
@@ -97,7 +101,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name, currency: "USD", timezone: "UTC" } },
+        options: {
+          data: {
+            name,
+            currency: "USD",
+            timezone: "UTC",
+            welcome_email_sent: false,
+          },
+        },
       });
 
       console.log("👤 register result:", data, error);
