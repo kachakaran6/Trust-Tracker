@@ -520,6 +520,8 @@ const Predictions: React.FC = () => {
     );
   }
 
+//  /loading removed  
+
   return (
     <AnimatePresence>
       <div className="space-y-8">
