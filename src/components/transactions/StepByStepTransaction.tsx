@@ -73,7 +73,7 @@ function StepByStepTransaction({
   });
 
   // Quick amounts for different transaction types
-  const quickAmounts = [10, 25, 50, 100, 250, 500];
+  const quickAmounts = [10, 20, 50, 100, 250, 500];
 
   // Common descriptions
   const commonDescriptions = {
@@ -94,7 +94,7 @@ function StepByStepTransaction({
       category_id: "",
       amount: "",
       description: "",
-      date: format(new Date(), "yyyy-MM-dd"),
+      date: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
     });
     setCurrentStep(1);
     setShowSuccess(false);
@@ -134,7 +134,7 @@ function StepByStepTransaction({
           amount: "",
           category_id: "",
           description: "",
-          date: format(new Date(), "yyyy-MM-dd"),
+          date: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
         });
         setCurrentStep(1);
         setShowSuccess(false);
@@ -522,10 +522,10 @@ function StepByStepTransaction({
                           <div className="relative">
                             <Calendar
                               size={20}
-                              className="absolute left-3 top-3 text-neutral-400"
+                              className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-500"
                             />
                             <input
-                              type="date"
+                              type="datetime-local"
                               value={formData.date}
                               onChange={(e) =>
                                 setFormData({
@@ -533,7 +533,9 @@ function StepByStepTransaction({
                                   date: e.target.value,
                                 })
                               }
-                              className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+                              className="w-full pl-12 pr-4 py-3 rounded-2xl border border-neutral-300 shadow-sm 
+               focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
+               transition-all duration-200 bg-white hover:shadow-md cursor-pointer"
                             />
                           </div>
 
