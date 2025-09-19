@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Button } from "./Button";
+import Button from "./Button";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -12,24 +12,20 @@ export function ThemeToggle() {
   return (
     <Button
       variant="outline"
-      size="icon"
+      size="sm"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="relative p-0 w-9 h-9 rounded-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+      className="relative w-10 h-10 p-0"
     >
       {/* Sun */}
       <Sun
-        className={`h-5 w-5 text-yellow-500 transition-all duration-300 ${
-          isDark
-            ? "rotate-90 scale-0 opacity-0"
-            : "rotate-0 scale-100 opacity-100"
+        className={`absolute top-1/2 left-1/2 h-5 w-5 text-yellow-500 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
+          isDark ? "opacity-0 scale-75" : "opacity-100 scale-100"
         }`}
       />
       {/* Moon */}
       <Moon
-        className={`absolute h-5 w-5 text-gray-200 transition-all duration-300 ${
-          isDark
-            ? "rotate-0 scale-100 opacity-100"
-            : "-rotate-90 scale-0 opacity-0"
+        className={`absolute top-1/2 left-1/2 h-5 w-5 text-gray-400 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
+          isDark ? "opacity-100 scale-100" : "opacity-0 scale-75"
         }`}
       />
 

@@ -98,7 +98,7 @@ function Header({ setSidebarOpen }: HeaderProps) {
         )}
       </div>
 
-      <div className="mt-4 px-4">
+      <div className="ml-4">
         <ThemeToggle />
       </div>
 
