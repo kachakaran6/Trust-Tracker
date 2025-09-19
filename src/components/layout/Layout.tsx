@@ -16,11 +16,11 @@ function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-gray-900 bg-opacity-50 transition-opacity md:hidden"
+          className="fixed inset-0 z-20 bg-gray-900 bg-opacity-50 dark:bg-black dark:bg-opacity-70 transition-opacity md:hidden"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
@@ -36,9 +36,12 @@ function Layout({ children }: LayoutProps) {
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
 
-        {/* <footer className="bg-white border-t border-gray-200 p-4 text-center text-sm text-gray-600">
-          <p>© 2025 FinSight. All rights reserved.</p>
-        </footer> */}
+        {/* Footer (optional) */}
+        {/* 
+    <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 text-center text-sm text-gray-600 dark:text-gray-400">
+      <p>© 2025 FinSight. All rights reserved.</p>
+    </footer> 
+    */}
       </div>
     </div>
   );

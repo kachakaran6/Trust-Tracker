@@ -474,8 +474,10 @@ const Predictions: React.FC = () => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-4 shadow-lg rounded-lg border border-neutral-200">
-          <p className="font-semibold text-neutral-800 mb-2">{label}</p>
+        <div className="bg-white dark:bg-gray-800 p-4 shadow-lg rounded-lg border border-neutral-200 dark:border-gray-700">
+          <p className="font-semibold text-neutral-800 dark:text-gray-100 mb-2">
+            {label}
+          </p>
           {payload.map(
             (item: any, index: number) =>
               item.value !== null && (
@@ -484,10 +486,10 @@ const Predictions: React.FC = () => {
                     className="w-3 h-3 rounded-full mr-2"
                     style={{ backgroundColor: item.color }}
                   />
-                  <span className="text-sm">
+                  <span className="text-sm text-neutral-800 dark:text-gray-100">
                     {item.name}: {formatCurrency(item.value)}
                     {item.payload.confidence && (
-                      <span className="text-neutral-500 ml-1">
+                      <span className="text-neutral-500 dark:text-gray-400 ml-1">
                         ({item.payload.confidence}% confidence)
                       </span>
                     )}
@@ -509,9 +511,7 @@ const Predictions: React.FC = () => {
           <div className="flex flex-col items-center space-y-4 animate-fade-in-up">
             <div className="relative">
               <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-primary-600">
-            
-              </div>
+              <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-primary-600"></div>
             </div>
             <p className="text-sm text-neutral-500">Loading predictions...</p>
           </div>
@@ -520,7 +520,7 @@ const Predictions: React.FC = () => {
     );
   }
 
-//  /loading removed  
+  //  /loading removed
 
   return (
     <AnimatePresence>
@@ -528,18 +528,20 @@ const Predictions: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-neutral-800 tracking-tight">
+            <h1 className="text-3xl font-bold text-neutral-800 dark:text-gray-100 tracking-tight">
               AI Predictions
             </h1>
-            <p className="text-neutral-500 mt-2">
+            <p className="text-neutral-500 dark:text-gray-400 mt-2">
               Machine learning powered financial forecasting
             </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center">
-              <span className="text-sm text-neutral-500 mr-2">Range:</span>
+              <span className="text-sm text-neutral-500 dark:text-gray-400 mr-2">
+                Range:
+              </span>
               <select
-                className="px-3 py-2 rounded-lg border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white text-neutral-900"
+                className="px-3 py-2 rounded-lg border border-neutral-200 dark:border-gray-600 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 text-neutral-900 dark:text-gray-100"
                 value={predictionRange}
                 onChange={(e) => setPredictionRange(parseInt(e.target.value))}
               >
@@ -549,6 +551,7 @@ const Predictions: React.FC = () => {
               </select>
             </div>
             <Button
+              className="dark:text-gray-100"
               variant="outline"
               onClick={trainModel}
               isLoading={isTraining}
@@ -563,7 +566,7 @@ const Predictions: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-6"
+          className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 border border-purple-200 dark:border-gray-700 rounded-xl p-6"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -571,10 +574,10 @@ const Predictions: React.FC = () => {
                 <Brain size={24} />
               </div>
               <div>
-                <h3 className="font-semibold text-neutral-800">
+                <h3 className="font-semibold text-neutral-800 dark:text-gray-100">
                   AI Model Status
                 </h3>
-                <p className="text-sm text-neutral-600">
+                <p className="text-sm text-neutral-600 dark:text-gray-400">
                   {isTraining
                     ? "Training neural network..."
                     : "Model ready for predictions"}
@@ -582,16 +585,18 @@ const Predictions: React.FC = () => {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-purple-600">
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {Math.round(modelAccuracy)}%
               </div>
-              <div className="text-sm text-neutral-500">Accuracy</div>
+              <div className="text-sm text-neutral-500 dark:text-gray-400">
+                Accuracy
+              </div>
             </div>
           </div>
 
           {isTraining && (
             <div className="mt-4">
-              <div className="w-full bg-neutral-200 rounded-full h-2">
+              <div className="w-full bg-neutral-200 dark:bg-gray-700 rounded-full h-2">
                 <motion.div
                   className="bg-gradient-to-r from-purple-600 to-blue-600 h-2 rounded-full"
                   initial={{ width: 0 }}
@@ -605,96 +610,79 @@ const Predictions: React.FC = () => {
 
         {/* Prediction Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card variant="glass" className="p-6 relative overflow-hidden">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-neutral-500">
-                    Next Month Prediction
-                  </p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    <p className="text-2xl font-bold text-purple-600">
-                      {formatCurrency(
-                        nextMonthPrediction?.predicted || totalPredicted
-                      )}
+          {[
+            {
+              title: "Next Month Prediction",
+              value: formatCurrency(
+                nextMonthPrediction?.predicted || totalPredicted
+              ),
+              color: "purple",
+              icon: <TrendingUp size={24} />,
+              subIcon: <Zap size={16} />,
+              subText: `${nextMonthPrediction?.confidence || 85}% confidence`,
+              bgClass: "bg-purple-100 dark:bg-purple-800/30",
+              textClass: "text-purple-600 dark:text-purple-400",
+            },
+            {
+              title: "Model Accuracy",
+              value: `${Math.round(modelAccuracy)}%`,
+              color: "blue",
+              icon: <Brain size={24} />,
+              subIcon: <Brain size={16} />,
+              subText: "TensorFlow.js",
+              bgClass: "bg-blue-100 dark:bg-blue-800/30",
+              textClass: "text-blue-600 dark:text-blue-400",
+            },
+            {
+              title: "Data Points",
+              value: transactions.length,
+              color: "green",
+              icon: <BarChart3 size={24} />,
+              subIcon: <BarChart3 size={16} />,
+              subText: "Transactions analyzed",
+              bgClass: "bg-success-100 dark:bg-green-800/30",
+              textClass: "text-success-600 dark:text-green-400",
+            },
+          ].map((card, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 * (idx + 1) }}
+            >
+              <Card
+                variant="glass"
+                className="p-6 relative overflow-hidden dark:bg-gray-900/50"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-neutral-500 dark:text-gray-400">
+                      {card.title}
                     </p>
-                  </p>
-                  <div className="flex items-center mt-2">
-                    <Zap className="text-purple-600 mr-1" size={16} />
-                    <span className="text-sm font-medium text-purple-600">
-                      {nextMonthPrediction?.confidence || 85}% confidence
-                    </span>
+                    <p className={`text-2xl font-bold ${card.textClass} mt-1`}>
+                      {card.value}
+                    </p>
+                    <div className="flex items-center mt-2">
+                      <span className={`${card.textClass} mr-1`}>
+                        {card.subIcon}
+                      </span>
+                      <span className={`text-sm font-medium ${card.textClass}`}>
+                        {card.subText}
+                      </span>
+                    </div>
+                  </div>
+                  <div
+                    className={`p-3 rounded-full ${card.bgClass} flex items-center justify-center`}
+                  >
+                    {card.icon}
                   </div>
                 </div>
-                <div className="p-3 bg-purple-100 rounded-full">
-                  <TrendingUp className="text-purple-600" size={24} />
-                </div>
-              </div>
-              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-purple-100 rounded-full opacity-30" />
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Card variant="glass" className="p-6 relative overflow-hidden">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-neutral-500">
-                    Model Accuracy
-                  </p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {Math.round(modelAccuracy)}%
-                  </p>
-                  <div className="flex items-center mt-2">
-                    <Brain className="text-blue-600 mr-1" size={16} />
-                    <span className="text-sm font-medium text-blue-600">
-                      TensorFlow.js
-                    </span>
-                  </div>
-                </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <Brain className="text-blue-600" size={24} />
-                </div>
-              </div>
-              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-blue-100 rounded-full opacity-30" />
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card variant="glass" className="p-6 relative overflow-hidden">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-neutral-500">
-                    Data Points
-                  </p>
-                  <p className="text-2xl font-bold text-success-600">
-                    {transactions.length}
-                  </p>
-                  <div className="flex items-center mt-2">
-                    <BarChart3 className="text-success-600 mr-1" size={16} />
-                    <span className="text-sm font-medium text-success-600">
-                      Transactions analyzed
-                    </span>
-                  </div>
-                </div>
-                <div className="p-3 bg-success-100 rounded-full">
-                  <BarChart3 className="text-success-600" size={24} />
-                </div>
-              </div>
-              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-success-100 rounded-full opacity-30" />
-            </Card>
-          </motion.div>
+                <div
+                  className={`absolute -bottom-4 -right-4 w-20 h-20 rounded-full ${card.bgClass} opacity-30`}
+                />
+              </Card>
+            </motion.div>
+          ))}
         </div>
 
         {/* Expense Trend Chart */}
@@ -703,16 +691,26 @@ const Predictions: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Card title="Expense Trend & AI Predictions" className="p-6">
+          <Card
+            title="Expense Trend & AI Predictions"
+            className="p-6 dark:bg-gray-900/50"
+          >
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={mlPredictions}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="month" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#37415150" />{" "}
+                  {/* subtle gray grid */}
+                  <XAxis
+                    dataKey="month"
+                    stroke="#9CA3AF"
+                    tick={{ fill: "currentColor" }}
+                  />
                   <YAxis
+                    stroke="#9CA3AF"
+                    tick={{ fill: "currentColor" }}
                     tickFormatter={(value) =>
                       formatCurrency(value).replace(/\.\d+/, "")
                     }
@@ -722,9 +720,16 @@ const Predictions: React.FC = () => {
                     x={mlPredictions[5]?.month}
                     stroke="#8B5CF6"
                     strokeDasharray="3 3"
-                    label={{ value: "AI Predictions", position: "top" }}
+                    label={{
+                      value: "AI Predictions",
+                      position: "top",
+                      fill: "#A78BFA", // softer purple for dark mode
+                      fontWeight: 600,
+                    }}
                   />
-                  <Legend />
+                  <Legend
+                    wrapperStyle={{ color: "#D1D5DB" }} // light gray for legend labels
+                  />
                   <Line
                     type="monotone"
                     name="Actual Expenses"
@@ -757,7 +762,10 @@ const Predictions: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <Card title="Category Predictions" className="p-6">
+            <Card
+              title="Category Predictions"
+              className="p-6 dark:bg-gray-900/50"
+            >
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
@@ -767,16 +775,23 @@ const Predictions: React.FC = () => {
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      stroke="#f0f0f0"
+                      stroke="#37415150"
                       horizontal={false}
                     />
                     <XAxis
                       type="number"
+                      stroke="#9CA3AF"
+                      tick={{ fill: "currentColor" }}
                       tickFormatter={(value) =>
                         formatCurrency(value).replace(/\.\d+/, "")
                       }
                     />
-                    <YAxis dataKey="name" type="category" />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      stroke="#9CA3AF"
+                      tick={{ fill: "currentColor" }}
+                    />
                     <Tooltip
                       formatter={(value) => formatCurrency(value as number)}
                     />
@@ -797,7 +812,10 @@ const Predictions: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <Card title="Spending Distribution" className="p-6">
+            <Card
+              title="Spending Distribution"
+              className="p-6 dark:bg-gray-900/50"
+            >
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -820,7 +838,7 @@ const Predictions: React.FC = () => {
                     <Tooltip
                       formatter={(value) => formatCurrency(value as number)}
                     />
-                    <Legend />
+                    <Legend wrapperStyle={{ color: "#D1D5DB" }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -834,35 +852,29 @@ const Predictions: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
         >
-          <Card title="Detailed Category Analysis" className="p-6">
+          <Card
+            title="Detailed Category Analysis"
+            className="p-6 dark:bg-gray-900/50"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categoryPredictions.slice(0, 6).map((category, index) => (
+              {categoryPredictions.slice(0, 6).map((category) => (
                 <div
                   key={category.id}
-                  className="p-4 rounded-xl border border-neutral-200 hover:border-primary-300 transition-all duration-200 hover:shadow-md"
+                  className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-primary-300 transition-all duration-200 hover:shadow-md"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center">
-                      {/* <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg mr-3"
-                        style={{
-                          backgroundColor: category.color + "20",
-                          color: category.color,
-                        }}
-                      >
-                        {category.icon}
-                      </div> */}
                       <div>
-                        <h4 className="font-semibold text-neutral-800">
+                        <h4 className="font-semibold text-neutral-800 dark:text-neutral-200">
                           {category.name}
                         </h4>
-                        <p className="text-sm text-neutral-500">
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
                           {category.confidence}% confidence
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold text-neutral-800">
+                      <div className="text-lg font-bold text-neutral-800 dark:text-neutral-200">
                         {formatCurrency(category.prediction)}
                       </div>
                       <div className="flex items-center">
@@ -893,12 +905,14 @@ const Predictions: React.FC = () => {
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-neutral-500">Current Month:</span>
-                      <span className="font-medium">
+                      <span className="text-neutral-500 dark:text-neutral-400">
+                        Current Month:
+                      </span>
+                      <span className="font-medium text-neutral-800 dark:text-neutral-200">
                         {formatCurrency(category.currentMonth)}
                       </span>
                     </div>
-                    <div className="w-full bg-neutral-200 rounded-full h-2">
+                    <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
                       <div
                         className="h-2 rounded-full transition-all duration-500"
                         style={{
@@ -927,24 +941,25 @@ const Predictions: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
         >
-          <Card className="p-6">
+          <Card className="p-6 dark:bg-gray-900/50">
             <div className="flex items-center mb-6">
               <div className="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white mr-4">
                 <Lightbulb size={24} />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-neutral-800">
+                <h2 className="text-xl font-semibold text-neutral-800 dark:text-neutral-200">
                   AI-Powered Recommendations
                 </h2>
-                <p className="text-neutral-500">
+                <p className="text-neutral-500 dark:text-neutral-400">
                   Personalized insights based on your spending patterns
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Optimization Opportunities */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-neutral-800 flex items-center">
+                <h3 className="font-semibold text-neutral-800 dark:text-neutral-200 flex items-center">
                   <Target className="mr-2 text-primary-600" size={20} />
                   Optimization Opportunities
                 </h3>
@@ -952,19 +967,10 @@ const Predictions: React.FC = () => {
                   {categoryPredictions.slice(0, 3).map((category) => (
                     <div
                       key={category.id}
-                      className="flex items-start p-3 bg-neutral-50 rounded-lg"
+                      className="flex items-start p-3 bg-neutral-50 dark:bg-gray-800 rounded-lg"
                     >
-                      {/* <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-sm mr-3 mt-0.5"
-                        style={{
-                          backgroundColor: category.color + "20",
-                          color: category.color,
-                        }}
-                      >
-                        {category.icon}
-                      </div> */}
                       <div className="flex-1">
-                        <p className="text-sm text-neutral-800">
+                        <p className="text-sm text-neutral-800 dark:text-neutral-200">
                           <strong>{category.name}</strong> spending is predicted
                           to {category.trend > 0 ? "increase" : "decrease"} by{" "}
                           <span
@@ -988,18 +994,19 @@ const Predictions: React.FC = () => {
                 </div>
               </div>
 
+              {/* Savings Opportunities */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-neutral-800 flex items-center">
+                <h3 className="font-semibold text-neutral-800 dark:text-neutral-200 flex items-center">
                   <DollarSign className="mr-2 text-success-600" size={20} />
                   Savings Opportunities
                 </h3>
                 <div className="space-y-3">
-                  <div className="flex items-start p-3 bg-success-50 rounded-lg">
-                    <div className="w-8 h-8 rounded-lg bg-success-100 flex items-center justify-center mr-3 mt-0.5">
+                  <div className="flex items-start p-3 bg-success-50 dark:bg-green-900 rounded-lg">
+                    <div className="w-8 h-8 rounded-lg bg-success-100 dark:bg-green-800 flex items-center justify-center mr-3 mt-0.5">
                       <TrendingDown className="text-success-600" size={16} />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-neutral-800">
+                      <p className="text-sm text-neutral-800 dark:text-neutral-200">
                         If you reduce your top spending category by 15%, you
                         could save approximately{" "}
                         <strong className="text-success-600">
@@ -1012,12 +1019,12 @@ const Predictions: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-start p-3 bg-blue-50 rounded-lg">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mr-3 mt-0.5">
+                  <div className="flex items-start p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-800 flex items-center justify-center mr-3 mt-0.5">
                       <Calendar className="text-blue-600" size={16} />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-neutral-800">
+                      <p className="text-sm text-neutral-800 dark:text-neutral-200">
                         Based on your income patterns, aim to save at least{" "}
                         <strong className="text-blue-600">20%</strong> of your
                         monthly income.
@@ -1025,12 +1032,12 @@ const Predictions: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-start p-3 bg-purple-50 rounded-lg">
-                    <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center mr-3 mt-0.5">
+                  <div className="flex items-start p-3 bg-purple-50 dark:bg-purple-900 rounded-lg">
+                    <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-800 flex items-center justify-center mr-3 mt-0.5">
                       <Brain className="text-purple-600" size={16} />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-neutral-800">
+                      <p className="text-sm text-neutral-800 dark:text-neutral-200">
                         Our AI model suggests setting up automatic transfers to
                         maximize your savings potential.
                       </p>

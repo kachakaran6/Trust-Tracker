@@ -110,8 +110,13 @@ function Budget() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Budget Planning</h1>
-        <button onClick={openAddForm} className="btn-primary">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+          Budget Planning
+        </h1>
+        <button
+          onClick={openAddForm}
+          className="btn-primary bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+        >
           <PlusCircle size={16} className="mr-1" />
           Add Budget
         </button>
@@ -119,22 +124,25 @@ function Budget() {
 
       {(isAddingBudget || isEditingBudget) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 animate-slide-up">
-            <h2 className="text-xl font-semibold mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 animate-slide-up border border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
               {editingBudgetId ? "Edit Budget" : "Add New Budget"}
             </h2>
 
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="categoryId" className="form-label">
+                  <label
+                    htmlFor="categoryId"
+                    className="form-label text-gray-700 dark:text-gray-300"
+                  >
                     Category
                   </label>
                   <select
                     id="categoryId"
                     name="categoryId"
                     required
-                    className="select-field"
+                    className="select-field bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
                     value={budgetForm.categoryId}
                     onChange={handleInputChange}
                   >
@@ -148,7 +156,10 @@ function Budget() {
                 </div>
 
                 <div>
-                  <label htmlFor="amount" className="form-label">
+                  <label
+                    htmlFor="amount"
+                    className="form-label text-gray-700 dark:text-gray-300"
+                  >
                     Budget Amount
                   </label>
                   <input
@@ -157,7 +168,7 @@ function Budget() {
                     type="number"
                     min="1"
                     required
-                    className="input-field"
+                    className="input-field bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
                     placeholder="0"
                     value={budgetForm.amount}
                     onChange={handleInputChange}
@@ -165,14 +176,17 @@ function Budget() {
                 </div>
 
                 <div>
-                  <label htmlFor="month" className="form-label">
+                  <label
+                    htmlFor="month"
+                    className="form-label text-gray-700 dark:text-gray-300"
+                  >
                     Month
                   </label>
                   <select
                     id="month"
                     name="month"
                     required
-                    className="select-field"
+                    className="select-field bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
                     value={budgetForm.month}
                     onChange={handleInputChange}
                   >
@@ -191,11 +205,14 @@ function Budget() {
                 <button
                   type="button"
                   onClick={closeForm}
-                  className="btn-outline"
+                  className="btn-outline text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
+                <button
+                  type="submit"
+                  className="btn-primary bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
+                >
                   {editingBudgetId ? "Update" : "Add"} Budget
                 </button>
               </div>
@@ -205,28 +222,30 @@ function Budget() {
       )}
 
       {/* Budget Summary */}
-      <div className="card p-6">
+      <div className="card p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
         <div className="flex justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold">Overall Budget</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Overall Budget
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Month of {format(new Date(currentMonth + "-01"), "MMMM yyyy")}
             </p>
           </div>
-          <p className="text-lg font-semibold">
+          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {formatCurrency(currentMonthSummary.totalSpent)} /{" "}
             {formatCurrency(currentMonthSummary.totalBudget)}
           </p>
         </div>
 
         <div className="relative pt-1">
-          <div className="flex justify-between text-sm mb-2">
+          <div className="flex justify-between text-sm mb-2 text-gray-700 dark:text-gray-300">
             <span>{formatPercentage(currentMonthSummary.percentage)} used</span>
             <span>
               {formatCurrency(currentMonthSummary.remaining)} remaining
             </span>
           </div>
-          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <div
               style={{
                 width: `${Math.min(currentMonthSummary.percentage, 100)}%`,
@@ -241,7 +260,9 @@ function Budget() {
 
       {/* Category Budgets */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Category Budgets</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+          Category Budgets
+        </h2>
         <div className="grid gap-4">
           {Object.entries(currentMonthSummary.categories).map(
             ([categoryId, data]) => {
@@ -253,11 +274,14 @@ function Budget() {
               );
 
               return (
-                <div key={categoryId} className="card p-6">
+                <div
+                  key={categoryId}
+                  className="card p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+                >
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-3">
                       <div
-                        className="w-10 h-10 flex items-center justify-center rounded-full"
+                        className="w-10 h-10 flex items-center justify-center rounded-full font-medium"
                         style={{
                           backgroundColor: category.color + "20",
                           color: category.color,
@@ -266,8 +290,10 @@ function Budget() {
                         {category.name.charAt(0)}
                       </div>
                       <div>
-                        <h3 className="font-medium">{category.name}</h3>
-                        <p className="text-sm text-gray-500">
+                        <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                          {category.name}
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {formatCurrency(data.spent)} of{" "}
                           {formatCurrency(data.budget)} used
                         </p>
@@ -278,7 +304,7 @@ function Budget() {
                         <>
                           <button
                             onClick={() => openEditForm(matchedBudget)}
-                            className="btn-sm btn-outline"
+                            className="btn-sm btn-outline text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                           >
                             <Pencil size={14} />
                           </button>
@@ -293,15 +319,15 @@ function Budget() {
                     </div>
                   </div>
 
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${getStatusColor(data.percentage)}`}
                       style={{ width: `${Math.min(data.percentage, 100)}%` }}
                     ></div>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>{formatPercentage(data.percentage)} used</span>
 
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <span>{formatPercentage(data.percentage)} used</span>
                     <span>{formatCurrency(data.remaining)} left</span>
                   </div>
                 </div>

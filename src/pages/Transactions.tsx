@@ -290,11 +290,13 @@ function Transactions() {
 
   return (
     <div className="space-y-6 pb-20">
-      {/*  Header  */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Transactions</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+            Transactions
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             {sortedTransactions.length} transaction
             {sortedTransactions.length !== 1 ? "s" : ""} found
           </p>
@@ -306,7 +308,7 @@ function Transactions() {
             variant="outline"
             icon={<FileText size={20} />}
             onClick={handleExportPDF}
-            className="shadow-sm hover:shadow-md transition-all duration-200"
+            className="shadow-sm hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
           >
             Export PDF
           </Button>
@@ -316,86 +318,93 @@ function Transactions() {
               variant="outline"
               icon={<Download size={20} />}
               onClick={handleExportExcel}
-              className="shadow-sm hover:shadow-md transition-all duration-200"
+              className="shadow-sm hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
             >
               Export Excel
             </Button>
 
             {/* Dropdown for Excel options */}
-            <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-neutral-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+            <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
               <div className="p-2">
                 <button
                   onClick={handleExportExcel}
-                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 rounded-md transition-colors"
+                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 >
                   📊 Detailed Report
-                  <div className="text-xs text-neutral-500">
+                  <div className="text-xs text-neutral-500 dark:text-gray-400">
                     Multiple sheets with analysis
                   </div>
                 </button>
                 <button
                   onClick={handleExportSimpleExcel}
-                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 rounded-md transition-colors"
+                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 >
                   📋 Simple List
-                  <div className="text-xs text-neutral-500">
+                  <div className="text-xs text-neutral-500 dark:text-gray-400">
                     Basic transaction list
                   </div>
                 </button>
               </div>
             </div>
           </div>
-        </div>
+          {/* </div> */}
 
-        {/* Mobile export dropdown */}
-        <div className="sm:hidden">
-          <Button
-            variant="outline"
-            icon={<FileText size={20} />}
-            onClick={() => setShowMobileExport(!showMobileExport)}
-            className="shadow-sm hover:shadow-md transition-all duration-200"
-          />
+          {/* Mobile export dropdown */}
+          <div className="sm:hidden">
+            <Button
+              variant="outline"
+              icon={<FileText size={20} />}
+              onClick={() => setShowMobileExport(!showMobileExport)}
+              className="shadow-sm hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+            />
 
-          {showMobileExport && (
-            <div
-              ref={dropdownRef}
-              className="absolute right-4 top-[60px] w-52 bg-white border border-neutral-200 rounded-lg shadow-lg z-20"
-            >
-              <div className="p-1">
-                <button
-                  onClick={handleExportPDF}
-                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 rounded-md"
-                >
-                  📄 Export PDF
-                </button>
-                <button
-                  onClick={handleExportExcel}
-                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 rounded-md"
-                >
-                  📊 Export Excel (Detailed)
-                </button>
-                <button
-                  onClick={handleExportSimpleExcel}
-                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 rounded-md"
-                >
-                  📋 Export Excel (Simple)
-                </button>
+            {showMobileExport && (
+              <div
+                ref={dropdownRef}
+                className="absolute right-4 top-[60px] w-52 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-lg shadow-lg z-20"
+              >
+                <div className="p-1">
+                  <button
+                    onClick={handleExportPDF}
+                    className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
+                  >
+                    📄 Export PDF
+                  </button>
+                  <button
+                    onClick={handleExportExcel}
+                    className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
+                  >
+                    📊 Export Excel (Detailed)
+                  </button>
+                  <button
+                    onClick={handleExportSimpleExcel}
+                    className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
+                  >
+                    📋 Export Excel (Simple)
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="card p-4 animate-fade-in">
+        {/* Total Income */}
+        <div className="card p-4 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
-              <ArrowUp size={20} className="text-green-600" />
+            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mr-3">
+              <ArrowUp
+                size={20}
+                className="text-green-600 dark:text-green-400"
+              />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Income</p>
-              <p className="text-lg font-semibold text-green-600">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Income
+              </p>
+              <p className="text-lg font-semibold text-green-600 dark:text-green-400">
                 {formatCurrency(
                   filteredTransactions
                     .filter((t) => t.type === "income")
@@ -406,17 +415,20 @@ function Transactions() {
           </div>
         </div>
 
+        {/* Total Expenses */}
         <div
-          className="card p-4 animate-fade-in"
+          className="card p-4 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
           style={{ animationDelay: "0.1s" }}
         >
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
-              <ArrowDown size={20} className="text-red-600" />
+            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mr-3">
+              <ArrowDown size={20} className="text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Expenses</p>
-              <p className="text-lg font-semibold text-red-600">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Expenses
+              </p>
+              <p className="text-lg font-semibold text-red-600 dark:text-red-400">
                 {formatCurrency(
                   filteredTransactions
                     .filter((t) => t.type === "expense")
@@ -427,16 +439,22 @@ function Transactions() {
           </div>
         </div>
 
+        {/* Net Balance */}
         <div
-          className="card p-4 animate-fade-in"
+          className="card p-4 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
           style={{ animationDelay: "0.2s" }}
         >
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-              <CreditCard size={20} className="text-blue-600" />
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+              <CreditCard
+                size={20}
+                className="text-blue-600 dark:text-blue-400"
+              />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Net Balance</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Net Balance
+              </p>
               <p
                 className={`text-lg font-semibold ${
                   filteredTransactions
@@ -446,8 +464,8 @@ function Transactions() {
                       .filter((t) => t.type === "expense")
                       .reduce((sum, t) => sum + t.amount, 0) >=
                   0
-                    ? "text-green-600"
-                    : "text-red-600"
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
                 }`}
               >
                 {formatCurrency(
@@ -465,27 +483,29 @@ function Transactions() {
       </div>
 
       {/* Filters and Search */}
-      <div className="card p-4 animate-fade-in">
+      <div className="card p-4 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Search Input */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-gray-400" />
+              <Search size={18} className="text-gray-400 dark:text-gray-400" />
             </div>
             <input
               type="text"
               placeholder="Search transactions..."
-              className="input-field pl-10"
+              className="input-field pl-10 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
+          {/* Category Filter */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Tag size={18} className="text-gray-400" />
+              <Tag size={18} className="text-gray-400 dark:text-gray-400" />
             </div>
             <select
-              className="select-field pl-10 appearance-none"
+              className="select-field pl-10 appearance-none bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
@@ -497,16 +517,20 @@ function Transactions() {
               ))}
             </select>
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <ArrowDown size={16} className="text-gray-400" />
+              <ArrowDown
+                size={16}
+                className="text-gray-400 dark:text-gray-400"
+              />
             </div>
           </div>
 
+          {/* Type Filter */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Filter size={18} className="text-gray-400" />
+              <Filter size={18} className="text-gray-400 dark:text-gray-400" />
             </div>
             <select
-              className="select-field pl-10 appearance-none"
+              className="select-field pl-10 appearance-none bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
             >
@@ -515,16 +539,23 @@ function Transactions() {
               <option value="expense">Expense</option>
             </select>
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <ArrowDown size={16} className="text-gray-400" />
+              <ArrowDown
+                size={16}
+                className="text-gray-400 dark:text-gray-400"
+              />
             </div>
           </div>
 
+          {/* Date Filter */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Calendar size={18} className="text-gray-400" />
+              <Calendar
+                size={18}
+                className="text-gray-400 dark:text-gray-400"
+              />
             </div>
             <select
-              className="select-field pl-10 appearance-none"
+              className="select-field pl-10 appearance-none bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
             >
@@ -534,7 +565,10 @@ function Transactions() {
               <option value="last-3-months">Last 3 Months</option>
             </select>
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <ArrowDown size={16} className="text-gray-400" />
+              <ArrowDown
+                size={16}
+                className="text-gray-400 dark:text-gray-400"
+              />
             </div>
           </div>
         </div>
@@ -542,14 +576,15 @@ function Transactions() {
 
       {showEditModal && transactionToEdit && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center transition-all duration-300">
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-lg animate-fade-in">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+          <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-lg animate-fade-in">
+            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-6">
               Edit Transaction
             </h2>
 
             <div className="space-y-5">
+              {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                   Description
                 </label>
                 <input
@@ -561,13 +596,14 @@ function Transactions() {
                       description: e.target.value,
                     })
                   }
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g. Grocery shopping"
                 />
               </div>
 
+              {/* Amount */}
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                   Amount
                 </label>
                 <input
@@ -579,13 +615,14 @@ function Transactions() {
                       amount: parseFloat(e.target.value),
                     })
                   }
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g. 150"
                 />
               </div>
 
+              {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                   Category
                 </label>
                 <select
@@ -596,7 +633,7 @@ function Transactions() {
                       category_id: e.target.value,
                     })
                   }
-                  className="w-full border border-gray-300 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Category</option>
                   {categories.map((cat) => (
@@ -607,8 +644,9 @@ function Transactions() {
                 </select>
               </div>
 
+              {/* Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">
+                <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
                   Date
                 </label>
                 <input
@@ -620,21 +658,22 @@ function Transactions() {
                       created_at: e.target.value,
                     })
                   }
-                  className="w-full border border-gray-300 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
+            {/* Actions */}
             <div className="mt-8 flex justify-end space-x-3">
               <button
                 onClick={() => setShowEditModal(false)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleSaveEdit(transactionToEdit)}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition"
               >
                 Save Changes
               </button>
@@ -644,16 +683,19 @@ function Transactions() {
       )}
 
       {/* Transactions List */}
-      <div className="card overflow-hidden animate-slide-up">
+      <div className="card overflow-hidden animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
         {sortedTransactions.length === 0 ? (
           <div className="p-12 text-center">
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <CreditCard size={32} className="text-gray-400" />
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-4">
+              <CreditCard
+                size={32}
+                className="text-gray-400 dark:text-gray-300"
+              />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
               No transactions found
             </h3>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
               {searchTerm || categoryFilter || typeFilter || dateFilter
                 ? "Try adjusting your filters to see more transactions."
                 : "Get started by adding your first transaction."}
@@ -668,13 +710,13 @@ function Transactions() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-[600px] w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Description
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                     onClick={() => toggleSort("category")}
                   >
                     <div className="flex items-center">
@@ -691,7 +733,7 @@ function Transactions() {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                     onClick={() => toggleSort("date")}
                   >
                     <div className="flex items-center">
@@ -708,7 +750,7 @@ function Transactions() {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                     onClick={() => toggleSort("amount")}
                   >
                     <div className="flex items-center justify-end">
@@ -724,12 +766,12 @@ function Transactions() {
                       )}
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {sortedTransactions.map((transaction) => {
                   const category = getCategoryById(
                     transaction.category_id || ""
@@ -737,7 +779,7 @@ function Transactions() {
                   return (
                     <tr
                       key={transaction.id}
-                      className="hover:bg-gray-50 transition-colors"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center">
@@ -754,14 +796,14 @@ function Transactions() {
                                   .toUpperCase()}
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               {transaction.description || "No Description..."}
                             </div>
                             <div
                               className={`text-xs ${
                                 transaction.type === "income"
-                                  ? "text-green-600"
-                                  : "text-red-600"
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-red-600 dark:text-red-400"
                               }`}
                             >
                               {transaction.type === "income"
@@ -781,7 +823,7 @@ function Transactions() {
                           {getCategoryName(transaction.category_id)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {format(
                           parseISO(transaction.created_at),
                           "MMM d, yyyy,h:mm a"
@@ -791,8 +833,8 @@ function Transactions() {
                         <span
                           className={`text-sm font-semibold ${
                             transaction.type === "income"
-                              ? "text-green-600"
-                              : "text-red-600"
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-red-600 dark:text-red-400"
                           }`}
                         >
                           {transaction.type === "income" ? "+" : "-"}
@@ -803,7 +845,7 @@ function Transactions() {
                         <div className="flex items-center justify-end space-x-2">
                           <button
                             onClick={() => handleEditClick(transaction)}
-                            className="btn-sm btn-outline"
+                            className="btn-sm btn-outline dark:text-gray-200 dark:hover:text-black dark:border-gray-400"
                           >
                             <Pencil size={14} />
                           </button>

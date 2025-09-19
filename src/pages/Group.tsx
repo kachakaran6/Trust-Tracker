@@ -123,9 +123,7 @@ const Groups: React.FC = () => {
         <div className="flex flex-col items-center space-y-4 animate-fade-in-up">
           <div className="relative">
             <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-primary-600">
-              
-            </div>
+            <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-primary-600"></div>
           </div>
           <p className="text-sm text-neutral-500">Loading groups...</p>
         </div>
@@ -139,16 +137,23 @@ const Groups: React.FC = () => {
       <AnimatePresence>
         {notification && (
           <motion.div
+            key={notification.id}
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
-              notification.type === "success"
-                ? "bg-success-600 text-white"
-                : "bg-danger-600 text-white"
-            }`}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className={`
+        fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg
+        ${
+          notification.type === "success"
+            ? "bg-success-600 text-white dark:bg-green-500"
+            : "bg-danger-600 text-white dark:bg-red-500"
+        }
+      `}
+            role="alert"
+            aria-live="assertive"
           >
-            {notification.message}
+            <p className="text-sm font-medium">{notification.message}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -156,25 +161,31 @@ const Groups: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Group Wallet</h1>
-          <p className="text-neutral-500 mt-2">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+            Group Wallet
+          </h1>
+          <p className="text-neutral-500 dark:text-neutral-400 mt-2">
             Manage shared expenses with friends, family, or teams
           </p>
         </div>
+
         <div className="flex gap-3">
           <Button
             variant="outline"
             icon={<UserPlus size={20} />}
             onClick={() => setShowJoinModal(true)}
-            className="shadow-sm hover:shadow-md transition-all duration-200"
+            className="shadow-sm hover:shadow-md transition-all duration-200 dark:text-gray-100"
+            aria-label="Join Group"
           >
             Join Group
           </Button>
+
           <Button
             variant="gradient"
             icon={<Plus size={20} />}
             onClick={() => setShowCreateModal(true)}
             className="shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            aria-label="Create Group"
           >
             Create Group
           </Button>
@@ -182,39 +193,50 @@ const Groups: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="flex items-center justify-between p-4 bg-white border border-gray-300 shadow-sm rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        {/* Total Groups */}
+        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm rounded-lg">
           <div>
-            <p className="text-sm font-medium text-neutral-500">Total Groups</p>
+            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
+              Total Groups
+            </p>
             <p className="text-2xl font-bold text-primary-600">
               {groups.length}
             </p>
           </div>
-          <div className="p-3 bg-primary-100 rounded-full">
-            <Users className="text-primary-600" size={24} />
+          <div className="p-3 bg-primary-100 dark:bg-primary-800 rounded-full">
+            <Users
+              className="text-primary-600 dark:text-primary-400"
+              size={24}
+            />
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-white border border-gray-300 shadow-sm rounded-lg">
+        {/* Active Groups */}
+        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm rounded-lg">
           <div>
-            <p className="text-sm font-medium text-neutral-500">
+            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
               Active Groups
             </p>
-            <p className="text-2xl font-bold text-success-600">
+            <p className="text-2xl font-bold text-success-600 dark:text-success-400">
               {groups.length}
             </p>
           </div>
-          <div className="p-3 bg-success-100 rounded-full">
-            <Settings className="text-success-600" size={24} />
+          <div className="p-3 bg-success-100 dark:bg-success-800 rounded-full">
+            <Settings
+              className="text-success-600 dark:text-success-400"
+              size={24}
+            />
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-white border border-gray-300 shadow-sm rounded-lg">
+        {/* Total Members */}
+        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm rounded-lg">
           <div>
-            <p className="text-sm font-medium text-neutral-500">
+            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
               Total Members
             </p>
-            <p className="text-2xl font-bold text-neutral-800">
+            <p className="text-2xl font-bold text-neutral-800 dark:text-gray-100">
               {groups.reduce(
                 (sum, group) =>
                   sum + (group._group_members_count?.[0]?.count || 0),
@@ -222,28 +244,38 @@ const Groups: React.FC = () => {
               )}
             </p>
           </div>
-          <div className="p-3 bg-neutral-100 rounded-full">
-            <Users className="text-neutral-600" size={24} />
+          <div className="p-3 bg-neutral-100 dark:bg-gray-700 rounded-full">
+            <Users
+              className="text-neutral-600 dark:text-neutral-300"
+              size={24}
+            />
           </div>
         </div>
       </div>
 
       {/* Groups Grid */}
       {groups.length === 0 ? (
-        <Card variant="glass" className="text-center py-16">
+        <Card
+          variant="glass"
+          className="text-center py-16 dark:bg-gray-800 dark:text-gray-100"
+        >
           <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users size={32} className="text-primary-600" />
+            <div className="w-16 h-16 bg-primary-100 dark:bg-primary-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users
+                size={32}
+                className="text-primary-600 dark:text-primary-400"
+              />
             </div>
-            <h3 className="text-lg font-medium text-neutral-800 mb-2">
+            <h3 className="text-lg font-medium text-neutral-800 dark:text-gray-100 mb-2">
               No groups yet
             </h3>
-            <p className="text-neutral-600 mb-6">
+            <p className="text-neutral-600 dark:text-neutral-400 mb-6">
               Create your first group or join an existing one to start managing
               shared expenses.
             </p>
             <div className="flex gap-3 justify-center">
               <Button
+                className="dark:text-gray-100"
                 variant="outline"
                 onClick={() => setShowJoinModal(true)}
                 icon={<UserPlus size={16} />}
@@ -273,19 +305,22 @@ const Groups: React.FC = () => {
               >
                 <Card
                   variant="glass"
-                  className="group hover:shadow-lg shadow-md transition-all duration-300 cursor-pointer border border-slate-300 hover:border-primary-400"
+                  className="group hover:shadow-lg shadow-md transition-all duration-300 cursor-pointer border border-slate-300 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-500 dark:bg-gray-800"
                 >
                   <div className="p-4">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center">
-                        <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center mr-3">
-                          <Users className="text-primary-600" size={24} />
+                        <div className="w-12 h-12 bg-primary-100 dark:bg-primary-800 rounded-xl flex items-center justify-center mr-3">
+                          <Users
+                            className="text-primary-600 dark:text-primary-400"
+                            size={24}
+                          />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-neutral-800 group-hover:text-primary-600 transition-colors">
+                          <h3 className="font-semibold text-neutral-800 dark:text-gray-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                             {group.name}
                           </h3>
-                          <p className="text-sm text-neutral-500">
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400">
                             {group._group_members_count?.[0]?.count || 0}{" "}
                             members
                           </p>
@@ -296,14 +331,14 @@ const Groups: React.FC = () => {
                           variant="ghost"
                           size="sm"
                           icon={<Eye size={16} />}
-                          className="text-neutral-400 hover:text-primary-600"
+                          className="text-neutral-400 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400"
                           onClick={() => navigate(`/grp/${group.id}`)}
                         />
                         <Button
                           variant="ghost"
                           size="sm"
                           icon={<Trash2 size={16} />}
-                          className="text-neutral-400 hover:text-danger-600"
+                          className="text-neutral-400 dark:text-neutral-300 hover:text-danger-600 dark:hover:text-danger-400"
                           onClick={() =>
                             handleDeleteGroup(group.id, group.name)
                           }
@@ -311,41 +346,35 @@ const Groups: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* {group.description && (
-                      <p className="text-sm text-neutral-600 mb-4">
-                        {group.description}
-                      </p>
-                    )} */}
-
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-neutral-500">
+                        <span className="text-sm text-neutral-500 dark:text-neutral-400">
                           Group Code
                         </span>
                         <div className="flex items-center space-x-2">
-                          <code className="bg-neutral-100 px-2 py-1 rounded text-sm font-mono">
+                          <code className="bg-neutral-100 dark:bg-gray-700 px-2 py-1 rounded text-sm font-mono text-neutral-800 dark:text-gray-100">
                             {group.code}
                           </code>
                           <Button
                             variant="ghost"
                             size="sm"
                             icon={<Copy size={14} />}
-                            className="text-neutral-400 hover:text-primary-600"
+                            className="text-neutral-400 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400"
                             onClick={() => copyGroupCode(group.code)}
                           />
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-neutral-500">
+                        <span className="text-sm text-neutral-500 dark:text-neutral-400">
                           Created
                         </span>
-                        <span className="text-sm text-neutral-700">
+                        <span className="text-sm text-neutral-700 dark:text-neutral-200">
                           {format(new Date(group.created_at), "MMM dd, yyyy")}
                         </span>
                       </div>
 
-                      <div className="pt-3 border-t border-neutral-200">
+                      <div className="pt-3 border-t border-neutral-200 dark:border-gray-700">
                         <div className="flex gap-2">
                           <Button
                             variant="primary"
@@ -386,7 +415,7 @@ const Groups: React.FC = () => {
       >
         <form onSubmit={handleCreateGroup} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
               Group Name *
             </label>
             <input
@@ -395,14 +424,14 @@ const Groups: React.FC = () => {
               onChange={(e) =>
                 setCreateForm({ ...createForm, name: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+              className="w-full px-4 py-3 rounded-xl border border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-neutral-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
               placeholder="Enter group name"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
               Description (Optional)
             </label>
             <textarea
@@ -410,7 +439,7 @@ const Groups: React.FC = () => {
               onChange={(e) =>
                 setCreateForm({ ...createForm, description: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
+              className="w-full px-4 py-3 rounded-xl border border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-neutral-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
               placeholder="What's this group for?"
               rows={3}
             />
@@ -445,19 +474,19 @@ const Groups: React.FC = () => {
       >
         <form onSubmit={handleJoinGroup} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
               Group Code
             </label>
             <input
               type="text"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 font-mono"
+              className="w-full px-4 py-3 rounded-xl border border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-neutral-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 font-mono"
               placeholder="Enter 6-character code"
               maxLength={6}
               required
             />
-            <p className="text-sm text-neutral-500 mt-2">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
               Ask a group member for the 6-character group code
             </p>
           </div>

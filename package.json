@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/genai": "^1.20.0",
+    "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.2.0",
     "@react-pdf-viewer/core": "^3.12.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
@@ -20,6 +22,8 @@
     "file-saver": "^2.0.5",
     "framer-motion": "^12.23.0",
     "lucide-react": "^0.344.0",
+    "next-themes": "^0.4.6",
+    "openai": "^5.21.0",
     "pdfmake": "^0.2.20",
     "react": "^18.3.1",
     "react-countup": "^6.5.3",

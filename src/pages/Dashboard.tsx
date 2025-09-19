@@ -117,12 +117,14 @@ function Dashboard() {
   };
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-20 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       <Toaster position="top-right" />
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+            Dashboard
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {format(new Date(), "MMMM d, yyyy")}
           </p>
         </div>
@@ -137,11 +139,14 @@ function Dashboard() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card p-6 animate-fade-in">
+        {/* Income */}
+        <div className="card p-6 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <div className="flex justify-between">
             <div>
-              <p className="text-sm text-gray-500 mb-1">Income</p>
-              <p className="text-2xl font-bold">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Income
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 <CountUp
                   end={currentMonthSummary.totalIncome}
                   duration={1.25}
@@ -151,21 +156,26 @@ function Dashboard() {
                 />
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-600 dark:text-green-400">
               <ArrowUpRight size={20} />
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">This month</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+            This month
+          </p>
         </div>
 
+        {/* Expenses */}
         <div
-          className="card p-6 animate-fade-in"
+          className="card p-6 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
           style={{ animationDelay: "0.1s" }}
         >
           <div className="flex justify-between">
             <div>
-              <p className="text-sm text-gray-500 mb-1">Expenses</p>
-              <p className="text-2xl font-bold">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Expenses
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 <CountUp
                   end={currentMonthSummary.totalExpense}
                   duration={1.25}
@@ -175,21 +185,26 @@ function Dashboard() {
                 />
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center text-red-600 dark:text-red-400">
               <ArrowDownRight size={20} />
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">This month</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+            This month
+          </p>
         </div>
 
+        {/* Balance */}
         <div
-          className="card p-6 animate-fade-in"
+          className="card p-6 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
           style={{ animationDelay: "0.2s" }}
         >
           <div className="flex justify-between">
             <div>
-              <p className="text-sm text-gray-500 mb-1">Balance</p>
-              <p className="text-2xl font-bold">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Balance
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 <CountUp
                   end={currentMonthSummary.balance}
                   duration={1.25}
@@ -199,36 +214,43 @@ function Dashboard() {
                 />
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400">
               <Wallet size={20} />
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-4">Net balance</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+            Net balance
+          </p>
         </div>
 
+        {/* Budget Spent */}
         <div
-          className="card p-6 animate-fade-in"
+          className="card p-6 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
           style={{ animationDelay: "0.3s" }}
         >
           <div className="flex justify-between">
             <div>
-              <p className="text-sm text-gray-500 mb-1">Budget Spent</p>
-              <p className="text-2xl font-bold">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Budget Spent
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {Math.round(budgetSummary.percentage)}%
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-400">
               <TrendingUp size={20} />
             </div>
           </div>
-          <div className="mt-4 bg-gray-200 h-2 rounded-full overflow-hidden">
+
+          {/* Progress Bar */}
+          <div className="mt-4 bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full ${
                 budgetSummary.percentage > 90
-                  ? "bg-danger-500"
+                  ? "bg-red-500"
                   : budgetSummary.percentage > 75
-                  ? "bg-warning-500"
-                  : "bg-success-500"
+                  ? "bg-yellow-500"
+                  : "bg-green-500"
               }`}
               style={{ width: `${Math.min(budgetSummary.percentage, 100)}%` }}
             ></div>
@@ -237,8 +259,8 @@ function Dashboard() {
       </div>
 
       {/* Spending trend chart */}
-      <div className="card p-6 animate-slide-up">
-        <h2 className="text-lg font-semibold mb-4">
+      <div className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
           Income vs. Expenses Trend
         </h2>
         <div className="h-80">
@@ -247,14 +269,37 @@ function Dashboard() {
               data={trendData}
               margin={{ top: 5, right: 20, bottom: 20, left: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" />
+              {/* Grid lines adapt to theme */}
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="var(--tw-prose-body, #e5e7eb)" // fallback to gray-200
+                className="text-gray-200 dark:text-gray-700"
+              />
+              <XAxis
+                dataKey="name"
+                stroke="currentColor"
+                className="text-gray-600 dark:text-gray-400"
+              />
               <YAxis
                 tickFormatter={(value) =>
                   formatCurrency(value).replace(/\.\d+/, "")
                 }
+                stroke="currentColor"
+                className="text-gray-600 dark:text-gray-400"
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip
+                content={<CustomTooltip />}
+                wrapperStyle={{
+                  backgroundColor: "var(--tooltip-bg, white)",
+                  border: "1px solid var(--tooltip-border, #e5e7eb)",
+                  borderRadius: "0.5rem",
+                }}
+                contentStyle={{
+                  backgroundColor: "white",
+                  color: "#111827",
+                }}
+                itemStyle={{ color: "#374151" }}
+              />
               <Line
                 type="monotone"
                 dataKey="income"
@@ -280,14 +325,14 @@ function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Category breakdown */}
         <div
-          className="card p-6 animate-slide-up"
+          className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
           style={{ animationDelay: "0.1s" }}
         >
-          <h2 className="text-lg font-semibold mb-4">
+          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
             Top Spending Categories
           </h2>
           {categoryData.length === 0 ? (
-            <div className="h-64 flex items-center justify-center text-gray-500">
+            <div className="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
               <p>No spending data available</p>
             </div>
           ) : (
@@ -320,6 +365,12 @@ function Dashboard() {
                   </Pie>
                   <Tooltip
                     formatter={(value) => formatCurrency(value as number)}
+                    contentStyle={{
+                      backgroundColor: "var(--tooltip-bg, white)",
+                      color: "var(--tooltip-text, #111827)",
+                      borderRadius: "0.5rem",
+                      border: "1px solid var(--tooltip-border, #e5e7eb)",
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -329,17 +380,22 @@ function Dashboard() {
 
         {/* Recent transactions */}
         <div
-          className="card overflow-hidden animate-slide-up"
+          className="card overflow-hidden animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
           style={{ animationDelay: "0.2s" }}
         >
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-lg font-semibold">Recent Transactions</h2>
+          <div className="p-6 border-b border-gray-100 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Recent Transactions
+            </h2>
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {recentTransactions.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">
-                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                  <DollarSign size={24} className="text-gray-400" />
+              <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+                <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-3">
+                  <DollarSign
+                    size={24}
+                    className="text-gray-400 dark:text-gray-300"
+                  />
                 </div>
                 <p className="mb-3">No recent transactions</p>
                 <button
@@ -355,7 +411,7 @@ function Dashboard() {
                 return (
                   <div
                     key={transaction.id}
-                    className="p-4 hover:bg-gray-50 transition-colors"
+                    className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <div className="flex items-center">
                       <div
@@ -369,12 +425,12 @@ function Dashboard() {
                           : transaction.category_id?.charAt(0).toUpperCase()}
                       </div>
                       <div className="ml-3 flex-1">
-                        <p className="font-medium">
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
                           {transaction.description
                             ? transaction.description
                             : category?.name}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {transaction.description ? (
                             <>{category?.name || "Unknown"} </>
                           ) : null}
@@ -397,10 +453,10 @@ function Dashboard() {
               })
             )}
           </div>
-          <div className="p-4 border-t border-gray-100 text-center">
+          <div className="p-4 border-t border-gray-100 dark:border-gray-700 text-center">
             <a
               href="/transactions"
-              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
             >
               View All Transactions
             </a>

@@ -400,9 +400,7 @@ function Admin() {
         <div className="flex flex-col items-center space-y-4 animate-fade-in-up">
           <div className="relative">
             <div className="w-12 h-12 border-4 border-primary-400 border-t-transparent rounded-full animate-spin-fast"></div>
-            <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-primary-600">
-              
-            </div>
+            <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-primary-600"></div>
           </div>
           <p className="text-sm text-white/90">Loading admin data....</p>
         </div>
@@ -421,10 +419,12 @@ function Admin() {
             <Crown size={24} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
               Admin Dashboard
             </h1>
-            <p className="text-gray-600 text-sm">Super Admin Control Panel</p>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Super Admin Control Panel
+            </p>
           </div>
         </div>
 
@@ -432,7 +432,7 @@ function Admin() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:space-x-3 gap-2">
           <button
             onClick={loadAdminData}
-            className="btn-outline flex items-center justify-center"
+            className="btn-outline flex items-center justify-center dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
             disabled={isLoading}
           >
             <RefreshCw
@@ -446,14 +446,14 @@ function Admin() {
 
       {/* Success/Error Messages */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center animate-fade-in">
+        <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg flex items-center animate-fade-in">
           <AlertCircle size={16} className="mr-2" />
           {error}
         </div>
       )}
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center animate-fade-in">
+        <div className="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-200 px-4 py-3 rounded-lg flex items-center animate-fade-in">
           <CheckCircle size={16} className="mr-2" />
           {success}
         </div>
@@ -461,116 +461,147 @@ function Admin() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        {/* Total User */}
-        <div className="card p-4 animate-fade-in">
+        {/* Total Users */}
+        <div className="card p-4 animate-fade-in bg-white dark:bg-gray-800">
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-              <Users size={20} className="text-blue-600" />
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+              <Users size={20} className="text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Users</p>
-              <p className="text-xl font-bold">{stats.totalUsers}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Users
+              </p>
+              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {stats.totalUsers}
+              </p>
             </div>
           </div>
         </div>
+
         {/* Active Users */}
         <div
-          className="card p-4 animate-fade-in"
+          className="card p-4 animate-fade-in bg-white dark:bg-gray-800"
           style={{ animationDelay: "0.1s" }}
         >
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
-              <UserCheck size={20} className="text-green-600" />
+            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mr-3">
+              <UserCheck
+                size={20}
+                className="text-green-600 dark:text-green-400"
+              />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Active</p>
-              <p className="text-xl font-bold">{stats.activeUsers}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {stats.activeUsers}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Admins */}
         <div
-          className="card p-4 animate-fade-in"
+          className="card p-4 animate-fade-in bg-white dark:bg-gray-800"
           style={{ animationDelay: "0.3s" }}
         >
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-              <Crown size={20} className="text-purple-600" />
+            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center mr-3">
+              <Crown
+                size={20}
+                className="text-purple-600 dark:text-purple-400"
+              />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Admins</p>
-              <p className="text-xl font-bold">{stats.superAdmins}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Admins</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {stats.superAdmins}
+              </p>
             </div>
           </div>
         </div>
+
         {/* Transactions */}
         <div
-          className="card p-4 animate-fade-in"
+          className="card p-4 animate-fade-in bg-white dark:bg-gray-800"
           style={{ animationDelay: "0.4s" }}
         >
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
-              <BarChart3 size={20} className="text-indigo-600" />
+            <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mr-3">
+              <BarChart3
+                size={20}
+                className="text-indigo-600 dark:text-indigo-400"
+              />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Transactions</p>
-              <p className="text-xl font-bold">{stats.totalTransactions}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Transactions
+              </p>
+              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {stats.totalTransactions}
+              </p>
             </div>
           </div>
         </div>
+
         {/* Total Volume */}
         <div
-          className="card p-4 animate-fade-in"
+          className="card p-4 animate-fade-in bg-white dark:bg-gray-800"
           style={{ animationDelay: "0.5s" }}
         >
           <div className="flex items-center">
-            {/* <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
-              <div className="text-yellow-600" />
-            </div> */}
             <div>
-              <p className="text-sm text-gray-500">Total Volume</p>
-              <p className="text-xl font-bold">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Volume
+              </p>
+              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 {formatCurrency(stats.totalAmount)}
               </p>
             </div>
           </div>
         </div>
+
         {/* New This Month */}
         <div
-          className="card p-4 animate-fade-in"
+          className="card p-4 animate-fade-in bg-white dark:bg-gray-800"
           style={{ animationDelay: "0.6s" }}
         >
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center mr-3">
-              <TrendingUp size={20} className="text-teal-600" />
+            <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center mr-3">
+              <TrendingUp
+                size={20}
+                className="text-teal-600 dark:text-teal-400"
+              />
             </div>
             <div>
-              <p className="text-sm text-gray-500">New This Month</p>
-              <p className="text-xl font-bold">{stats.newUsersThisMonth}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                New This Month
+              </p>
+              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                {stats.newUsersThisMonth}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="card p-4 animate-slide-up">
+      <div className="card p-4 animate-slide-up bg-white dark:bg-gray-800">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-gray-400" />
+              <Search size={18} className="text-gray-400 dark:text-gray-500" />
             </div>
             <input
               type="text"
               placeholder="Search users..."
-              className="input-field pl-10"
+              className="input-field pl-10 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
           <select
-            className="select-field"
+            className="select-field dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
           >
@@ -579,7 +610,7 @@ function Admin() {
             <option value="super_admin">Super Admins</option>
           </select>
 
-          <div className="text-sm text-gray-500 flex items-center">
+          <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
             <Filter size={16} className="mr-2" />
             {filteredUsers.length} of {users.length} users
           </div>
@@ -596,24 +627,24 @@ function Admin() {
 
       {/* Users Table */}
       <div
-        className="card overflow-hidden animate-slide-up"
+        className="card overflow-hidden animate-slide-up bg-white dark:bg-gray-800"
         style={{ animationDelay: "0.1s" }}
       >
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   User
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Role
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Status
                 </th>
                 <th
-                  className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() => toggleSort("total_transactions")}
                 >
                   <div className="flex items-center">
@@ -629,12 +660,11 @@ function Admin() {
                     )}
                   </div>
                 </th>
-
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Total Amount
                 </th>
                 <th
-                  className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() => toggleSort("created_at")}
                 >
                   <div className="flex items-center">
@@ -650,32 +680,31 @@ function Admin() {
                     )}
                   </div>
                 </th>
-
-                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {sortedUsers.map((user) => (
                 <tr
                   key={user.user_id}
-                  className="hover:bg-gray-50 transition-colors"
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center mr-3 text-primary-700 font-bold">
+                      <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center mr-3 text-primary-700 dark:text-primary-300 font-bold">
                         {user.full_name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {user.raw_user_meta_data?.full_name ||
                             user.raw_user_meta_data?.name ||
                             (user.full_name && user.full_name !== "Anonymous"
                               ? user.full_name
                               : "Anonymous")}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                           {user.email}
                         </div>
                       </div>
@@ -685,8 +714,8 @@ function Admin() {
                     <span
                       className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         user.user_role === "super_admin"
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-gray-100 text-gray-800"
+                          ? "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                       }`}
                     >
                       {user.user_role === "super_admin"
@@ -698,27 +727,27 @@ function Admin() {
                     <span
                       className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         user.user_status === "active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                          ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+                          : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
                       }`}
                     >
                       {user.user_status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                     {user.total_transactions}
                   </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
                     {formatCurrency(user.total_amount)}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                     {format(parseISO(user.created_at), "MMM d, yyyy")}
                   </td>
                   <td className="px-6 py-4 text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => viewUserDetails(user)}
-                        className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded transition-colors"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-1 hover:bg-blue-50 dark:hover:bg-blue-900 rounded transition-colors"
                         title="View details"
                       >
                         <Eye size={16} />
@@ -730,7 +759,7 @@ function Admin() {
                             handleUserAction(user.user_id, "promote")
                           }
                           disabled={actionLoading === `${user.user_id}-promote`}
-                          className="text-purple-600 hover:text-purple-900 p-1 hover:bg-purple-50 rounded transition-colors disabled:opacity-50"
+                          className="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 p-1 hover:bg-purple-50 dark:hover:bg-purple-900 rounded transition-colors disabled:opacity-50"
                           title="Promote to admin"
                         >
                           {actionLoading === `${user.user_id}-promote` ? (
@@ -749,7 +778,7 @@ function Admin() {
                             disabled={
                               actionLoading === `${user.user_id}-demote`
                             }
-                            className="text-gray-600 hover:text-gray-900 p-1 hover:bg-gray-50 rounded transition-colors disabled:opacity-50"
+                            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
                             title="Demote to user"
                           >
                             {actionLoading === `${user.user_id}-demote` ? (
@@ -764,7 +793,7 @@ function Admin() {
                       <button
                         onClick={() => handleUserAction(user.user_id, "delete")}
                         disabled={actionLoading === `${user.user_id}-delete`}
-                        className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1 hover:bg-red-50 dark:hover:bg-red-900 rounded transition-colors disabled:opacity-50"
                         title="Delete user"
                       >
                         {actionLoading === `${user.user_id}-delete` ? (
@@ -783,7 +812,6 @@ function Admin() {
       </div>
 
       {/* User Details Modal */}
-
       <AnimatePresence>
         {showUserModal && selectedUser && (
           <motion.div
@@ -793,20 +821,20 @@ function Admin() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-2xl shadow-xl max-w-3xl w-full p-6"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-3xl w-full p-6"
               initial={{ opacity: 0, scale: 0.95, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 30 }}
               transition={{ duration: 0.25 }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between border-b pb-4 mb-6">
-                <h2 className="text-2xl font-semibold text-gray-800">
+              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4 mb-6">
+                <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
                   User Details
                 </h2>
                 <button
                   onClick={() => setShowUserModal(false)}
-                  className="text-gray-400 hover:text-gray-600 text-3xl leading-none"
+                  className="text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-100 text-3xl leading-none"
                 >
                   &times;
                 </button>
@@ -816,29 +844,39 @@ function Admin() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Basic Info */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">
+                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
                     👤 Basic Information
                   </h3>
-                  <div className="space-y-2 text-sm text-gray-600">
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                     <div>
-                      <span className="font-medium text-gray-800">Name:</span>{" "}
+                      <span className="font-medium text-gray-800 dark:text-gray-100">
+                        Name:
+                      </span>{" "}
                       {selectedUser.raw_user_meta_data?.full_name ||
                         "Unknown User"}
                     </div>
                     <div>
-                      <span className="font-medium text-gray-800">Email:</span>{" "}
+                      <span className="font-medium text-gray-800 dark:text-gray-100">
+                        Email:
+                      </span>{" "}
                       {selectedUser.email}
                     </div>
                     <div>
-                      <span className="font-medium text-gray-800">Role:</span>{" "}
+                      <span className="font-medium text-gray-800 dark:text-gray-100">
+                        Role:
+                      </span>{" "}
                       {selectedUser.user_role}
                     </div>
                     <div>
-                      <span className="font-medium text-gray-800">Status:</span>{" "}
+                      <span className="font-medium text-gray-800 dark:text-gray-100">
+                        Status:
+                      </span>{" "}
                       {selectedUser.user_status}
                     </div>
                     <div>
-                      <span className="font-medium text-gray-800">Joined:</span>{" "}
+                      <span className="font-medium text-gray-800 dark:text-gray-100">
+                        Joined:
+                      </span>{" "}
                       {format(
                         parseISO(selectedUser.created_at),
                         "MMM d, yyyy, hh:mm:ss a"
@@ -846,7 +884,7 @@ function Admin() {
                     </div>
                     {selectedUser.last_sign_in_at && (
                       <div>
-                        <span className="font-medium text-gray-800">
+                        <span className="font-medium text-gray-800 dark:text-gray-100">
                           Last Login:
                         </span>{" "}
                         {format(
@@ -860,26 +898,26 @@ function Admin() {
 
                 {/* Activity Summary */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">
+                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
                     📊 Activity Summary
                   </h3>
-                  <div className="space-y-2 text-sm text-gray-600">
+                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                     <div>
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-gray-800 dark:text-gray-100">
                         Total Transactions:
                       </span>{" "}
                       {selectedUser.total_transactions}
                     </div>
                     <div>
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-gray-800 dark:text-gray-100">
                         Total Amount:
                       </span>{" "}
                       {formatCurrency(selectedUser.total_amount)}
                     </div>
                     <div>
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-gray-800 dark:text-gray-100">
                         Average per Transaction:
-                      </span>
+                      </span>{" "}
                       {selectedUser.total_transactions > 0
                         ? formatCurrency(
                             selectedUser.total_amount /
@@ -895,12 +933,13 @@ function Admin() {
               <div className="mt-8 flex justify-end">
                 <button
                   onClick={() => setShowUserModal(false)}
-                  className="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition"
+                  className="px-5 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-medium transition"
                 >
                   Close
                 </button>
               </div>
             </motion.div>
+            /
           </motion.div>
         )}
       </AnimatePresence>

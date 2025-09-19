@@ -206,13 +206,13 @@ function Settings() {
         return (
           <div className="animate-fade-in">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
                 Profile Settings
               </h2>
               {!isEditingProfile && (
                 <button
                   onClick={() => setIsEditingProfile(true)}
-                  className="btn-outline flex items-center text-gray-700 hover:text-gray-900 transition duration-200"
+                  className="btn-outline flex items-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition duration-200"
                 >
                   <Edit2 size={16} className="mr-1" />
                   Edit Profile
@@ -222,16 +222,16 @@ function Settings() {
 
             {/* Success Message */}
             {showSuccessMessage && (
-              <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center animate-fade-in">
+              <div className="mb-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg flex items-center animate-fade-in">
                 <Check size={16} className="mr-2" />
                 Profile updated successfully!
               </div>
             )}
 
-            <div className="card p-6 mb-6 shadow-lg rounded-lg">
+            <div className="card p-6 mb-6 shadow-lg rounded-lg bg-white dark:bg-gray-800">
               <form onSubmit={handleProfileSubmit}>
                 <div className="flex flex-col md:flex-row items-start">
-                  <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-3xl mb-4 md:mb-0 md:mr-6">
+                  <div className="w-24 h-24 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-3xl mb-4 md:mb-0 md:mr-6">
                     {user?.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1">
@@ -239,7 +239,7 @@ function Settings() {
                       <div>
                         <label
                           htmlFor="name"
-                          className="form-label text-gray-700"
+                          className="form-label text-gray-700 dark:text-gray-200"
                         >
                           Full Name
                         </label>
@@ -247,7 +247,7 @@ function Settings() {
                           id="name"
                           name="name"
                           type="text"
-                          className="input-field border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="input-field border border-gray-300 dark:border-gray-600 rounded-md p-2 w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={profileData.name}
                           onChange={handleProfileInputChange}
                           disabled={!isEditingProfile}
@@ -257,32 +257,32 @@ function Settings() {
                       <div>
                         <label
                           htmlFor="email"
-                          className="form-label text-gray-700"
+                          className="form-label text-gray-700 dark:text-gray-200"
                         >
                           Email Address
                         </label>
                         <input
                           id="email"
                           type="email"
-                          className="input-field bg-gray-50 border border-gray-300 rounded-md p-2 w-full"
+                          className="input-field bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md p-2 w-full text-gray-900 dark:text-gray-100"
                           value={user?.email}
                           disabled
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           Email cannot be changed
                         </p>
                       </div>
                       <div>
                         <label
                           htmlFor="timezone"
-                          className="form-label text-gray-700"
+                          className="form-label text-gray-700 dark:text-gray-200"
                         >
                           Timezone
                         </label>
                         <select
                           id="timezone"
                           name="timezone"
-                          className="select-field border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="select-field border border-gray-300 dark:border-gray-600 rounded-md p-2 w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={profileData.timezone}
                           onChange={handleProfileInputChange}
                           disabled={!isEditingProfile}
@@ -311,14 +311,14 @@ function Settings() {
                       <div>
                         <label
                           htmlFor="currency"
-                          className="form-label text-gray-700"
+                          className="form-label text-gray-700 dark:text-gray-200"
                         >
                           Default Currency
                         </label>
                         <select
                           id="currency"
                           name="currency"
-                          className="select-field border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="select-field border border-gray-300 dark:border-gray-600 rounded-md p-2 w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           value={profileData.currency}
                           onChange={handleProfileInputChange}
                           disabled={!isEditingProfile}
@@ -351,14 +351,14 @@ function Settings() {
                               currency: user?.currency || "USD",
                             });
                           }}
-                          className="btn-outline text-gray-700 hover:text-gray-900 transition duration-200"
+                          className="btn-outline text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition duration-200"
                           disabled={isSavingProfile}
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="btn-primary flex items-center bg-blue-600 text-white rounded-md px-4 py-2 hover:bg-blue-700 transition duration-200"
+                          className="btn-primary flex items-center bg-blue-600 dark:bg-blue-700 text-white rounded-md px-4 py-2 hover:bg-blue-700 dark:hover:bg-blue-800 transition duration-200"
                           disabled={isSavingProfile}
                         >
                           {isSavingProfile ? (
@@ -379,20 +379,21 @@ function Settings() {
                 </div>
               </form>
             </div>
+
             {/* Update Password */}
-            <div className="card p-6 mb-6 shadow-lg rounded-lg">
-              <h3 className="font-semibold text-lg text-gray-800 mb-4">
+            <div className="card p-6 mb-6 shadow-lg rounded-lg bg-white dark:bg-gray-800">
+              <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-100 mb-4">
                 Change Password
               </h3>
 
               <form onSubmit={handlePasswordChange}>
                 <div className="mb-4 relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                     New Password
                   </label>
                   <input
                     type={showPassword ? "text" : "password"}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Enter new password"
@@ -400,7 +401,7 @@ function Settings() {
                   />
                   <button
                     type="button"
-                    className="absolute right-3 top-9 text-gray-500"
+                    className="absolute right-3 top-9 text-gray-500 dark:text-gray-300"
                     onClick={() => setShowPassword((prev) => !prev)}
                     tabIndex={-1}
                   >
@@ -409,12 +410,12 @@ function Settings() {
                 </div>
 
                 {passwordUpdateError && (
-                  <p className="text-red-600 text-sm mb-2">
+                  <p className="text-red-600 dark:text-red-400 text-sm mb-2">
                     {passwordUpdateError}
                   </p>
                 )}
                 {passwordUpdateSuccess && (
-                  <p className="text-green-600 text-sm mb-2">
+                  <p className="text-green-600 dark:text-green-400 text-sm mb-2">
                     Password updated successfully!
                   </p>
                 )}
@@ -424,7 +425,7 @@ function Settings() {
                   className={`w-full py-2 px-4 rounded-md text-white font-medium transition ${
                     isPasswordUpdating
                       ? "bg-blue-400 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700"
+                      : "bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-800"
                   }`}
                   disabled={isPasswordUpdating}
                 >
@@ -434,65 +435,43 @@ function Settings() {
             </div>
 
             {/* Currency Preview */}
-            <div className="card p-6 mb-6 shadow-lg rounded-lg">
-              <h3 className="font-semibold text-lg text-gray-800 mb-4">
+            <div className="card p-6 mb-6 shadow-lg rounded-lg bg-white dark:bg-gray-800">
+              <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-100 mb-4">
                 Currency Preview
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
                 <div>
-                  <p className="text-gray-500">Sample Amount</p>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Sample Amount
+                  </p>
                   <p className="font-semibold text-lg">
                     {formatCurrency(1234.56)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Large Amount</p>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Large Amount
+                  </p>
                   <p className="font-semibold text-lg">
                     {formatCurrency(123456)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Small Amount</p>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Small Amount
+                  </p>
                   <p className="font-semibold text-lg">
                     {formatCurrency(12.34)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Zero Amount</p>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Zero Amount
+                  </p>
                   <p className="font-semibold text-lg">{formatCurrency(0)}</p>
                 </div>
               </div>
             </div>
-
-            {/* <div className="card p-6 shadow-lg rounded-lg">
-              <h3 className="font-semibold text-red-600 text-lg mb-4">
-                Danger Zone
-              </h3>
-              <div className="border border-red-200 rounded-lg p-4 bg-red-50">
-                <h4 className="font-medium text-red-800 mb-2">
-                  Delete Account
-                </h4>
-                <p className="text-sm text-red-700 mb-4">
-                  Once you delete your account, there is no going back. This
-                  action cannot be undone and will permanently delete all your
-                  financial data.
-                </p>
-                <button
-                  className="btn-danger bg-red-600 text-white rounded-md px-4 py-2 hover:bg-red-700 transition duration-200"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Are you absolutely sure you want to delete your account? This action cannot be undone."
-                      )
-                    ) {
-                      console.log("Account deletion requested");
-                    }
-                  }}
-                >
-                  Delete Account
-                </button>
-              </div>
-            </div> */}
           </div>
         );
 
@@ -500,7 +479,7 @@ function Settings() {
         return (
           <div className="animate-fade-in">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 Category Management
               </h2>
               <button
@@ -514,7 +493,7 @@ function Settings() {
                   });
                   setShowCategoryForm(true);
                 }}
-                className="btn-primary px-4 py-2 rounded-md shadow hover:bg-primary-700 transition"
+                className="btn-primary px-4 py-2 rounded-md shadow hover:bg-primary-700 dark:hover:bg-primary-600 transition"
               >
                 Add Category
               </button>
@@ -523,8 +502,8 @@ function Settings() {
             {/* Category form modal */}
             {showCategoryForm && (
               <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-lg animate-slide-up">
-                  <h2 className="text-2xl font-semibold mb-5 text-gray-900">
+                <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-lg animate-slide-up">
+                  <h2 className="text-2xl font-semibold mb-5 text-gray-900 dark:text-gray-100">
                     {editingCategory ? "Edit Category" : "Add New Category"}
                   </h2>
 
@@ -533,7 +512,7 @@ function Settings() {
                       <div>
                         <label
                           htmlFor="name"
-                          className="form-label font-medium text-gray-700"
+                          className="form-label font-medium text-gray-700 dark:text-gray-200"
                         >
                           Category Name
                         </label>
@@ -542,7 +521,7 @@ function Settings() {
                           name="name"
                           type="text"
                           required
-                          className="input-field mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="input-field mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                           placeholder="e.g., Groceries, Salary"
                           value={newCategory.name}
                           onChange={handleInputChange}
@@ -550,15 +529,15 @@ function Settings() {
                       </div>
 
                       <div>
-                        <label className="form-label font-medium text-gray-700 mb-2 block">
+                        <label className="form-label font-medium text-gray-700 dark:text-gray-200 mb-2 block">
                           Category Type
                         </label>
                         <div className="grid grid-cols-2 gap-4">
                           <label
                             className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
                               newCategory.type === "expense"
-                                ? "border-primary-500 bg-primary-50 text-primary-700"
-                                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                ? "border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900 dark:text-primary-300"
+                                : "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                             }`}
                           >
                             <input
@@ -577,8 +556,8 @@ function Settings() {
                           <label
                             className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
                               newCategory.type === "income"
-                                ? "border-success-500 bg-success-50 text-success-700"
-                                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                ? "border-success-500 bg-success-50 text-success-700 dark:bg-success-900 dark:text-success-300"
+                                : "border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                             }`}
                           >
                             <input
@@ -599,7 +578,7 @@ function Settings() {
                       <div>
                         <label
                           htmlFor="color"
-                          className="form-label font-medium text-gray-700 mb-2 block"
+                          className="form-label font-medium text-gray-700 dark:text-gray-200 mb-2 block"
                         >
                           Category Color
                         </label>
@@ -608,13 +587,13 @@ function Settings() {
                             id="color"
                             name="color"
                             type="color"
-                            className="h-12 w-12 rounded-md border border-gray-300 p-1 cursor-pointer"
+                            className="h-12 w-12 rounded-md border border-gray-300 dark:border-gray-600 p-1 cursor-pointer"
                             value={newCategory.color}
                             onChange={handleInputChange}
                           />
                           <input
                             type="text"
-                            className="input-field flex-1 rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            className="input-field flex-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             value={newCategory.color}
                             onChange={handleInputChange}
                             name="color"
@@ -631,13 +610,13 @@ function Settings() {
                           setShowCategoryForm(false);
                           setEditingCategory(null);
                         }}
-                        className="btn-outline px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition"
+                        className="btn-outline px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="btn-primary px-5 py-2 rounded-md shadow hover:bg-primary-700 transition"
+                        className="btn-primary px-5 py-2 rounded-md shadow hover:bg-primary-700 dark:hover:bg-primary-600 transition"
                       >
                         {editingCategory ? "Update Category" : "Add Category"}
                       </button>
@@ -651,7 +630,7 @@ function Settings() {
             <div className="space-y-10">
               {/* Income Categories */}
               <section>
-                <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4">
+                <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-4">
                   Income Categories (
                   {categories.filter((cat) => cat.type === "income").length})
                 </h3>
@@ -661,7 +640,7 @@ function Settings() {
                     .map((category) => (
                       <div
                         key={category.id}
-                        className="card p-4 flex items-center justify-between rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                        className="card p-4 flex items-center justify-between rounded-lg shadow-sm hover:shadow-md dark:bg-gray-700 transition-shadow"
                       >
                         <div className="flex items-center space-x-4">
                           <div
@@ -671,24 +650,24 @@ function Settings() {
                             {category.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <span className="font-semibold text-gray-900 text-lg">
+                            <span className="font-semibold text-gray-900 dark:text-gray-100 text-lg">
                               {category.name}
                             </span>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
                               Income category
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-3">
                           <button
-                            className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-100 rounded-md transition-colors"
+                            className="p-2 text-gray-500 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900 rounded-md transition-colors"
                             onClick={() => handleEditCategory(category)}
                             title="Edit category"
                           >
                             <Edit2 size={18} />
                           </button>
                           <button
-                            className="p-2 text-gray-500 hover:text-danger-600 hover:bg-danger-100 rounded-md transition-colors"
+                            className="p-2 text-gray-500 dark:text-gray-300 hover:text-danger-600 dark:hover:text-danger-400 hover:bg-danger-100 dark:hover:bg-danger-900 rounded-md transition-colors"
                             onClick={() => handleDeleteCategory(category.id)}
                             title="Delete category"
                           >
@@ -699,7 +678,7 @@ function Settings() {
                     ))}
                   {categories.filter((cat) => cat.type === "income").length ===
                     0 && (
-                    <div className="text-center py-10 text-gray-500">
+                    <div className="text-center py-10 text-gray-500 dark:text-gray-400">
                       <p>No income categories yet.</p>
                       <button
                         onClick={() => {
@@ -709,7 +688,7 @@ function Settings() {
                           }));
                           setShowCategoryForm(true);
                         }}
-                        className="btn-outline mt-4 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition"
+                        className="btn-outline mt-4 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                       >
                         Add Income Category
                       </button>
@@ -720,7 +699,7 @@ function Settings() {
 
               {/* Expense Categories */}
               <section>
-                <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4">
+                <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-4">
                   Expense Categories (
                   {categories.filter((cat) => cat.type === "expense").length})
                 </h3>
@@ -730,7 +709,7 @@ function Settings() {
                     .map((category) => (
                       <div
                         key={category.id}
-                        className="card p-4 flex items-center justify-between rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                        className="card p-4 flex items-center justify-between rounded-lg shadow-sm hover:shadow-md dark:bg-gray-700 transition-shadow"
                       >
                         <div className="flex items-center space-x-4">
                           <div
@@ -740,24 +719,24 @@ function Settings() {
                             {category.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <span className="font-semibold text-gray-900 text-lg">
+                            <span className="font-semibold text-gray-900 dark:text-gray-100 text-lg">
                               {category.name}
                             </span>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
                               Expense category
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-3">
                           <button
-                            className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-100 rounded-md transition-colors"
+                            className="p-2 text-gray-500 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900 rounded-md transition-colors"
                             onClick={() => handleEditCategory(category)}
                             title="Edit category"
                           >
                             <Edit2 size={18} />
                           </button>
                           <button
-                            className="p-2 text-gray-500 hover:text-danger-600 hover:bg-danger-100 rounded-md transition-colors"
+                            className="p-2 text-gray-500 dark:text-gray-300 hover:text-danger-600 dark:hover:text-danger-400 hover:bg-danger-100 dark:hover:bg-danger-900 rounded-md transition-colors"
                             onClick={() => handleDeleteCategory(category.id)}
                             title="Delete category"
                           >
@@ -768,7 +747,7 @@ function Settings() {
                     ))}
                   {categories.filter((cat) => cat.type === "expense").length ===
                     0 && (
-                    <div className="text-center py-10 text-gray-500">
+                    <div className="text-center py-10 text-gray-500 dark:text-gray-400">
                       <p>No expense categories yet.</p>
                       <button
                         onClick={() => {
@@ -778,7 +757,7 @@ function Settings() {
                           }));
                           setShowCategoryForm(true);
                         }}
-                        className="btn-outline mt-4 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-100 transition"
+                        className="btn-outline mt-4 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                       >
                         Add Expense Category
                       </button>
@@ -799,8 +778,12 @@ function Settings() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-1">Settings</h1>
-        <p className="text-gray-500">Manage your account and preferences</p>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-1">
+          Settings
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400">
+          Manage your account and preferences
+        </p>
       </div>
 
       {/* Tab Navigation */}
@@ -814,8 +797,8 @@ function Settings() {
             onClick={() => setActiveTab(key)}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition ${
               activeTab === key
-                ? "bg-primary-100 text-primary-700"
-                : "bg-white border text-gray-700 hover:bg-gray-100"
+                ? "bg-primary-100 text-primary-700 dark:bg-primary-700 dark:text-primary-100"
+                : "bg-white border text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
             }`}
           >
             <Icon size={16} />
@@ -824,15 +807,15 @@ function Settings() {
         ))}
 
         {/* <button
-          onClick={logout}
-          className="ml-auto text-sm text-red-600 hover:underline"
-        >
-          Logout
-        </button> */}
+    onClick={logout}
+    className="ml-auto text-sm text-red-600 dark:text-red-400 hover:underline"
+  >
+    Logout
+  </button> */}
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white p-6 rounded-xl shadow-md">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md dark:shadow-gray-700">
         {renderTabContent()}
       </div>
     </div>

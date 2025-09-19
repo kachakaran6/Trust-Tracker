@@ -147,20 +147,27 @@ function Analytics() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Analytics</h1>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+          Analytics
+        </h1>
       </div>
 
       {/* Month selector */}
-      <div className="flex items-center justify-center space-x-4 mb-6">
-        <button onClick={goToPreviousMonth} className="btn-outline p-1">
+      <div className="flex items-center justify-center space-x-4 mb-6 text-gray-800 dark:text-gray-200">
+        <button
+          onClick={goToPreviousMonth}
+          className="btn-outline p-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+        >
           <ChevronLeft size={20} />
         </button>
-        <h2 className="text-xl font-semibold">
+
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           {format(selectedMonth, "MMMM yyyy")}
         </h2>
+
         <button
           onClick={goToNextMonth}
-          className="btn-outline p-1"
+          className="btn-outline p-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={addMonths(selectedMonth, 1) > new Date()}
         >
           <ChevronRight size={20} />
@@ -169,38 +176,47 @@ function Analytics() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="card p-6 animate-fade-in">
+        {/* Income */}
+        <div className="card p-6 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
           <div className="text-center">
-            <p className="text-sm text-gray-500 mb-1">Income</p>
-            <p className="text-2xl font-bold text-success-600">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+              Income
+            </p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
               {formatCurrency(monthlySummary.totalIncome)}
             </p>
           </div>
         </div>
 
+        {/* Expenses */}
         <div
-          className="card p-6 animate-fade-in"
+          className="card p-6 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
           style={{ animationDelay: "0.1s" }}
         >
           <div className="text-center">
-            <p className="text-sm text-gray-500 mb-1">Expenses</p>
-            <p className="text-2xl font-bold text-danger-600">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+              Expenses
+            </p>
+            <p className="text-2xl font-bold text-red-600 dark:text-red-400">
               {formatCurrency(monthlySummary.totalExpense)}
             </p>
           </div>
         </div>
 
+        {/* Balance */}
         <div
-          className="card p-6 animate-fade-in"
+          className="card p-6 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
           style={{ animationDelay: "0.2s" }}
         >
           <div className="text-center">
-            <p className="text-sm text-gray-500 mb-1">Balance</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+              Balance
+            </p>
             <p
               className={`text-2xl font-bold ${
                 monthlySummary.balance >= 0
-                  ? "text-primary-600"
-                  : "text-danger-600"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-red-600 dark:text-red-400"
               }`}
             >
               {formatCurrency(monthlySummary.balance)}
@@ -210,10 +226,12 @@ function Analytics() {
       </div>
 
       {/* Category breakdown pie chart */}
-      <div className="card p-6 animate-slide-up">
-        <h2 className="text-lg font-semibold mb-4">Expenses by Category</h2>
+      <div className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+          Expenses by Category
+        </h2>
         {expenseData.length === 0 ? (
-          <div className="h-80 flex items-center justify-center text-gray-500">
+          <div className="h-80 flex items-center justify-center text-gray-500 dark:text-gray-400">
             <p>No spending data available for this month</p>
           </div>
         ) : (
@@ -241,20 +259,30 @@ function Analytics() {
                   ))}
                 </Pie>
                 <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    borderColor: "#ccc",
+                    color: "#000",
+                  }}
                   formatter={(value) => formatCurrency(value as number)}
                 />
-                <Legend />
+                <Legend
+                  wrapperStyle={{ color: "#4B5563", darkColor: "#D1D5DB" }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
         )}
       </div>
+
       {/* Income category */}
-      <div className="card p-6 animate-slide-up">
-        <h2 className="text-lg font-semibold mb-4">Income by Category</h2>
+      <div className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mt-4">
+        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+          Income by Category
+        </h2>
         {incomeData.length === 0 ? (
-          <div className="h-80 flex items-center justify-center text-gray-500">
-            <p>No spending data available for this month</p>
+          <div className="h-80 flex items-center justify-center text-gray-500 dark:text-gray-400">
+            <p>No income data available for this month</p>
           </div>
         ) : (
           <div className="h-80">
@@ -281,9 +309,16 @@ function Analytics() {
                   ))}
                 </Pie>
                 <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    borderColor: "#ccc",
+                    color: "#000",
+                  }}
                   formatter={(value) => formatCurrency(value as number)}
                 />
-                <Legend />
+                <Legend
+                  wrapperStyle={{ color: "#4B5563", darkColor: "#D1D5DB" }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -292,26 +327,39 @@ function Analytics() {
 
       {/* Daily spending bar chart */}
       <div
-        className="card p-6 animate-slide-up"
+        className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
         style={{ animationDelay: "0.1s" }}
       >
-        <h2 className="text-lg font-semibold mb-4">Daily Spending</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+          Daily Spending
+        </h2>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={dailyData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="day" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="#e5e7eb"
+                dark:stroke="#374151"
+              />
+              <XAxis dataKey="day" stroke="#4B5563" dark:stroke="#D1D5DB" />
               <YAxis
                 tickFormatter={(value) =>
                   formatCurrency(value).replace(/\.\d+/, "")
                 }
+                stroke="#4B5563"
+                dark:stroke="#D1D5DB"
               />
               <Tooltip
                 formatter={(value) => formatCurrency(value as number)}
                 labelFormatter={(value) => `Day ${value}`}
+                contentStyle={{
+                  backgroundColor: "white",
+                  borderColor: "#ccc",
+                  color: "#000",
+                }}
               />
               <Bar dataKey="amount" fill="#3B82F6" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -321,25 +369,35 @@ function Analytics() {
 
       {/* Monthly trends line chart */}
       <div
-        className="card p-6 animate-slide-up"
+        className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mt-4"
         style={{ animationDelay: "0.2s" }}
       >
-        <h2 className="text-lg font-semibold mb-4">Monthly Trends</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+          Monthly Trends
+        </h2>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={yearlyTrendData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="#e5e7eb"
+                dark:stroke="#374151"
+              />
+              <XAxis dataKey="name" stroke="#4B5563" dark:stroke="#D1D5DB" />
               <YAxis
                 tickFormatter={(value) =>
                   formatCurrency(value).replace(/\.\d+/, "")
                 }
+                stroke="#4B5563"
+                dark:stroke="#D1D5DB"
               />
               <Tooltip content={<CustomTooltip />} />
-              <Legend />
+              <Legend
+                wrapperStyle={{ color: "#4B5563", darkColor: "#D1D5DB" }}
+              />
               <Line
                 type="monotone"
                 dataKey="income"
@@ -371,14 +429,18 @@ function Analytics() {
 
       {/* Key insights */}
       <div
-        className="card p-6 animate-slide-up"
+        className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mt-4"
         style={{ animationDelay: "0.3s" }}
       >
-        <h2 className="text-lg font-semibold mb-4">Key Insights</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+          Key Insights
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-            <h3 className="font-medium mb-2">Top Spending Categories</h3>
-            <ul className="space-y-2">
+          <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border border-blue-100 dark:border-blue-700">
+            <h3 className="font-medium mb-2 text-gray-900 dark:text-gray-100">
+              Top Spending Categories
+            </h3>
+            <ul className="space-y-2 text-gray-700 dark:text-gray-200">
               {categoryData.slice(0, 3).map((category, index) => (
                 <li key={index} className="flex items-center justify-between">
                   <span>{category.name}</span>
@@ -390,9 +452,11 @@ function Analytics() {
             </ul>
           </div>
 
-          <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-            <h3 className="font-medium mb-2">Spending Trend</h3>
-            <p className="text-sm">
+          <div className="bg-green-50 dark:bg-green-900 p-4 rounded-lg border border-green-100 dark:border-green-700">
+            <h3 className="font-medium mb-2 text-gray-900 dark:text-gray-100">
+              Spending Trend
+            </h3>
+            <p className="text-sm text-gray-700 dark:text-gray-200">
               {monthlySummary.totalExpense >
               (yearlyTrendData[yearlyTrendData.length - 2]?.expenses || 0)
                 ? `Your spending increased by ${formatCurrency(
@@ -406,7 +470,7 @@ function Analytics() {
                   )} compared to last month.`}
             </p>
             <div className="mt-2">
-              <div className="text-xs text-gray-500 mb-1">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                 vs. Previous Month
               </div>
               <div className="flex items-center">
@@ -414,8 +478,8 @@ function Analytics() {
                   className={`h-2 rounded-full ${
                     monthlySummary.totalExpense >
                     (yearlyTrendData[yearlyTrendData.length - 2]?.expenses || 0)
-                      ? "bg-danger-500"
-                      : "bg-success-500"
+                      ? "bg-red-500 dark:bg-red-600"
+                      : "bg-green-500 dark:bg-green-600"
                   }`}
                   style={{
                     width: `${Math.min(
