@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { ThemeToggle } from "../ui/ThemeToggle";
+
 import {
   LayoutDashboard,
   CreditCard,
@@ -163,10 +163,6 @@ function Sidebar({ open, setOpen }: SidebarProps) {
           </span>
           Logout
         </a>
-
-        <div className="mt-4 px-4">
-          <ThemeToggle />
-        </div>
       </nav>
     </div>
   );

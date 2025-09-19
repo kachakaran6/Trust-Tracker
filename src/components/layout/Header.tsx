@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { Menu } from "lucide-react";
+import { ThemeToggle } from "../ui/ThemeToggle";
 
 interface HeaderProps {
   setSidebarOpen: (open: boolean) => void;
@@ -95,6 +96,10 @@ function Header({ setSidebarOpen }: HeaderProps) {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="mt-4 px-4">
+        <ThemeToggle />
       </div>
 
       {/* User dropdown (simplified for now) */}
