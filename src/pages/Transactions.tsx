@@ -347,47 +347,48 @@ function Transactions() {
               </div>
             </div>
           </div>
-          {/* </div> */}
+        </div>
 
-          {/* Mobile export dropdown */}
-          <div className="sm:hidden">
-            <Button
-              variant="outline"
-              icon={<FileText size={20} />}
-              onClick={() => setShowMobileExport(!showMobileExport)}
-              className="shadow-sm hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
-            />
+        {/* Mobile export dropdown */}
+        <div className="sm:hidden relative">
+          <Button
+            variant="outline"
+            icon={<FileText size={20} />}
+            onClick={() => setShowMobileExport(!showMobileExport)}
+            className="shadow-sm hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+            children={undefined}
+          />
 
-            {showMobileExport && (
-              <div
-                ref={dropdownRef}
-                className="absolute right-4 top-[60px] w-52 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-lg shadow-lg z-20"
-              >
-                <div className="p-1">
-                  <button
-                    onClick={handleExportPDF}
-                    className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
-                  >
-                    📄 Export PDF
-                  </button>
-                  <button
-                    onClick={handleExportExcel}
-                    className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
-                  >
-                    📊 Export Excel (Detailed)
-                  </button>
-                  <button
-                    onClick={handleExportSimpleExcel}
-                    className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
-                  >
-                    📋 Export Excel (Simple)
-                  </button>
-                </div>
+          {showMobileExport && (
+            <div
+              ref={dropdownRef}
+              className="absolute right-4 top-[60px] w-52 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-lg shadow-lg z-20"
+            >
+              <div className="p-1">
+                <button
+                  onClick={handleExportPDF}
+                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
+                >
+                  📄 Export PDF
+                </button>
+                <button
+                  onClick={handleExportExcel}
+                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
+                >
+                  📊 Export Excel (Detailed)
+                </button>
+                <button
+                  onClick={handleExportSimpleExcel}
+                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
+                >
+                  📋 Export Excel (Simple)
+                </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
+      {/* </div> */}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
