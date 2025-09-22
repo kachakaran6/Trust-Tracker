@@ -27,7 +27,7 @@ import Preview from "./pages/Preview";
 import UpdatePassword from "./pages/UpdatePassword";
 import Groups from "./pages/Group";
 import GroupDetail from "./pages/GroupDetail";
-// import DiaryTransactionInput from "./pages/DiaryTransactionInput";
+import DiaryTransactionInput from "./pages/DiaryTransactionInput";
 import { Toaster } from "sonner";
 
 function App() {
@@ -62,10 +62,10 @@ function App() {
                       <Route path="/preview" element={<Preview />} />
                       <Route path="/group" element={<Groups />} />
                       <Route path="/group/:groupId" element={<GroupDetail />} />
-                      {/* <Route
-                        path="/diary"
+                      <Route
+                        path="/manualentry"
                         element={<DiaryTransactionInput />}
-                      /> */}
+                      />
                     </Route>
 
                     {/* Default redirect */}
