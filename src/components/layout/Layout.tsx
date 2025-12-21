@@ -15,6 +15,8 @@ function Layout({ children }: LayoutProps) {
     return null;
   }
 
+  // const [showFooter, setShowFooter] = useState(true);
+
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile sidebar backdrop */}
@@ -28,6 +30,15 @@ function Layout({ children }: LayoutProps) {
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
 
+      {/* <div className="p-4 text-center">
+        <button
+          onClick={() => setShowFooter(!showFooter)}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          {showFooter ? "Disable Footer" : "Enable Footer"}
+        </button>
+      </div> */}
+
       {/* Main content area */}
       <div className="flex flex-col flex-1 w-full">
         <Header setSidebarOpen={setSidebarOpen} />
@@ -37,11 +48,11 @@ function Layout({ children }: LayoutProps) {
         </main>
 
         {/* Footer (optional) */}
-        {/* 
-    <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 text-center text-sm text-gray-600 dark:text-gray-400">
-      <p>© 2025 FinSight. All rights reserved.</p>
-    </footer> 
-    */}
+        {/* {showFooter && (
+          <footer className="mt-auto bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 text-center text-sm text-gray-600 dark:text-gray-400">
+            <p>© 2025 FinSight. All rights reserved.</p>
+          </footer>
+        )} */}
       </div>
     </div>
   );
