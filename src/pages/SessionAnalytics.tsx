@@ -47,12 +47,12 @@ export default function SessionAnalytics() {
 
         // Convert session_data (it can be an array or an object with an array)
         let transactions: Transaction[] = [];
-        if (Array.isArray(session.session_data)) {
-          transactions = session.session_data;
-        } else if (session.session_data.transactions) {
-          transactions = session.session_data.transactions;
-        } else if (session.session_data.data) {
-          transactions = session.session_data.data;
+        if (Array.isArray(session.data)) {
+          transactions = session.data;
+        } else if (session.data.transactions) {
+          transactions = session.data.transactions;
+        } else if (session.data.data) {
+          transactions = session.data.data;
         }
 
         setData(transactions);
