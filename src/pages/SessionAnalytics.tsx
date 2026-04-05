@@ -60,7 +60,7 @@ export default function SessionAnalytics() {
           .filter(t => t && (t.amount || t.description))
           .map(t => ({
             ...t,
-            type: t.type || 'expense', // Fallback
+            type: (t.type === 'income' ? 'income' : 'expense') as "income" | "expense",
             amount: Number(t.amount) || 0,
             date: t.date || new Date().toISOString(),
           }));
@@ -296,7 +296,7 @@ export default function SessionAnalytics() {
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 text-xs rounded-full font-medium ${t.type === 'income' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                         }`}>
-                        {(t.type || "").toUpperCase()}
+                        {t.type.toUpperCase()}
                       </span>
                     </td>
                     <td className={`px-6 py-4 text-sm font-bold text-right ${t.type === 'income' ? "text-green-600" : "text-red-600"
