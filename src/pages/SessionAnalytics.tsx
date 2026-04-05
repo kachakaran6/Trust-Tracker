@@ -55,7 +55,17 @@ export default function SessionAnalytics() {
           transactions = session.data.data;
         }
 
-        setData(transactions);
+        // Sanitize and filter empty records
+        const sanitized = transactions
+          .filter(t => t && (t.amount || t.description))
+          .map(t => ({
+            ...t,
+            type: t.type || 'expense', // Fallback
+            amount: Number(t.amount) || 0,
+            date: t.date || new Date().toISOString(),
+          }));
+
+        setData(sanitized);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -123,10 +133,11 @@ export default function SessionAnalytics() {
 
   // Daily Trends (Bar Chart)
   const dailyData = data.reduce((acc: any, t) => {
+    if (!t.date) return acc;
     const day = format(parseISO(t.date), 'MMM dd');
     if (!acc[day]) acc[day] = { name: day, income: 0, expense: 0 };
-    if (t.type === 'income') acc[day].income += Number(t.amount);
-    else acc[day].expense += Number(t.amount);
+    if (t.type === 'income') acc[day].income += Number(t.amount || 0);
+    else if (t.type === 'expense') acc[day].expense += Number(t.amount || 0);
     return acc;
   }, {});
 
@@ -285,7 +296,7 @@ export default function SessionAnalytics() {
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 text-xs rounded-full font-medium ${t.type === 'income' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                         }`}>
-                        {t.type.toUpperCase()}
+                        {(t.type || "").toUpperCase()}
                       </span>
                     </td>
                     <td className={`px-6 py-4 text-sm font-bold text-right ${t.type === 'income' ? "text-green-600" : "text-red-600"
