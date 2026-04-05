@@ -28,6 +28,7 @@ import UpdatePassword from "./pages/UpdatePassword";
 import Groups from "./pages/Group";
 import GroupDetail from "./pages/GroupDetail";
 import DiaryTransactionInput from "./pages/DiaryTransactionInput";
+import SessionAnalytics from "./pages/SessionAnalytics";
 import { Toaster } from "sonner";
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/session/:id" element={<SessionAnalytics />} />
                     <Route
                       path="/update-password"
                       element={<UpdatePassword />}

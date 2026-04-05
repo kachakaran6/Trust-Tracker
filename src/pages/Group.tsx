@@ -137,7 +137,7 @@ const Groups: React.FC = () => {
       <AnimatePresence>
         {notification && (
           <motion.div
-            key={notification.id}
+            key={notification.message}
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
@@ -194,17 +194,16 @@ const Groups: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        {/* Total Groups */}
         <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm rounded-lg">
           <div>
             <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
               Total Groups
             </p>
-            <p className="text-2xl font-bold text-primary-600">
+            <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
               {groups.length}
             </p>
           </div>
-          <div className="p-3 bg-primary-100 dark:bg-primary-800 rounded-full">
+          <div className="p-3 bg-primary-100 dark:bg-primary-900/30 rounded-full">
             <Users
               className="text-primary-600 dark:text-primary-400"
               size={24}
@@ -212,17 +211,17 @@ const Groups: React.FC = () => {
           </div>
         </div>
 
-        {/* Active Groups */}
+        {/* Recent Activity */}
         <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm rounded-lg">
           <div>
             <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Active Groups
+              Group Activity
             </p>
             <p className="text-2xl font-bold text-success-600 dark:text-success-400">
-              {groups.length}
+              Active
             </p>
           </div>
-          <div className="p-3 bg-success-100 dark:bg-success-800 rounded-full">
+          <div className="p-3 bg-success-100 dark:bg-success-900/30 rounded-full">
             <Settings
               className="text-success-600 dark:text-success-400"
               size={24}
@@ -332,8 +331,10 @@ const Groups: React.FC = () => {
                           size="sm"
                           icon={<Eye size={16} />}
                           className="text-neutral-400 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400"
-                          onClick={() => navigate(`/grp/${group.id}`)}
-                        />
+                          onClick={() => navigate(`/group/${group.id}`)}
+                        >
+                          {" "}
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -342,7 +343,9 @@ const Groups: React.FC = () => {
                           onClick={() =>
                             handleDeleteGroup(group.id, group.name)
                           }
-                        />
+                        >
+                          {" "}
+                        </Button>
                       </div>
                     </div>
 
@@ -361,7 +364,9 @@ const Groups: React.FC = () => {
                             icon={<Copy size={14} />}
                             className="text-neutral-400 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400"
                             onClick={() => copyGroupCode(group.code)}
-                          />
+                          >
+                            {" "}
+                          </Button>
                         </div>
                       </div>
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-case-declarations */
 import { useState, useRef, useEffect } from "react";
 // import * as XLSX from "xlsx";
@@ -19,8 +18,7 @@ pdfMake.vfs = pdfFonts.vfs;
 import { useTransactions } from "../contexts/TransactionsContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
-import { Transaction } from "../lib/supabase";
-// import { User } from "../lib/supabase";
+import { Transaction } from "../types";
 import {
   format,
   parseISO,
@@ -210,23 +208,23 @@ function Transactions() {
   };
 
   //  Function for edit
-  const handleEditClick = (transaction: any) => {
+  const handleEditClick = (transaction: Transaction) => {
     setTransactionToEdit(transaction);
     setShowEditModal(true);
   };
 
   // Add this with the others
 
-  const handleSaveEdit = async (transactionToEdit: any) => {
-    if (!transactionToEdit) return;
+  const handleSaveEdit = async (updatedTransaction: Transaction) => {
+    if (!updatedTransaction) return;
 
     try {
-      await updateTransaction(transactionToEdit.id, {
-        description: transactionToEdit.description,
-        amount: transactionToEdit.amount,
-        category_id: transactionToEdit.category_id,
-        created_at: transactionToEdit.created_at,
-        type: transactionToEdit.type,
+      await updateTransaction(updatedTransaction.id, {
+        description: updatedTransaction.description,
+        amount: updatedTransaction.amount,
+        category_id: updatedTransaction.category_id,
+        created_at: updatedTransaction.created_at,
+        type: updatedTransaction.type,
       });
 
       setShowEditModal(false);
@@ -268,11 +266,11 @@ function Transactions() {
 
   const [showMobileExport, setShowMobileExport] = useState(false);
 
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowMobileExport(false);
       }
     };
@@ -590,7 +588,7 @@ function Transactions() {
                 </label>
                 <input
                   type="text"
-                  value={transactionToEdit.description}
+                  value={transactionToEdit.description ?? ""}
                   onChange={(e) =>
                     setTransactionToEdit({
                       ...transactionToEdit,
@@ -627,7 +625,7 @@ function Transactions() {
                   Category
                 </label>
                 <select
-                  value={transactionToEdit.category_id}
+                  value={transactionToEdit.category_id ?? ""}
                   onChange={(e) =>
                     setTransactionToEdit({
                       ...transactionToEdit,

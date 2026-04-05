@@ -2,7 +2,8 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
-import { supabase, Transaction } from "../lib/supabase";
+import { supabase } from "../lib/supabase";
+import { Transaction } from "../types";
 import { parseISO, startOfMonth, endOfMonth } from "date-fns";
 
 interface TransactionSummary {
@@ -195,12 +196,13 @@ export function TransactionsProvider({
         summary.totalExpense += transaction.amount;
       }
 
-      if (!summary.categories[transaction.category_id]) {
-        summary.categories[transaction.category_id] = { total: 0, count: 0 };
+      const categoryKey = transaction.category_id || "uncategorized";
+      if (!summary.categories[categoryKey]) {
+        summary.categories[categoryKey] = { total: 0, count: 0 };
       }
 
-      summary.categories[transaction.category_id].total += transaction.amount;
-      summary.categories[transaction.category_id].count += 1;
+      summary.categories[categoryKey].total += transaction.amount;
+      summary.categories[categoryKey].count += 1;
     });
 
     summary.balance = summary.totalIncome - summary.totalExpense;

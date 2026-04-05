@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -44,7 +44,7 @@ const GroupDetail: React.FC = () => {
   const [transactions, setTransactions] = useState<GroupTransaction[]>([]);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [categories, setCategories] = useState<GroupCategory[]>([]);
-  const { loading: categoriesLoading, addCategory } = useGroupCategories(
+  const { addCategory } = useGroupCategories(
     groupId!
   );
   const [personalCategories, setPersonalCategories] = useState<any[]>([]);
@@ -59,13 +59,14 @@ const GroupDetail: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] =
     useState<GroupTransaction | null>(null);
 
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("this-month");
 
-  const [members, setMembers] = React.useState([]);
+  const [members, setMembers] = useState<any[]>([]);
   // const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
@@ -77,6 +78,7 @@ const GroupDetail: React.FC = () => {
     type: "expense" as "income" | "expense",
     amount: "",
     description: "",
+    category_id: "",
     date: format(new Date(), "yyyy-MM-dd"),
   });
 
@@ -246,6 +248,7 @@ const GroupDetail: React.FC = () => {
         type: "expense",
         amount: "",
         description: "",
+        category_id: "",
         date: format(new Date(), "yyyy-MM-dd"),
       });
 
@@ -306,7 +309,7 @@ const GroupDetail: React.FC = () => {
   const loadGroupMembers = async () => {
     try {
       setLoading(true);
-      const data = await groupService.getGroupMembers(groupId);
+      const data = await groupService.getGroupMembers(groupId as string);
 
       const membersList = data.map((member) => ({
         id: member.user_id,
@@ -394,17 +397,29 @@ const GroupDetail: React.FC = () => {
 
   const filteredTransactions = filterTransactions();
 
+  const stats = useMemo(() => {
+    const income = filteredTransactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + t.amount, 0);
+    const expense = filteredTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + t.amount, 0);
+    return {
+      income,
+      expense,
+      balance: income - expense,
+      membersCount: group?.group_members?.length || members.length || 0
+    };
+  }, [filteredTransactions, group, members]);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex justify-center items-center bg-white duration-300">
+      <div className="min-h-screen flex justify-center items-center bg-sky dark:bg-gray-900 transition-colors duration-300">
         <div className="flex flex-col items-center space-y-4 animate-fade-in-up">
           <div className="relative">
-            <div className="w-12 h-12 border-4 border-primary-400 border-t-transparent rounded-full animate-spin-fast"></div>
-            <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-primary-600">
-              
-            </div>
+            <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
-          <p className="text-sm text-white/90">Loading admin data....</p>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">Loading group details...</p>
         </div>
       </div>
     );
@@ -532,84 +547,63 @@ const GroupDetail: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
+        <Card className="p-4 bg-white dark:bg-gray-800 border-neutral-200 dark:border-gray-700">
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
-              <ArrowUp size={20} className="text-green-600" />
+            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mr-3">
+              <ArrowUp size={20} className="text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Income</p>
-              <p className="text-lg font-semibold text-green-600">
-                {formatCurrency(
-                  filteredTransactions
-                    .filter((t) => t.type === "income")
-                    .reduce((sum, t) => sum + t.amount, 0)
-                )}
+              <p className="text-sm text-gray-500 dark:text-gray-400">Total Income</p>
+              <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                {formatCurrency(stats.income)}
               </p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 bg-white dark:bg-gray-800 border-neutral-200 dark:border-gray-700">
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
-              <ArrowDown size={20} className="text-red-600" />
+            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mr-3">
+              <ArrowDown size={20} className="text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Expenses</p>
-              <p className="text-lg font-semibold text-red-600">
-                {formatCurrency(
-                  filteredTransactions
-                    .filter((t) => t.type === "expense")
-                    .reduce((sum, t) => sum + t.amount, 0)
-                )}
+              <p className="text-sm text-gray-500 dark:text-gray-400">Total Expenses</p>
+              <p className="text-lg font-semibold text-red-600 dark:text-red-400">
+                {formatCurrency(stats.expense)}
               </p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 bg-white dark:bg-gray-800 border-neutral-200 dark:border-gray-700">
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
-              <CreditCard size={20} className="text-blue-600" />
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3">
+              <CreditCard size={20} className="text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Net Balance</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Net Balance</p>
               <p
                 className={`text-lg font-semibold ${
-                  filteredTransactions
-                    .filter((t) => t.type === "income")
-                    .reduce((sum, t) => sum + t.amount, 0) -
-                    filteredTransactions
-                      .filter((t) => t.type === "expense")
-                      .reduce((sum, t) => sum + t.amount, 0) >=
-                  0
-                    ? "text-green-600"
-                    : "text-red-600"
+                  stats.balance >= 0
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
                 }`}
               >
-                {formatCurrency(
-                  filteredTransactions
-                    .filter((t) => t.type === "income")
-                    .reduce((sum, t) => sum + t.amount, 0) -
-                    filteredTransactions
-                      .filter((t) => t.type === "expense")
-                      .reduce((sum, t) => sum + t.amount, 0)
-                )}
+                {formatCurrency(stats.balance)}
               </p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 bg-white dark:bg-gray-800 border-neutral-200 dark:border-gray-700">
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-              <Users size={20} className="text-purple-600" />
+            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mr-3">
+              <Users size={20} className="text-purple-600 dark:text-purple-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Group Members</p>
-              <p className="text-lg font-semibold">
-                {group.group_members?.length || 0}
+              <p className="text-sm text-gray-500 dark:text-gray-400">Group Members</p>
+              <p className="text-lg font-semibold text-neutral-800 dark:text-neutral-100">
+                {stats.membersCount}
               </p>
             </div>
           </div>
@@ -826,7 +820,9 @@ const GroupDetail: React.FC = () => {
                           onClick={() => openCopyModal(transaction)}
                           title="Copy to personal wallet"
                           className="text-gray-400 hover:text-primary-600"
-                        />
+                        >
+                          {" "}
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -837,7 +833,9 @@ const GroupDetail: React.FC = () => {
                           }}
                           title="Split transaction"
                           className="text-gray-400 hover:text-blue-600"
-                        />
+                        >
+                          {" "}
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -847,7 +845,9 @@ const GroupDetail: React.FC = () => {
                           }
                           title="Delete transaction"
                           className="text-gray-400 hover:text-red-600"
-                        />
+                        >
+                          {" "}
+                        </Button>
                       </div>
                     </td>
                   </motion.tr>

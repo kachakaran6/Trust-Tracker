@@ -1,5 +1,6 @@
 export interface Group {
-  group_members: any;
+  group_members?: GroupMember[];
+  _group_members_count?: { count: number }[];
   id: string;
   name: string;
   description?: string;
@@ -42,7 +43,7 @@ export interface GroupTransaction {
   created_by: string;
   created_at: string;
   group_categories?: GroupCategory;
-  users?: {
+  created_by_user?: {
     full_name: string;
     email: string;
   };

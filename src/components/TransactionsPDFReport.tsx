@@ -1,37 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import { format } from "date-fns";
-// import {
-//   TrendingUp,
-//   TrendingDown,
-//   DollarSign,
-//   Calendar,
-//   User,
-//   BarChart3,
-// } from "lucide-react";
+import { Transaction, Category, User } from "../types";
 
-interface Transaction {
-  id: string;
-  amount: number;
-  type: "income" | "expense";
-  description: string;
-  date: string;
-  category_id: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  type: "income" | "expense";
-}
 
 interface TransactionsPDFReportProps {
   transactions: Transaction[];
   categories: Category[];
-  user: any;
+  user: User | null;
   dateRange?: {
     start: string;
     end: string;
@@ -44,7 +19,8 @@ const TransactionsPDFReport: React.FC<TransactionsPDFReportProps> = ({
   user,
   dateRange,
 }) => {
-  const getCategoryName = (categoryId: string) => {
+  const getCategoryName = (categoryId: string | null) => {
+    if (!categoryId) return "Uncategorized";
     const category = categories.find((c) => c.id === categoryId);
     return category ? category.name : "Unknown Category";
   };
@@ -136,7 +112,7 @@ const TransactionsPDFReport: React.FC<TransactionsPDFReportProps> = ({
             </h3>
           </div>
           <p className="text-neutral-700">
-            {user?.name || user?.displayName || "User"}
+            {user?.name || user?.full_name || "User"}
           </p>
           <p className="text-sm text-neutral-500">{user?.email}</p>
         </div>

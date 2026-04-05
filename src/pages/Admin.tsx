@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { format, parseISO } from "date-fns";
 import { toast, Toaster } from "sonner";
+import { AdminUser, AdminStatsLocal } from "../types";
 
 import {
   Users,
@@ -28,38 +29,11 @@ import {
 
 import { AnimatePresence, motion } from "framer-motion";
 
-interface AdminUser {
-  user_id: string;
-  email: string;
-  full_name: string;
-  created_at: string;
-  last_sign_in_at: string;
-  user_role: "normal" | "super_admin";
-  user_status: "active" | "banned";
-  total_transactions: number;
-  total_amount: number;
-  raw_user_meta_data?: {
-    full_name?: string;
-    name?: string;
-    picture?: string;
-    [key: string]: any;
-  };
-}
-
-interface AdminStats {
-  totalUsers: number;
-  totalTransactions: number;
-  totalAmount: number;
-  newUsersThisMonth: number;
-  activeUsers: number;
-  bannedUsers: number;
-  superAdmins: number;
-}
 
 function Admin() {
   const { user } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [stats, setStats] = useState<AdminStats>({
+  const [stats, setStats] = useState<AdminStatsLocal>({
     totalUsers: 0,
     totalTransactions: 0,
     totalAmount: 0,
@@ -223,8 +197,6 @@ function Admin() {
     if (!userId || !action) return;
 
     if (action === "delete") {
-      console.log("Delete i wroking but not showing in ui......");
-
       toast.warning("Are you sure you want to permanently delete this user?", {
         description: (
           <>
@@ -271,18 +243,9 @@ function Admin() {
       }
 
       if (data?.success) {
-        toast.success(data.message || `User ${action}ed successfully`);
-
-        if (action === "delete") {
-          setUsers((prev) => prev.filter((u) => u.user_id !== userId));
-          setStats((prev) => ({
-            ...prev,
-            totalUsers: prev.totalUsers - 1,
-            activeUsers: prev.activeUsers - 1,
-          }));
-        } else {
-          await loadAdminData();
-        }
+        toast.success(data.message || `User ${action} successfully`);
+        // Always reload data to ensure stats and users list are in sync
+        await loadAdminData();
       } else {
         throw new Error(data?.message || `User ${action} failed.`);
       }

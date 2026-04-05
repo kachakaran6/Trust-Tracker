@@ -1,30 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { format } from "date-fns";
+import { Transaction, Category, User } from "../types";
 
-interface Transaction {
-  id: string;
-  amount: number;
-  type: "income" | "expense";
-  description: string;
-  date: string;
-  category_id: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  type: "income" | "expense";
-}
 
 interface ExcelExportOptions {
   transactions: Transaction[];
   categories: Category[];
-  user: any;
+  user: User | null;
   filename?: string;
 }
 
@@ -34,14 +18,10 @@ export const exportTransactionsToExcel = ({
   user,
   filename,
 }: ExcelExportOptions) => {
-  const getCategoryName = (categoryId: string) => {
+  const getCategoryName = (categoryId: string | null) => {
+    if (!categoryId) return "Uncategorized";
     const category = categories.find((c) => c.id === categoryId);
     return category ? category.name : "Unknown Category";
-  };
-
-  const getCategoryType = (categoryId: string) => {
-    const category = categories.find((c) => c.id === categoryId);
-    return category ? category.type : "unknown";
   };
 
   // Calculate statistics
@@ -285,7 +265,8 @@ export const exportSimpleTransactionsToExcel = (
   categories: Category[],
   filename?: string
 ) => {
-  const getCategoryName = (categoryId: string) => {
+  const getCategoryName = (categoryId: string | null) => {
+    if (!categoryId) return "Uncategorized";
     const category = categories.find((c) => c.id === categoryId);
     return category ? category.name : "Unknown Category";
   };
