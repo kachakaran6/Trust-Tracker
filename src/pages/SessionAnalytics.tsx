@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { 
-  PlusCircle, 
-  MinusCircle, 
-  TrendingUp, 
-  TrendingDown, 
-  ArrowLeft, 
-  Download, 
-  Share2, 
-  Calendar, 
-  PieChart as PieChartIcon 
+import {
+  PlusCircle,
+  MinusCircle,
+  TrendingUp,
+  TrendingDown,
+  ArrowLeft,
+  Download,
+  Share2,
+  Calendar,
+  PieChart as PieChartIcon
 } from "lucide-react";
-import { 
+import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from 'recharts';
@@ -39,7 +39,7 @@ export default function SessionAnalytics() {
       try {
         const { data: session, error } = await supabase
           .from("temporary_analytics")
-          .select("session_data, expires_at")
+          .select("data, expires_at")
           .eq("id", id)
           .single();
 
@@ -85,8 +85,8 @@ export default function SessionAnalytics() {
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             The data session was either not found or has expired (sessions last 30 minutes).
           </p>
-          <Link 
-            to="/dashboard" 
+          <Link
+            to="/dashboard"
             className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
           >
             <ArrowLeft className="w-4 h-4" /> Go to Back Home
@@ -152,7 +152,7 @@ export default function SessionAnalytics() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
       <Toaster />
       <div className="max-w-6xl mx-auto space-y-8">
-        
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -165,13 +165,13 @@ export default function SessionAnalytics() {
             <p className="text-sm text-amber-600 font-medium">⚠️ Valid for 30 minutes from creation</p>
           </div>
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={handleCopyLink}
               className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-sm hover:bg-gray-50 transition"
             >
               <Share2 className="w-4 h-4 cursor-pointer" /> Share
             </button>
-            <button 
+            <button
               onClick={downloadJSON}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl shadow-lg hover:bg-blue-700 transition"
             >
@@ -209,7 +209,7 @@ export default function SessionAnalytics() {
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
+
           {/* Spending Behavior (Pie Chart) */}
           <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border dark:border-gray-800">
             <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2 mb-6">
@@ -232,7 +232,7 @@ export default function SessionAnalytics() {
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend verticalAlign="bottom" height={36}/>
+                  <Legend verticalAlign="bottom" height={36} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -247,12 +247,12 @@ export default function SessionAnalytics() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barChartData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} />
-                  <Tooltip cursor={{fill: 'transparent'}} />
-                  <Legend verticalAlign="top" align="right" height={36}/>
-                  <Bar dataKey="income" fill="#10B981" radius={[4,4,0,0]} barSize={20} />
-                  <Bar dataKey="expense" fill="#EF4444" radius={[4,4,0,0]} barSize={20} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                  <Tooltip cursor={{ fill: 'transparent' }} />
+                  <Legend verticalAlign="top" align="right" height={36} />
+                  <Bar dataKey="income" fill="#10B981" radius={[4, 4, 0, 0]} barSize={20} />
+                  <Bar dataKey="expense" fill="#EF4444" radius={[4, 4, 0, 0]} barSize={20} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -283,15 +283,13 @@ export default function SessionAnalytics() {
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-800 dark:text-gray-200">{t.description}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                        t.type === 'income' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                      }`}>
+                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${t.type === 'income' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                        }`}>
                         {t.type.toUpperCase()}
                       </span>
                     </td>
-                    <td className={`px-6 py-4 text-sm font-bold text-right ${
-                      t.type === 'income' ? "text-green-600" : "text-red-600"
-                    }`}>
+                    <td className={`px-6 py-4 text-sm font-bold text-right ${t.type === 'income' ? "text-green-600" : "text-red-600"
+                      }`}>
                       ₹ {Number(t.amount).toLocaleString()}
                     </td>
                   </tr>
