@@ -55,7 +55,10 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Open Sans", "sans-serif"],
+        sans: ["Manrope", "sans-serif"],
+      },
+      transitionTimingFunction: {
+        fluid: "cubic-bezier(0.32, 0.72, 0, 1)",
       },
       animation: {
         "fade-in": "fadeIn 0.3s ease-in-out",

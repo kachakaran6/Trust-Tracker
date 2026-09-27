@@ -13,6 +13,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { ThemeProvider } from "./contexts/ThemeProvider";
 
 // Pages
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -43,6 +44,7 @@ function App() {
                 <NotificationsProvider>
                   <Routes>
                     {/* Public routes */}
+                    <Route path="/" element={<LandingPage />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
@@ -73,7 +75,7 @@ function App() {
                     {/* Default redirect */}
                     <Route
                       path="*"
-                      element={<Navigate to="/login" replace />}
+                      element={<Navigate to="/" replace />}
                     />
                   </Routes>
                 </NotificationsProvider>
