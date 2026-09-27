@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { supabase } from "../lib/supabase";
+import { api } from "../lib/api";
 import { useCategories } from "../contexts/CategoriesContext";
 import {
   User,
@@ -13,7 +12,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-// import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 function Settings() {
   const { user, updateProfile } = useAuth();
@@ -28,7 +27,7 @@ function Settings() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileData, setProfileData] = useState({
     name: user?.name || "",
-    timezone: user?.timezone || "America/New_York",
+    timezone: user?.timezone || "UTC",
     currency: user?.currency || "USD",
   });
 
@@ -42,13 +41,14 @@ function Settings() {
     icon: "Tag",
   });
 
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
   const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(false);
   const [passwordUpdateError, setPasswordUpdateError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handlePasswordChange = async (e: { preventDefault: () => void }) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordUpdateSuccess(false);
     setPasswordUpdateError("");
@@ -58,15 +58,18 @@ function Settings() {
       return;
     }
 
-    setIsPasswordUpdating(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setIsPasswordUpdating(false);
-
-    if (error) {
-      setPasswordUpdateError(error.message);
-    } else {
+    try {
+      setIsPasswordUpdating(true);
+      await api.auth.updatePassword({ currentPassword, newPassword });
       setPasswordUpdateSuccess(true);
       setNewPassword("");
+      setCurrentPassword("");
+      toast.success("Password updated successfully!");
+    } catch (err: any) {
+      setPasswordUpdateError(err.message || "Failed to update password");
+      toast.error(err.message || "Failed to update password");
+    } finally {
+      setIsPasswordUpdating(false);
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -15,7 +15,6 @@ import {
   Users,
   Notebook,
 } from "lucide-react";
-import { supabase } from "../../lib/supabase";
 
 interface SidebarProps {
   open: boolean;
@@ -24,25 +23,7 @@ interface SidebarProps {
 
 function Sidebar({ open, setOpen }: SidebarProps) {
   const { user, logout } = useAuth();
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [loadingRole, setLoadingRole] = useState(true);
-
-  useEffect(() => {
-    const fetchRole = async () => {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
-
-      if (error) console.error("Error fetching role:", error);
-      else setIsSuperAdmin(data?.role === "super_admin");
-
-      setLoadingRole(false);
-    };
-
-    if (user) fetchRole();
-  }, [user]);
+  const isSuperAdmin = user?.role === "super_admin";
 
   if (!user) return null;
 
