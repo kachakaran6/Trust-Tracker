@@ -20,6 +20,9 @@ RUN npm run build:server
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+# Install curl and wget for health checks
+RUN apk add --no-cache curl wget
+
 ENV NODE_ENV=production
 ENV PORT=5000
 
@@ -32,11 +35,14 @@ COPY --from=frontend-builder /app/dist ./dist
 COPY --from=server-builder /app/server/dist ./server/dist
 COPY server/src/db/schema.sql ./server/dist/db/schema.sql
 
+# Mark server/dist as CommonJS so Node treats compiled CJS properly despite root "type": "module"
+RUN echo '{"type": "commonjs"}' > ./server/dist/package.json
+
 # Expose HTTP port
 EXPOSE 5000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=15s --timeout=5s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:5000/api/health || exit 1
 
 # Start the fullstack application
