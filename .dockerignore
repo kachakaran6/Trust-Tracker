@@ -1,0 +1,11 @@
+node_modules
+.git
+.github
+dist
+server/dist
+.env
+.env.local
+*.log
+trust_tracker_zip.zip
+.vscode
+.idea
