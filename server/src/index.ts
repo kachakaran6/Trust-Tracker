@@ -61,9 +61,9 @@ app.use("/api/analytics", analyticsRoutes);
 const distPath = path.resolve(__dirname, "../../dist");
 app.use(express.static(distPath));
 
-// SPA catch-all route for React Router (Express 5 path-to-regexp compatible)
-app.get("(.*)", (req, res, next) => {
-  if (req.path.startsWith("/api")) {
+// SPA catch-all middleware for React Router
+app.use((req, res, next) => {
+  if (req.method !== "GET" || req.path.startsWith("/api")) {
     return next();
   }
   res.sendFile(path.join(distPath, "index.html"), (err) => {
