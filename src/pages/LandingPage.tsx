@@ -24,7 +24,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import ThemeToggle from "../components/ThemeToggle";
+import { ThemeToggle } from "../components/ui/ThemeToggle";
 
 // Animated Tagline Reveal Word Component (Rule B11)
 const TaglineWord: React.FC<{ word: string; index: number }> = ({ word, index }) => {
