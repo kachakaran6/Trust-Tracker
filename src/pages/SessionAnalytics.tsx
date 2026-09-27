@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { api } from "../lib/api";
 import {
   PlusCircle,
   MinusCircle,
@@ -17,7 +17,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from 'recharts';
 import { format, parseISO } from 'date-fns';
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "sonner";
 
 interface Transaction {
   amount: number;
@@ -36,23 +36,17 @@ export default function SessionAnalytics() {
 
   useEffect(() => {
     async function fetchSession() {
+      if (!id) return;
       try {
-        const { data: session, error } = await supabase
-          .from("temporary_analytics")
-          .select("data, expires_at")
-          .eq("id", id)
-          .single();
-
-        if (error) throw new Error("Session expired or does not exist");
-
-        // Convert session_data (it can be an array or an object with an array)
+        const session = await api.analytics.getSession(id);
+        const sData = session.sessionData;
         let transactions: Transaction[] = [];
-        if (Array.isArray(session.data)) {
-          transactions = session.data;
-        } else if (session.data.transactions) {
-          transactions = session.data.transactions;
-        } else if (session.data.data) {
-          transactions = session.data.data;
+        if (Array.isArray(sData)) {
+          transactions = sData;
+        } else if (sData && sData.transactions) {
+          transactions = sData.transactions;
+        } else if (sData && sData.data) {
+          transactions = sData.data;
         }
 
         // Sanitize and filter empty records

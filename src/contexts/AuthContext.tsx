@@ -1,10 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+import { api, authStorage } from "../lib/api";
 import { User } from "../types";
 import { toast } from "sonner";
-// import { log } from "@tensorflow/tfjs";
 
 interface AuthContextType {
   user: User | null;
@@ -12,7 +9,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: () => void;
   updateProfile: (updates: Partial<User>) => Promise<void>;
 }
 
@@ -24,143 +21,76 @@ export function useAuth() {
   return context;
 }
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log("🔍 AuthContext: checking session");
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("🔁 initial session:", session);
-      if (session?.user) {
-        const u = session.user;
-        setUser({
-          id: u.id,
-          email: u.email!,
-          name: u.user_metadata.name || "",
-          avatar_url: u.user_metadata.avatar_url,
-          currency: u.user_metadata.currency || "USD",
-          timezone: u.user_metadata.timezone || "UTC",
-          welcome_email_sent: u.user_metadata?.welcome_email_sent ?? false,
-        });
-      }
+    const token = authStorage.getToken();
+    if (!token) {
       setIsLoading(false);
-    });
+      return;
+    }
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("📡 auth state change:", event, session);
-        if (session?.user) {
-          const u = session.user;
-          setUser({
-            id: u.id,
-            email: u.email!,
-            name: u.user_metadata.name || "",
-            avatar_url: u.user_metadata.avatar_url,
-            currency: u.user_metadata.currency || "USD",
-            timezone: u.user_metadata.timezone || "UTC",
-            welcome_email_sent: u.user_metadata?.welcome_email_sent ?? false,
-          });
-        } else {
-          setUser(null);
-        }
+    api.auth
+      .me()
+      .then((res) => {
+        setUser(res.user);
+      })
+      .catch(() => {
+        authStorage.clearToken();
+        setUser(null);
+      })
+      .finally(() => {
         setIsLoading(false);
-      }
-    );
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+      });
   }, []);
 
   const login = async (email: string, password: string) => {
-    console.log("🚪 login attempt:", email);
-    // setIsLoading(true);
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    console.log("🧾 login result:", data, error);
-    setIsLoading(false);
-
-    if (error) {
-      // toast.error(error.message || "Login failed");
-      toast.error(error.message || "Login failed");
-      throw error;
+    try {
+      setIsLoading(true);
+      const res = await api.auth.login({ email, password });
+      authStorage.setToken(res.token);
+      setUser(res.user);
+      toast.success(res.message || "Login successful!");
+    } catch (err: any) {
+      toast.error(err.message || "Login failed");
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
-
-    // ✅ Success toast (optional if already handled in handleSubmit)
-    toast.success("Login successful!");
   };
 
   const register = async (name: string, email: string, password: string) => {
     try {
       setIsLoading(true);
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            currency: "USD",
-            timezone: "UTC",
-            welcome_email_sent: false,
-          },
-        },
-      });
-
-      console.log("👤 register result:", data, error);
-      setIsLoading(false);
-
-      if (error) {
-        if (
-          error.name === "AuthApiError" &&
-          error.message?.toLowerCase().includes("invalid")
-        ) {
-          toast.error("Invalid email. Please use a valid email address.");
-        } else {
-          toast.error(error.message || "Registration failed.");
-        }
-        return;
-      }
-
-      toast.success("Registration successful! Check your email to verify.");
+      const res = await api.auth.register({ name, email, password });
+      authStorage.setToken(res.token);
+      setUser(res.user);
+      toast.success("Account created successfully!");
     } catch (err: any) {
-      console.error("🚨 Unexpected error during registration:", err);
-      toast.error("Something went wrong. Please try again.");
+      toast.error(err.message || "Registration failed");
+      throw err;
+    } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = async () => {
-    console.log("🔐 logging out");
-    await supabase.auth.signOut();
+  const logout = () => {
+    api.auth.logout();
     setUser(null);
-    console.log("🔐 logged out");
+    toast.info("Logged out successfully");
   };
 
   const updateProfile = async (updates: Partial<User>) => {
     if (!user) throw new Error("No user logged in");
-
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          name: updates.name ?? user.name,
-          currency: updates.currency ?? user.currency,
-          timezone: updates.timezone ?? user.timezone,
-        },
-      });
-
-      if (error) throw error;
-
-      // Update local user state
-      setUser((prev) => (prev ? { ...prev, ...updates } : null));
-    } catch (error) {
-      console.error("❌ Error updating profile:", error);
-      throw error;
+      const res = await api.auth.updateProfile(updates);
+      setUser(res.user);
+      toast.success(res.message || "Profile updated!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update profile");
+      throw err;
     }
   };
 

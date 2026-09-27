@@ -1,523 +1,266 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Users,
-  Plus,
-  //   QrCode,
-  Copy,
-  Settings,
-  LogOut,
-  Eye,
-  //   Calendar,
-  Trash2,
-  UserPlus,
-} from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-// import DashboardLayout from "../components/layout/DashboardLayout";
-import Card from "../components/ui/Card";
-import Button from "../components/ui/Button";
-import Modal from "../components/ui/Modal";
 import { useGroups } from "../hooks/useGroup";
+import { Users, Plus, UserPlus, ArrowRight, ShieldCheck, Sparkles, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
-const Groups: React.FC = () => {
+export default function Groups() {
   const navigate = useNavigate();
-  const { groups, loading, createGroup, joinGroup, leaveGroup, deleteGroup } =
-    useGroups();
+  const { groups, loading, createGroup, joinGroup } = useGroups();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [notification, setNotification] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
-
-  // Create group form
-  const [createForm, setCreateForm] = useState({
-    name: "",
-    description: "",
-  });
-
-  // Join group form
+  const [createName, setCreateName] = useState("");
+  const [createDesc, setCreateDesc] = useState("");
   const [joinCode, setJoinCode] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const showNotification = (message: string, type: "success" | "error") => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  const handleCreateGroup = async (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!createForm.name.trim()) return;
+    if (!createName.trim()) return;
 
     try {
-      setSubmitting(true);
-      await createGroup(
-        createForm.name.trim(),
-        createForm.description.trim() || undefined
-      );
+      setIsSubmitting(true);
+      const newGroup = await createGroup(createName.trim(), createDesc.trim() || undefined);
+      toast.success(`Group "${newGroup.name}" created!`);
       setShowCreateModal(false);
-      setCreateForm({ name: "", description: "" });
-      showNotification("Group created successfully!", "success");
-    } catch (error: any) {
-      showNotification("Failed to create group: " + error.message, "error");
+      setCreateName("");
+      setCreateDesc("");
+      navigate(`/group/${newGroup.id}`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create group");
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleJoinGroup = async (e: React.FormEvent) => {
+  const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!joinCode.trim()) return;
 
     try {
-      setSubmitting(true);
-      await joinGroup(joinCode.trim().toUpperCase());
+      setIsSubmitting(true);
+      const res = await joinGroup(joinCode.trim().toUpperCase());
+      toast.success(res.message || "Joined group!");
       setShowJoinModal(false);
       setJoinCode("");
-      showNotification("Successfully joined the group!", "success");
-    } catch (error: any) {
-      showNotification("Failed to join group: " + error.message, "error");
+      navigate(`/group/${res.group.id}`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to join group");
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleLeaveGroup = async (groupId: string, groupName: string) => {
-    if (!confirm(`Are you sure you want to leave "${groupName}"?`)) return;
-
-    try {
-      await leaveGroup(groupId);
-      showNotification("Left group successfully", "success");
-    } catch (error: any) {
-      showNotification("Failed to leave group: " + error.message, "error");
-    }
-  };
-
-  const handleDeleteGroup = async (groupId: string, groupName: string) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete "${groupName}"? This action cannot be undone.`
-      )
-    )
-      return;
-
-    try {
-      await deleteGroup(groupId);
-      showNotification("Group deleted successfully", "success");
-    } catch (error: any) {
-      showNotification("Failed to delete group: " + error.message, "error");
-    }
-  };
-
-  const copyGroupCode = (code: string) => {
+  const copyCode = (e: React.MouseEvent, code: string, id: string) => {
+    e.stopPropagation();
     navigator.clipboard.writeText(code);
-    showNotification("Group code copied to clipboard!", "success");
+    setCopiedId(id);
+    toast.success("Group code copied!");
+    setTimeout(() => setCopiedId(null), 2000);
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-[60vh]">
-        <div className="flex flex-col items-center space-y-4 animate-fade-in-up">
-          <div className="relative">
-            <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-primary-600"></div>
-          </div>
-          <p className="text-sm text-neutral-500">Loading groups...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-8">
-      {/* Notification */}
-      <AnimatePresence>
-        {notification && (
-          <motion.div
-            key={notification.message}
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className={`
-        fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg
-        ${
-          notification.type === "success"
-            ? "bg-success-600 text-white dark:bg-green-500"
-            : "bg-danger-600 text-white dark:bg-red-500"
-        }
-      `}
-            role="alert"
-            aria-live="assertive"
-          >
-            <p className="text-sm font-medium">{notification.message}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-            Group Wallet
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Users className="w-7 h-7 text-indigo-500" />
+            Shared Groups & Expense Splitting
           </h1>
-          <p className="text-neutral-500 dark:text-neutral-400 mt-2">
-            Manage shared expenses with friends, family, or teams
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Collaborate with roommates, friends, or trip partners and track shared balances
           </p>
         </div>
 
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            icon={<UserPlus size={20} />}
+        <div className="flex items-center gap-3">
+          <button
             onClick={() => setShowJoinModal(true)}
-            className="shadow-sm hover:shadow-md transition-all duration-200 dark:text-gray-100"
-            aria-label="Join Group"
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-sm font-semibold transition cursor-pointer"
           >
-            Join Group
-          </Button>
-
-          <Button
-            variant="gradient"
-            icon={<Plus size={20} />}
+            <UserPlus className="w-4 h-4" />
+            Join with Code
+          </button>
+          <button
             onClick={() => setShowCreateModal(true)}
-            className="shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-            aria-label="Create Group"
+            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-600/20 transition cursor-pointer"
           >
+            <Plus className="w-4 h-4" />
             Create Group
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm rounded-lg">
-          <div>
-            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Total Groups
-            </p>
-            <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
-              {groups.length}
-            </p>
-          </div>
-          <div className="p-3 bg-primary-100 dark:bg-primary-900/30 rounded-full">
-            <Users
-              className="text-primary-600 dark:text-primary-400"
-              size={24}
-            />
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm rounded-lg">
-          <div>
-            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Group Activity
-            </p>
-            <p className="text-2xl font-bold text-success-600 dark:text-success-400">
-              Active
-            </p>
-          </div>
-          <div className="p-3 bg-success-100 dark:bg-success-900/30 rounded-full">
-            <Settings
-              className="text-success-600 dark:text-success-400"
-              size={24}
-            />
-          </div>
-        </div>
-
-        {/* Total Members */}
-        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 shadow-sm rounded-lg">
-          <div>
-            <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-              Total Members
-            </p>
-            <p className="text-2xl font-bold text-neutral-800 dark:text-gray-100">
-              {groups.reduce(
-                (sum, group) =>
-                  sum + (group._group_members_count?.[0]?.count || 0),
-                0
-              )}
-            </p>
-          </div>
-          <div className="p-3 bg-neutral-100 dark:bg-gray-700 rounded-full">
-            <Users
-              className="text-neutral-600 dark:text-neutral-300"
-              size={24}
-            />
-          </div>
+          </button>
         </div>
       </div>
 
       {/* Groups Grid */}
-      {groups.length === 0 ? (
-        <Card
-          variant="glass"
-          className="text-center py-16 dark:bg-gray-800 dark:text-gray-100"
-        >
-          <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 bg-primary-100 dark:bg-primary-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users
-                size={32}
-                className="text-primary-600 dark:text-primary-400"
-              />
-            </div>
-            <h3 className="text-lg font-medium text-neutral-800 dark:text-gray-100 mb-2">
-              No groups yet
-            </h3>
-            <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-              Create your first group or join an existing one to start managing
-              shared expenses.
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Button
-                className="dark:text-gray-100"
-                variant="outline"
-                onClick={() => setShowJoinModal(true)}
-                icon={<UserPlus size={16} />}
-              >
-                Join Group
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => setShowCreateModal(true)}
-                icon={<Plus size={16} />}
-              >
-                Create Group
-              </Button>
-            </div>
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[30vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+        </div>
+      ) : groups.length === 0 ? (
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-12 text-center shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8" />
           </div>
-        </Card>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Groups Yet</h3>
+          <p className="text-sm text-slate-400 max-w-md mx-auto mt-1 mb-6">
+            Create a shared group for a vacation, household, or dinner party to track who paid and calculate who owes whom.
+          </p>
+          <div className="flex justify-center gap-3">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-sm cursor-pointer"
+            >
+              Create Your First Group
+            </button>
+          </div>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence>
-            {groups.map((group, index) => (
-              <motion.div
-                key={group.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <Card
-                  variant="glass"
-                  className="group hover:shadow-lg shadow-md transition-all duration-300 cursor-pointer border border-slate-300 dark:border-gray-700 hover:border-primary-400 dark:hover:border-primary-500 dark:bg-gray-800"
-                >
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 bg-primary-100 dark:bg-primary-800 rounded-xl flex items-center justify-center mr-3">
-                          <Users
-                            className="text-primary-600 dark:text-primary-400"
-                            size={24}
-                          />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-neutral-800 dark:text-gray-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                            {group.name}
-                          </h3>
-                          <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                            {group._group_members_count?.[0]?.count || 0}{" "}
-                            members
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={<Eye size={16} />}
-                          className="text-neutral-400 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400"
-                          onClick={() => navigate(`/group/${group.id}`)}
-                        >
-                          {" "}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={<Trash2 size={16} />}
-                          className="text-neutral-400 dark:text-neutral-300 hover:text-danger-600 dark:hover:text-danger-400"
-                          onClick={() =>
-                            handleDeleteGroup(group.id, group.name)
-                          }
-                        >
-                          {" "}
-                        </Button>
-                      </div>
-                    </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {groups.map((g) => (
+            <motion.div
+              key={g.id}
+              whileHover={{ y: -4 }}
+              onClick={() => navigate(`/group/${g.id}`)}
+              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white truncate">{g.name}</h3>
+                  <button
+                    onClick={(e) => copyCode(e, g.code, g.id)}
+                    title="Copy invite code"
+                    className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-mono font-bold hover:bg-indigo-100"
+                  >
+                    {copiedId === g.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {g.code}
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 line-clamp-2 mb-4">
+                  {g.description || "Shared financial ledger"}
+                </p>
+              </div>
 
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-neutral-500 dark:text-neutral-400">
-                          Group Code
-                        </span>
-                        <div className="flex items-center space-x-2">
-                          <code className="bg-neutral-100 dark:bg-gray-700 px-2 py-1 rounded text-sm font-mono text-neutral-800 dark:text-gray-100">
-                            {group.code}
-                          </code>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            icon={<Copy size={14} />}
-                            className="text-neutral-400 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400"
-                            onClick={() => copyGroupCode(group.code)}
-                          >
-                            {" "}
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-neutral-500 dark:text-neutral-400">
-                          Created
-                        </span>
-                        <span className="text-sm text-neutral-700 dark:text-neutral-200">
-                          {format(new Date(group.created_at), "MMM dd, yyyy")}
-                        </span>
-                      </div>
-
-                      <div className="pt-3 border-t border-neutral-200 dark:border-gray-700">
-                        <div className="flex gap-2">
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => navigate(`/group/${group.id}`)}
-                            className="flex-1"
-                            icon={<Eye size={16} />}
-                          >
-                            View
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleLeaveGroup(group.id, group.name)
-                            }
-                            className="flex-1"
-                            icon={<LogOut size={16} />}
-                          >
-                            Leave
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                  <Users className="w-4 h-4" />
+                  <span>{g.member_count || 1} members</span>
+                </div>
+                <div className="flex items-center gap-1 font-bold text-indigo-600 dark:text-indigo-400">
+                  <span>${(g.total_spent || 0).toFixed(2)} total</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
       )}
 
-      {/* Create Group Modal */}
-      <Modal
-        open={showCreateModal}
-        title="Create New Group"
-        onClose={() => setShowCreateModal(false)}
-      >
-        <form onSubmit={handleCreateGroup} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
-              Group Name *
-            </label>
-            <input
-              type="text"
-              value={createForm.name}
-              onChange={(e) =>
-                setCreateForm({ ...createForm, name: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-xl border border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-neutral-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
-              placeholder="Enter group name"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
-              Description (Optional)
-            </label>
-            <textarea
-              value={createForm.description}
-              onChange={(e) =>
-                setCreateForm({ ...createForm, description: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-xl border border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-neutral-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
-              placeholder="What's this group for?"
-              rows={3}
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowCreateModal(false)}
-              className="flex-1"
+      {/* Modal: Create Group */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4"
             >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="gradient"
-              isLoading={submitting}
-              className="flex-1"
-            >
-              Create Group
-            </Button>
-          </div>
-        </form>
-      </Modal>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Create New Group</h3>
+              <form onSubmit={handleCreate} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Group Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={createName}
+                    onChange={(e) => setCreateName(e.target.value)}
+                    placeholder="e.g. Summer Euro Trip 2026"
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm"
+                  />
+                </div>
 
-      {/* Join Group Modal */}
-      <Modal
-        open={showJoinModal}
-        title="Join Group"
-        onClose={() => setShowJoinModal(false)}
-      >
-        <form onSubmit={handleJoinGroup} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-2">
-              Group Code
-            </label>
-            <input
-              type="text"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              className="w-full px-4 py-3 rounded-xl border border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-neutral-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 font-mono"
-              placeholder="Enter 6-character code"
-              maxLength={6}
-              required
-            />
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
-              Ask a group member for the 6-character group code
-            </p>
-          </div>
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Description (Optional)</label>
+                  <textarea
+                    rows={2}
+                    value={createDesc}
+                    onChange={(e) => setCreateDesc(e.target.value)}
+                    placeholder="Brief note about the group purpose"
+                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm"
+                  />
+                </div>
 
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowJoinModal(false)}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="gradient"
-              isLoading={submitting}
-              className="flex-1"
-            >
-              Join Group
-            </Button>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="px-4 py-2 text-slate-500 hover:text-slate-700 text-sm font-semibold cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-sm disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSubmitting ? "Creating..." : "Create Group"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        </form>
-      </Modal>
+        )}
+      </AnimatePresence>
+
+      {/* Modal: Join Group */}
+      <AnimatePresence>
+        {showJoinModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4"
+            >
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Join Group</h3>
+              <form onSubmit={handleJoin} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">6-Character Invite Code</label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. A9B2C4"
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-base font-mono uppercase text-center tracking-widest font-bold"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowJoinModal(false)}
+                    className="px-4 py-2 text-slate-500 hover:text-slate-700 text-sm font-semibold cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-sm disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSubmitting ? "Joining..." : "Join Group"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
-};
-
-export default Groups;
+}

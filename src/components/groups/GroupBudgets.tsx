@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { format, endOfMonth } from "date-fns";
 import { groupService } from "../../services/groupService";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "sonner";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 // import Badge from "../ui/Badge";

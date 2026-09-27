@@ -1,21 +1,22 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useAuth } from "./AuthContext";
-import { supabase, Category } from "../lib/supabase";
+import { api } from "../lib/api";
+import { Category } from "../types";
+import { toast } from "sonner";
 
 interface CategoriesContextType {
   categories: Category[];
-  addCategory: (category: Omit<Category, "id" | "user_id">) => Promise<void>;
-  updateCategory: (id: string, category: Partial<Category>) => Promise<void>;
+  addCategory: (category: Omit<Category, "id" | "user_id">) => Promise<Category>;
+  updateCategory: (id: string, category: Partial<Category>) => Promise<Category>;
   deleteCategory: (id: string) => Promise<void>;
   getCategoryById: (id: string) => Category | undefined;
   getIncomeCategories: () => Category[];
   getExpenseCategories: () => Category[];
+  refreshCategories: () => Promise<void>;
   isLoading: boolean;
 }
 
-const CategoriesContext = createContext<CategoriesContextType | undefined>(
-  undefined
-);
+const CategoriesContext = createContext<CategoriesContextType | undefined>(undefined);
 
 export function useCategories() {
   const context = useContext(CategoriesContext);
@@ -25,213 +26,94 @@ export function useCategories() {
   return context;
 }
 
-export function CategoriesProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function CategoriesProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadCategories();
-    } else {
+  const loadCategories = useCallback(async () => {
+    if (!user) {
       setCategories([]);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const data = await api.categories.list();
+      setCategories(data);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load categories");
+    } finally {
       setIsLoading(false);
     }
   }, [user]);
 
-  const loadCategories = async () => {
-    if (!user) return;
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
 
+  const addCategory = async (category: Omit<Category, "id" | "user_id">): Promise<Category> => {
     try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-
-      if (data.length === 0) {
-        // Create default categories for new users
-        await createDefaultCategories();
-      } else {
-        setCategories(data);
-      }
-    } catch (error) {
-      console.error("Error loading categories:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const createDefaultCategories = async () => {
-    if (!user) return;
-
-    const defaultCategories = [
-      { name: "Salary", type: "income", color: "#4F46E5", icon: "Briefcase" },
-      { name: "Freelance", type: "income", color: "#8B5CF6", icon: "Laptop" },
-      {
-        name: "Investments",
-        type: "income",
-        color: "#6366F1",
-        icon: "TrendingUp",
-      },
-      {
-        name: "Food",
-        type: "expense",
-        color: "#F97316",
-        icon: "UtensilsCrossed",
-      },
-      {
-        name: "Transportation",
-        type: "expense",
-        color: "#3B82F6",
-        icon: "Car",
-      },
-      {
-        name: "Entertainment",
-        type: "expense",
-        color: "#EC4899",
-        icon: "Film",
-      },
-      {
-        name: "Utilities",
-        type: "expense",
-        color: "#10B981",
-        icon: "Lightbulb",
-      },
-      { name: "Rent", type: "expense", color: "#6366F1", icon: "Home" },
-    ];
-
-    try {
-      // 1. Get existing category names
-      const { data: existing, error: fetchError } = await supabase
-        .from("categories")
-        .select("name")
-        .eq("user_id", user.id);
-
-      if (fetchError) throw fetchError;
-
-      const existingNames = (existing ?? []).map((cat) => cat.name);
-
-      // 2. Filter out categories already present
-      const categoriesToInsert = defaultCategories.filter(
-        (cat) => !existingNames.includes(cat.name)
-      );
-
-      if (categoriesToInsert.length === 0) return;
-
-      // 3. Insert only missing categories
-      const { data, error: insertError } = await supabase
-        .from("categories")
-        .insert(categoriesToInsert.map((cat) => ({ ...cat, user_id: user.id })))
-        .select();
-
-      if (insertError) throw insertError;
-
-      setCategories((prev) => [...prev, ...(data ?? [])]);
-    } catch (error) {
-      console.error("Error creating default categories:", error);
-    }
-  };
-
-  const addCategory = async (category: Omit<Category, "id" | "user_id">) => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("categories")
-        .insert([
-          {
-            ...category,
-            user_id: user.id,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
-      setCategories((prev) => [...prev, data]);
-    } catch (error) {
-      console.error("Error adding category:", error);
+      const created = await api.categories.create(category);
+      setCategories((prev) => [...prev, created]);
+      toast.success(`Category "${created.name}" created!`);
+      return created;
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add category");
       throw error;
     }
   };
 
-  const updateCategory = async (
-    id: string,
-    updatedFields: Partial<Category>
-  ) => {
-    if (!user) return;
-
+  const updateCategory = async (id: string, updatedFields: Partial<Category>): Promise<Category> => {
     try {
-      const { data, error } = await supabase
-        .from("categories")
-        .update(updatedFields)
-        .eq("id", id)
-        .eq("user_id", user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      setCategories((prev) =>
-        prev.map((category) =>
-          category.id === id ? { ...category, ...data } : category
-        )
-      );
-    } catch (error) {
-      console.error("Error updating category:", error);
+      const updated = await api.categories.update(id, updatedFields);
+      setCategories((prev) => prev.map((c) => (c.id === id ? updated : c)));
+      toast.success(`Category updated!`);
+      return updated;
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update category");
       throw error;
     }
   };
 
-  const deleteCategory = async (id: string) => {
-    if (!user) return;
-
+  const deleteCategory = async (id: string): Promise<void> => {
     try {
-      const { error } = await supabase
-        .from("categories")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-      setCategories((prev) => prev.filter((category) => category.id !== id));
-    } catch (error) {
-      console.error("Error deleting category:", error);
+      await api.categories.delete(id);
+      setCategories((prev) => prev.filter((c) => c.id !== id));
+      toast.success("Category deleted");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete category");
       throw error;
     }
   };
 
   const getCategoryById = (id: string): Category | undefined => {
-    return categories.find((category) => category.id === id);
+    return categories.find((c) => c.id === id);
   };
 
   const getIncomeCategories = (): Category[] => {
-    return categories.filter((category) => category.type === "income");
+    return categories.filter((c) => c.type === "income");
   };
 
   const getExpenseCategories = (): Category[] => {
-    return categories.filter((category) => category.type === "expense");
-  };
-
-  const value = {
-    categories,
-    addCategory,
-    updateCategory,
-    deleteCategory,
-    getCategoryById,
-    getIncomeCategories,
-    getExpenseCategories,
-    isLoading,
+    return categories.filter((c) => c.type === "expense");
   };
 
   return (
-    <CategoriesContext.Provider value={value}>
+    <CategoriesContext.Provider
+      value={{
+        categories,
+        addCategory,
+        updateCategory,
+        deleteCategory,
+        getCategoryById,
+        getIncomeCategories,
+        getExpenseCategories,
+        refreshCategories: loadCategories,
+        isLoading,
+      }}
+    >
       {children}
     </CategoriesContext.Provider>
   );

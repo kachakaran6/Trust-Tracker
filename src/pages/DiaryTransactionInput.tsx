@@ -1,237 +1,211 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { useState } from "react";
+import React, { useState } from "react";
 import { useTransactions } from "../contexts/TransactionsContext";
 import { useCategories } from "../contexts/CategoriesContext";
-import { useAuth } from "../contexts/AuthContext";
-import { toast } from "react-hot-toast";
-import { div } from "@tensorflow/tfjs";
+import { api } from "../lib/api";
+import { Sparkles, ArrowRight, Check, Trash2, Calendar, Tag, DollarSign } from "lucide-react";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+
+interface ParsedTransaction {
+  amount: number;
+  type: "income" | "expense";
+  description: string;
+  category_id: string | null;
+  date: string;
+}
 
 export default function DiaryTransactionInput() {
   const { addTransaction } = useTransactions();
   const { categories } = useCategories();
-  const { user } = useAuth();
 
-  const [entry, setEntry] = useState("");
-  const [parsedEntries, setParsedEntries] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [text, setText] = useState("");
+  const [isParsing, setIsParsing] = useState(false);
+  const [parsedItems, setParsedItems] = useState<ParsedTransaction[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const miscCategoryId = categories.find(
-    (c) => c.name.toLowerCase() === "miscellaneous"
-  )?.id;
-
-  // Keyword to category map for auto-categorization
-  const keywordCategoryMap: Record<string, string> = {};
-  categories.forEach((c) => {
-    keywordCategoryMap[c.name.toLowerCase()] = c.id;
-  });
-
-  // Enhanced parser for multi-entries and auto-category
-  const parseEntry = (text: string) => {
-    const entries = text.split(/,|and|\n/);
-    const results: any[] = [];
-
-    entries.forEach((entryText) => {
-      const amountMatch = entryText.match(/([0-9]+(?:\.[0-9]{1,2})?)/);
-      const amount = amountMatch ? parseFloat(amountMatch[1]) : null;
-      if (!amount) return;
-
-      let type: "income" | "expense" =
-        /income|salary|earned|freelance|received/i.test(entryText)
-          ? "income"
-          : "expense";
-      if (/spent|bought|paid|expense/i.test(entryText)) type = "expense";
-      if (/returned|refunded|cancelled/i.test(entryText)) type = "expense";
-
-      const description = entryText
-        .replace(/([0-9]+(?:\.[0-9]{1,2})?)/, "")
-        .trim();
-
-      // Auto-assign category
-      let category_id = miscCategoryId || null;
-      for (const keyword of Object.keys(keywordCategoryMap)) {
-        if (description.toLowerCase().includes(keyword)) {
-          category_id = keywordCategoryMap[keyword];
-          break;
-        }
-      }
-
-      results.push({ type, amount, description, category_id });
-    });
-
-    return results;
-  };
-
-  const handleParse = () => {
-    const results = parseEntry(entry);
-    if (results.length === 0) {
-      toast.error("Could not understand your entry");
+  const handleParse = async () => {
+    if (!text.trim()) {
+      toast.error("Please enter some text describing your transactions.");
       return;
     }
-    setParsedEntries(results);
-  };
 
-  const handleSave = async (parsed: any) => {
-    setLoading(true);
     try {
-      await addTransaction({
-        amount: parsed.amount,
-        category_id: parsed.category_id || miscCategoryId,
-        description: parsed.description,
-        type: parsed.type,
-        date: new Date().toISOString(),
-      });
-      toast.success(`Transaction added: ${parsed.description}`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to save transaction");
+      setIsParsing(true);
+      const res = await api.ai.parseDiary(text);
+      if (!res.transactions || res.transactions.length === 0) {
+        toast.warning("No transactions could be extracted. Try including amounts like '$25 for dinner'");
+        return;
+      }
+      setParsedItems(res.transactions);
+      toast.success(`Extracted ${res.transactions.length} transaction${res.transactions.length > 1 ? "s" : ""}!`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to parse text");
     } finally {
-      setLoading(false);
+      setIsParsing(false);
     }
   };
 
   const handleSaveAll = async () => {
-    for (const entry of parsedEntries) {
-      await handleSave(entry);
+    if (parsedItems.length === 0) return;
+
+    try {
+      setIsSaving(true);
+      for (const item of parsedItems) {
+        await addTransaction({
+          amount: item.amount,
+          type: item.type,
+          description: item.description,
+          category_id: item.category_id,
+          date: item.date,
+        });
+      }
+      toast.success(`Successfully saved ${parsedItems.length} transactions!`);
+      setText("");
+      setParsedItems([]);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save transactions");
+    } finally {
+      setIsSaving(false);
     }
-    setEntry("");
-    setParsedEntries([]);
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setParsedItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateItem = (index: number, field: keyof ParsedTransaction, value: any) => {
+    setParsedItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    );
   };
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6 pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
-          Manual Entry
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <Sparkles className="w-7 h-7 text-indigo-500" />
+          Smart AI Diary & Receipt Parser
         </h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Paste your day's diary entry, receipt notes, or multiple expenses in free-form English
+        </p>
       </div>
 
-      {/* Input Section */}
-      <div
-        className="max-w-4xl mx-auto p-6 rounded-2xl shadow-xl 
-                bg-white/90 dark:bg-gray-900/90 
-                backdrop-blur border border-gray-200 dark:border-gray-700 
-                transition-colors duration-300"
-      >
-        <h2
-          className="flex items-center gap-2 text-2xl font-bold 
-                 text-gray-800 dark:text-gray-100 mb-4"
-        >
-          📝 Transaction Entry
-        </h2>
-
+      {/* Input Box */}
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-6 shadow-sm">
         <textarea
-          className="w-full border border-gray-300 dark:border-gray-700 
-               rounded-xl p-4 
-               bg-gray-50 dark:bg-gray-800 
-               text-gray-800 dark:text-gray-200 
-               focus:ring-2 focus:ring-blue-500 focus:outline-none 
-               resize-none min-h-[120px] shadow-sm 
-               placeholder-gray-400 dark:placeholder-gray-500
-               transition-colors duration-300"
-          placeholder="e.g. Bought groceries for 50 and coffee 5, Received salary 2000"
-          value={entry}
-          onChange={(e) => setEntry(e.target.value)}
+          rows={4}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Example: Spent $45.50 on groceries at Walmart, paid $12.00 for Uber to office, earned $350 from freelance design project."
+          className="w-full p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
 
-        <button
-          onClick={handleParse}
-          className="mt-5 w-full py-3 
-               bg-gradient-to-r from-blue-600 to-indigo-600 
-               hover:from-blue-700 hover:to-indigo-700 
-               text-white font-semibold rounded-xl shadow-lg 
-               transform transition hover:scale-[1.02] active:scale-[0.98]"
-        >
-          🚀 Parse Transactions
-        </button>
-      </div>
-
-      {/* Parsed Transactions */}
-      {parsedEntries.length > 0 && (
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {/* Income */}
-          <div className="p-4 rounded-xl shadow bg-green-50 border border-green-200">
-            <h3 className="text-lg font-semibold mb-3 text-green-700">
-              Income
-            </h3>
-            <div className="space-y-3">
-              {parsedEntries
-                .filter((p) => p.type === "income")
-                .map((p, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 border rounded-lg bg-white shadow-sm"
-                  >
-                    <p className="font-bold text-green-700">₹ {p.amount}</p>
-                    <p className="text-sm text-gray-700">{p.description}</p>
-                    <p className="text-xs text-gray-500">
-                      Category:{" "}
-                      {categories.find((c) => c.id === p.category_id)?.name ||
-                        "Miscellaneous"}
-                    </p>
-                    <button
-                      disabled={loading}
-                      onClick={() => handleSave(p)}
-                      className="mt-2 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition"
-                    >
-                      Save
-                    </button>
-                  </div>
-                ))}
-            </div>
+        <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="text-xs text-slate-400 flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            AI extracts amounts, categories, types, and descriptions automatically
           </div>
-
-          {/* Expense */}
-          <div className="p-4 rounded-xl shadow bg-red-50 border border-red-200">
-            <h3 className="text-lg font-semibold mb-3 text-red-700">Expense</h3>
-            <div className="space-y-3">
-              {parsedEntries
-                .filter((p) => p.type === "expense")
-                .map((p, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 border rounded-lg bg-white shadow-sm"
-                  >
-                    <p className="font-bold text-red-700">₹ {p.amount}</p>
-                    <p className="text-sm text-gray-700">{p.description}</p>
-                    <p className="text-xs text-gray-500">
-                      Category:{" "}
-                      {categories.find((c) => c.id === p.category_id)?.name ||
-                        "Miscellaneous"}
-                    </p>
-                    <button
-                      disabled={loading}
-                      onClick={() => handleSave(p)}
-                      className="mt-2 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition"
-                    >
-                      Save
-                    </button>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Save All Button */}
-      {parsedEntries.length > 0 && (
-        <div className="max-w-4xl mx-auto">
           <button
-            onClick={handleSaveAll}
-            disabled={loading}
-            className="mt-6 w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition"
+            onClick={handleParse}
+            disabled={isParsing || !text.trim()}
+            className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
           >
-            Save All Transactions
+            {isParsing ? "Extracting..." : "Parse Transactions"}
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
-      )}
+      </div>
 
-      <footer className="max-w-4xl mx-auto text-center text-sm text-gray-500 dark:text-gray-400 pt-8 border-t border-gray-200 dark:border-gray-700 mt-10">
-        ⚠️ This page is still under{" "}
-        <span className="font-semibold">testing</span>. Features may change or
-        break unexpectedly.
-      </footer>
+      {/* Extracted Preview List */}
+      <AnimatePresence>
+        {parsedItems.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-6 shadow-sm space-y-4"
+          >
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-700/60">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Extracted Transactions ({parsedItems.length})
+              </h3>
+              <button
+                onClick={handleSaveAll}
+                disabled={isSaving}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
+              >
+                <Check className="w-4 h-4" />
+                {isSaving ? "Saving..." : "Save All to Account"}
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {parsedItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-700/60 rounded-2xl flex flex-col md:flex-row gap-3 items-center justify-between"
+                >
+                  <div className="flex items-center gap-3 w-full md:w-auto">
+                    <select
+                      value={item.type}
+                      onChange={(e) => handleUpdateItem(idx, "type", e.target.value)}
+                      className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200"
+                    >
+                      <option value="expense">Expense</option>
+                      <option value="income">Income</option>
+                    </select>
+
+                    <div className="relative flex-1 md:w-36">
+                      <DollarSign className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400" />
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={item.amount}
+                        onChange={(e) => handleUpdateItem(idx, "amount", parseFloat(e.target.value) || 0)}
+                        className="w-full pl-7 pr-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-900 dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <input
+                    type="text"
+                    value={item.description}
+                    onChange={(e) => handleUpdateItem(idx, "description", e.target.value)}
+                    placeholder="Description"
+                    className="w-full md:flex-1 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white"
+                  />
+
+                  <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                    <select
+                      value={item.category_id || ""}
+                      onChange={(e) => handleUpdateItem(idx, "category_id", e.target.value || null)}
+                      className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-800 dark:text-slate-200 max-w-[140px]"
+                    >
+                      <option value="">Select Category</option>
+                      {categories
+                        .filter((c) => c.type === item.type)
+                        .map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        ))}
+                    </select>
+
+                    <button
+                      onClick={() => handleRemoveItem(idx)}
+                      className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg transition cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

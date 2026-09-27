@@ -23,7 +23,7 @@ import {
   Check,
   Zap,
 } from "lucide-react";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "sonner";
 
 interface StepByStepTransactionProps {
   isOpen: boolean;

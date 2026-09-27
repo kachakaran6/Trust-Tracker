@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import StepByStepTransaction from "../components/transactions/StepByStepTransaction";
 import FloatingAddButton from "../components/transactions/FloatingAddButton";
-import { Toaster } from "sonner";
 
 function Dashboard() {
   const { user } = useAuth();

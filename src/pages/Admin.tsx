@@ -1,18 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { supabase } from "../lib/supabase";
+import { api } from "../lib/api";
+import { AdminUser, AdminStats } from "../types";
 import { format, parseISO } from "date-fns";
-import { toast, Toaster } from "sonner";
-import { AdminUser, AdminStatsLocal } from "../types";
-
+import { toast } from "sonner";
 import {
   Users,
   Eye,
   CheckCircle,
-  BarChart3,
   Search,
   Filter,
   Download,
@@ -25,15 +20,15 @@ import {
   ShieldOff,
   ArrowUp,
   ArrowDown,
+  ShieldAlert,
+  X,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { AnimatePresence, motion } from "framer-motion";
-
-
-function Admin() {
+export default function Admin() {
   const { user } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [stats, setStats] = useState<AdminStatsLocal>({
+  const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     totalTransactions: 0,
     totalAmount: 0,
@@ -47,728 +42,407 @@ function Admin() {
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [showUserModal, setShowUserModal] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [sortField, setSortField] = React.useState<string>("created_at");
-  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc");
+  const [sortField, setSortField] = useState<"created_at" | "total_transactions" | "total_amount">("created_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const toggleSort = (field: string) => {
+  const isSuperAdmin = user?.role === "super_admin";
+
+  const loadData = useCallback(async () => {
+    if (!isSuperAdmin) return;
+    try {
+      setIsLoading(true);
+      const [statsData, usersData] = await Promise.all([
+        api.admin.getStats(),
+        api.admin.getUsers(),
+      ]);
+      setStats(statsData);
+      setUsers(usersData);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to load admin data");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isSuperAdmin]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const toggleSort = (field: "created_at" | "total_transactions" | "total_amount") => {
     if (sortField === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortOrder("asc");
+      setSortOrder("desc");
     }
   };
 
-  // Filter users
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.full_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = !roleFilter || user.user_role === roleFilter;
-    const matchesStatus = !statusFilter || user.user_status === statusFilter;
-
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
-  const sortedUsers = [...filteredUsers].sort((a, b) => {
-    if (sortField === "created_at") {
-      const dateA = new Date(a.created_at).getTime();
-      const dateB = new Date(b.created_at).getTime();
-      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-    }
-    if (sortField === "total_transactions") {
-      return sortOrder === "asc"
-        ? a.total_transactions - b.total_transactions
-        : b.total_transactions - a.total_transactions;
-    }
-    // add other sort fields if needed
-    return 0;
-  });
-
-  // Check if user is super admin
-  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    checkAdminAccess();
-  }, [user]);
-
-  useEffect(() => {
-    if (isSuperAdmin) {
-      loadAdminData();
-    }
-  }, [isSuperAdmin]);
-
-  const checkAdminAccess = async () => {
-    if (!user) return;
-
+  const handleRoleToggle = async (targetUser: AdminUser) => {
+    const newRole = targetUser.user_role === "super_admin" ? "normal" : "super_admin";
     try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
-
-      if (error || !data) {
-        console.error("Error checking admin access:", error);
-        setIsSuperAdmin(false); // explicitly mark as not admin
-        return;
-      }
-
-      setIsSuperAdmin(data.role === "super_admin");
-    } catch (error) {
-      console.error("Error checking admin access:", error);
-      setIsSuperAdmin(false);
-    }
-  };
-
-  const loadAdminData = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      console.log("Loading admin data...");
-
-      // Call the admin function
-      const { data: adminUsers, error } = await supabase.rpc("get_admin_users");
-
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
-      }
-
-      console.log("Admin users loaded:", adminUsers);
-      setUsers(adminUsers || []);
-
-      // Calculate stats
-      if (adminUsers && adminUsers.length > 0) {
-        const totalUsers = adminUsers.length;
-        const totalTransactions = adminUsers.reduce(
-          (sum: number, u: AdminUser) => sum + u.total_transactions,
-          0
-        );
-        const totalAmount = adminUsers.reduce(
-          (sum: number, u: AdminUser) => sum + u.total_amount,
-          0
-        );
-
-        const thisMonth = new Date();
-        thisMonth.setDate(1);
-
-        const newUsersThisMonth = adminUsers.filter(
-          (u: AdminUser) => new Date(u.created_at) >= thisMonth
-        ).length;
-
-        const activeUsers = adminUsers.filter(
-          (u: AdminUser) => u.user_status === "active"
-        ).length;
-        const bannedUsers = adminUsers.filter(
-          (u: AdminUser) => u.user_status === "banned"
-        ).length;
-        const superAdmins = adminUsers.filter(
-          (u: AdminUser) => u.user_role === "super_admin"
-        ).length;
-
-        setStats({
-          totalUsers,
-          totalTransactions,
-          totalAmount,
-          newUsersThisMonth,
-          activeUsers,
-          bannedUsers,
-          superAdmins,
-        });
-      }
-    } catch (error) {
-      console.error("Error loading admin data:", error);
-      setError("Failed to load admin data. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUserAction = async (
-    userId: string,
-    action: "promote" | "demote" | "ban" | "unban" | "delete"
-  ) => {
-    if (!userId || !action) return;
-
-    if (action === "delete") {
-      toast.warning("Are you sure you want to permanently delete this user?", {
-        description: (
-          <>
-            <p>This will delete:</p>
-            <ul className="list-disc list-inside text-sm ml-4">
-              <li>All transactions</li>
-              <li>All categories</li>
-              <li>All budgets</li>
-              <li>User account</li>
-            </ul>
-            <p className="mt-2 text-red-500 font-semibold">
-              ⚠ This action cannot be undone.
-            </p>
-          </>
-        ),
-        action: {
-          label: "Confirm Delete",
-          onClick: async () => {
-            await performUserAction(userId, action);
-          },
-        },
-      });
-      return;
-    }
-
-    await performUserAction(userId, action);
-  };
-
-  const performUserAction = async (
-    userId: string,
-    action: "promote" | "demote" | "ban" | "unban" | "delete"
-  ) => {
-    setActionLoading(`${userId}-${action}`);
-
-    try {
-      const rpcName = `admin_${action}_user`;
-      const payload: Record<string, any> = { target_user_id: userId };
-      if (action === "ban") payload.reason = "Banned by admin";
-
-      const { data, error } = await supabase.rpc(rpcName, payload);
-
-      if (error) {
-        throw new Error(error.message || `Failed to ${action} user.`);
-      }
-
-      if (data?.success) {
-        toast.success(data.message || `User ${action} successfully`);
-        // Always reload data to ensure stats and users list are in sync
-        await loadAdminData();
-      } else {
-        throw new Error(data?.message || `User ${action} failed.`);
-      }
+      setActionLoading(`${targetUser.user_id}-role`);
+      await api.admin.updateRole(targetUser.user_id, newRole);
+      setUsers((prev) =>
+        prev.map((u) => (u.user_id === targetUser.user_id ? { ...u, user_role: newRole } : u))
+      );
+      toast.success(`User updated to ${newRole}`);
+      loadData();
     } catch (err: any) {
-      const msg =
-        err?.message ||
-        (typeof err === "string" ? err : `Unexpected error during ${action}`);
-      console.error(`${action} user failed:`, msg);
-      toast.error(msg);
+      toast.error(err.message || "Failed to update user role");
     } finally {
       setActionLoading(null);
     }
   };
 
-  const viewUserDetails = (user: AdminUser) => {
-    setSelectedUser(user);
-    setShowUserModal(true);
-  };
-
-  const exportData = () => {
-    const csvContent = [
-      [
-        "Email",
-        "Name",
-        "Role",
-        "Status",
-        "Created At",
-        "Transactions",
-        "Total Amount",
-      ].join(","),
-      ...filteredUsers.map((user) =>
-        [
-          user.email,
-          user.full_name,
-          user.user_role,
-          user.user_status,
-          format(parseISO(user.created_at), "yyyy-MM-dd"),
-          user.total_transactions,
-          user.total_amount,
-        ].join(",")
-      ),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `users-export-${format(new Date(), "yyyy-MM-dd")}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  // Format currency using user's preferred currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: user?.currency || "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  // Clear messages after 5 seconds
-  useEffect(() => {
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError(null);
-        setSuccess(null);
-      }, 5000);
-      return () => clearTimeout(timer);
+  const handleStatusToggle = async (targetUser: AdminUser) => {
+    const newStatus = targetUser.user_status === "active" ? "banned" : "active";
+    try {
+      setActionLoading(`${targetUser.user_id}-status`);
+      await api.admin.updateStatus(targetUser.user_id, newStatus);
+      setUsers((prev) =>
+        prev.map((u) => (u.user_id === targetUser.user_id ? { ...u, user_status: newStatus } : u))
+      );
+      toast.success(`User status updated to ${newStatus}`);
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update user status");
+    } finally {
+      setActionLoading(null);
     }
-  }, [error, success]);
+  };
 
-  const currentUserId = user?.id;
+  const handleDeleteUser = async (targetUser: AdminUser) => {
+    if (!window.confirm(`Are you sure you want to permanently delete ${targetUser.email}? This will delete all their transactions, categories, and budgets.`)) {
+      return;
+    }
 
-  if (isSuperAdmin === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500 text-sm animate-pulse">
-          Checking access...
-        </div>
-      </div>
-    );
-  }
+    try {
+      setActionLoading(`${targetUser.user_id}-delete`);
+      await api.admin.deleteUser(targetUser.user_id);
+      setUsers((prev) => prev.filter((u) => u.user_id !== targetUser.user_id));
+      toast.success(`User ${targetUser.email} permanently deleted.`);
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete user");
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
-  // If not super admin, show access denied
+  const exportCSV = () => {
+    const headers = ["User ID", "Email", "Full Name", "Role", "Status", "Total Transactions", "Total Amount", "Joined Date"];
+    const rows = users.map((u) => [
+      u.user_id,
+      u.email,
+      `"${u.full_name || ""}"`,
+      u.user_role,
+      u.user_status,
+      u.total_transactions,
+      u.total_amount,
+      u.created_at,
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `trust_tracker_users_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const filteredUsers = users
+    .filter((u) => {
+      const matchesSearch =
+        u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (u.full_name || "").toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = !roleFilter || u.user_role === roleFilter;
+      const matchesStatus = !statusFilter || u.user_status === statusFilter;
+      return matchesSearch && matchesRole && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (sortField === "created_at") {
+        const timeA = new Date(a.created_at).getTime();
+        const timeB = new Date(b.created_at).getTime();
+        return sortOrder === "asc" ? timeA - timeB : timeB - timeA;
+      }
+      if (sortField === "total_transactions") {
+        return sortOrder === "asc" ? a.total_transactions - b.total_transactions : b.total_transactions - a.total_transactions;
+      }
+      return sortOrder === "asc" ? a.total_amount - b.total_amount : b.total_amount - a.total_amount;
+    });
+
   if (!isSuperAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-        <div className="text-center animate-fade-in-up">
-          <div className="text-6xl mb-4 text-gray-400">🚫</div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Page Not Found
-          </h1>
-          <p className="text-gray-600 max-w-md mx-auto">
-            The page you're looking for doesn't exist or you don't have access
-            to it.
-          </p>
-          <div className="mt-6">
-            <a
-              href="/"
-              className="inline-block px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Go back home
-            </a>
-          </div>
+      <div className="p-8 max-w-xl mx-auto text-center">
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 inline-block mb-4">
+          <ShieldAlert className="w-12 h-12 mx-auto" />
         </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center bg-white duration-300">
-        <div className="flex flex-col items-center space-y-4 animate-fade-in-up">
-          <div className="relative">
-            <div className="w-12 h-12 border-4 border-primary-400 border-t-transparent rounded-full animate-spin-fast"></div>
-            <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-primary-600"></div>
-          </div>
-          <p className="text-sm text-white/90">Loading admin data....</p>
-        </div>
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Admin Access Restricted</h2>
+        <p className="text-slate-500 dark:text-slate-400 mt-2">
+          You need Super Admin privileges to view and manage this administrative control panel.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Toaster position="top-right" />
+    <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        {/* Left: Title + Icon */}
-        <div className="flex items-center">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center mr-4">
-            <Crown size={24} className="text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">
-              Admin Dashboard
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Super Admin Control Panel
-            </p>
-          </div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Crown className="w-7 h-7 text-indigo-500" />
+            Admin Command Center
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            System overview, user role management, and global platform statistics
+          </p>
         </div>
-
-        {/* Right: Buttons */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:space-x-3 gap-2">
+        <div className="flex items-center gap-2">
           <button
-            onClick={loadAdminData}
-            className="btn-outline flex items-center justify-center dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+            onClick={loadData}
             disabled={isLoading}
+            className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-medium transition cursor-pointer"
           >
-            <RefreshCw
-              size={16}
-              className={`mr-2 ${isLoading ? "animate-spin" : ""}`}
-            />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
+          </button>
+          <button
+            onClick={exportCSV}
+            className="flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-medium transition shadow-sm cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
           </button>
         </div>
       </div>
 
-      {/* Success/Error Messages */}
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg flex items-center animate-fade-in">
-          <AlertCircle size={16} className="mr-2" />
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-200 px-4 py-3 rounded-lg flex items-center animate-fade-in">
-          <CheckCircle size={16} className="mr-2" />
-          {success}
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        {/* Total Users */}
-        <div className="card p-4 animate-fade-in bg-white dark:bg-gray-800">
-          <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
-              <Users size={20} className="text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Total Users
-              </p>
-              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                {stats.totalUsers}
-              </p>
-            </div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Users</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stats.totalUsers}</p>
+            <p className="text-xs text-emerald-500 font-medium mt-1">+{stats.newUsersThisMonth} this month</p>
+          </div>
+          <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-xl">
+            <Users className="w-6 h-6" />
           </div>
         </div>
 
-        {/* Active Users */}
-        <div
-          className="card p-4 animate-fade-in bg-white dark:bg-gray-800"
-          style={{ animationDelay: "0.1s" }}
-        >
-          <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mr-3">
-              <UserCheck
-                size={20}
-                className="text-green-600 dark:text-green-400"
-              />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                {stats.activeUsers}
-              </p>
-            </div>
+        <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Active / Banned</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+              {stats.activeUsers} <span className="text-sm font-normal text-slate-400">/ {stats.bannedUsers}</span>
+            </p>
+            <p className="text-xs text-slate-400 mt-1">{stats.superAdmins} Super Admins</p>
+          </div>
+          <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">
+            <UserCheck className="w-6 h-6" />
           </div>
         </div>
 
-        {/* Admins */}
-        <div
-          className="card p-4 animate-fade-in bg-white dark:bg-gray-800"
-          style={{ animationDelay: "0.3s" }}
-        >
-          <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center mr-3">
-              <Crown
-                size={20}
-                className="text-purple-600 dark:text-purple-400"
-              />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Admins</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                {stats.superAdmins}
-              </p>
-            </div>
+        <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Transactions</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stats.totalTransactions}</p>
+            <p className="text-xs text-slate-400 mt-1">Across all user accounts</p>
+          </div>
+          <div className="p-3 bg-amber-500/10 text-amber-500 rounded-xl">
+            <TrendingUp className="w-6 h-6" />
           </div>
         </div>
 
-        {/* Transactions */}
-        <div
-          className="card p-4 animate-fade-in bg-white dark:bg-gray-800"
-          style={{ animationDelay: "0.4s" }}
-        >
-          <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mr-3">
-              <BarChart3
-                size={20}
-                className="text-indigo-600 dark:text-indigo-400"
-              />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Transactions
-              </p>
-              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                {stats.totalTransactions}
-              </p>
-            </div>
+        <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Global Volume</p>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+              ${stats.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">Platform-wide tracked spend</p>
           </div>
-        </div>
-
-        {/* Total Volume */}
-        <div
-          className="card p-4 animate-fade-in bg-white dark:bg-gray-800"
-          style={{ animationDelay: "0.5s" }}
-        >
-          <div className="flex items-center">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Total Volume
-              </p>
-              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                {formatCurrency(stats.totalAmount)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* New This Month */}
-        <div
-          className="card p-4 animate-fade-in bg-white dark:bg-gray-800"
-          style={{ animationDelay: "0.6s" }}
-        >
-          <div className="flex items-center">
-            <div className="w-10 h-10 rounded-full bg-teal-100 dark:bg-teal-900 flex items-center justify-center mr-3">
-              <TrendingUp
-                size={20}
-                className="text-teal-600 dark:text-teal-400"
-              />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                New This Month
-              </p>
-              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                {stats.newUsersThisMonth}
-              </p>
-            </div>
+          <div className="p-3 bg-purple-500/10 text-purple-500 rounded-xl">
+            <CheckCircle className="w-6 h-6" />
           </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="card p-4 animate-slide-up bg-white dark:bg-gray-800">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-gray-400 dark:text-gray-500" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search users..."
-              className="input-field pl-10 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+      {/* Filter and Search Bar */}
+      <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search users by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-slate-400" />
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="px-3 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-300 focus:outline-none"
+            >
+              <option value="">All Roles</option>
+              <option value="super_admin">Super Admin</option>
+              <option value="normal">Normal</option>
+            </select>
           </div>
 
           <select
-            className="select-field dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-300 focus:outline-none"
           >
-            <option value="">All Roles</option>
-            <option value="normal">Normal Users</option>
-            <option value="super_admin">Super Admins</option>
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="banned">Banned</option>
           </select>
-
-          <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-            <Filter size={16} className="mr-2" />
-            {filteredUsers.length} of {users.length} users
-          </div>
-
-          <button
-            onClick={exportData}
-            className="btn-primary flex items-center justify-center"
-          >
-            <Download size={16} className="mr-2" />
-            Export Data
-          </button>
         </div>
       </div>
 
       {/* Users Table */}
-      <div
-        className="card overflow-hidden animate-slide-up bg-white dark:bg-gray-800"
-        style={{ animationDelay: "0.1s" }}
-      >
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Status
-                </th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">User</th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Role</th>
+                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Status</th>
                 <th
-                  className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                   onClick={() => toggleSort("total_transactions")}
+                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-indigo-500"
                 >
-                  <div className="flex items-center">
+                  <span className="flex items-center gap-1">
                     Transactions
-                    {sortField === "total_transactions" && (
-                      <span className="ml-1">
-                        {sortOrder === "asc" ? (
-                          <ArrowUp size={14} />
-                        ) : (
-                          <ArrowDown size={14} />
-                        )}
-                      </span>
-                    )}
-                  </div>
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Total Amount
+                    {sortField === "total_transactions" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                  </span>
                 </th>
                 <th
-                  className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                  onClick={() => toggleSort("created_at")}
+                  onClick={() => toggleSort("total_amount")}
+                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-indigo-500"
                 >
-                  <div className="flex items-center">
+                  <span className="flex items-center gap-1">
+                    Volume
+                    {sortField === "total_amount" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                  </span>
+                </th>
+                <th
+                  onClick={() => toggleSort("created_at")}
+                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-indigo-500"
+                >
+                  <span className="flex items-center gap-1">
                     Joined
-                    {sortField === "created_at" && (
-                      <span className="ml-1">
-                        {sortOrder === "asc" ? (
-                          <ArrowUp size={14} />
-                        ) : (
-                          <ArrowDown size={14} />
-                        )}
-                      </span>
-                    )}
-                  </div>
+                    {sortField === "created_at" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                  </span>
                 </th>
-                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {sortedUsers.map((user) => (
-                <tr
-                  key={user.user_id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center mr-3 text-primary-700 dark:text-primary-300 font-bold">
-                        {user.full_name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {user.raw_user_meta_data?.full_name ||
-                            user.raw_user_meta_data?.name ||
-                            (user.full_name && user.full_name !== "Anonymous"
-                              ? user.full_name
-                              : "Anonymous")}
-                        </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.user_role === "super_admin"
-                          ? "bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                      }`}
-                    >
-                      {user.user_role === "super_admin"
-                        ? "Super Admin"
-                        : "User"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.user_status === "active"
-                          ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
-                          : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
-                      }`}
-                    >
-                      {user.user_status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                    {user.total_transactions}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {formatCurrency(user.total_amount)}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {format(parseISO(user.created_at), "MMM d, yyyy")}
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm font-medium">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button
-                        onClick={() => viewUserDetails(user)}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 p-1 hover:bg-blue-50 dark:hover:bg-blue-900 rounded transition-colors"
-                        title="View details"
-                      >
-                        <Eye size={16} />
-                      </button>
-
-                      {user.user_role === "normal" ? (
-                        <button
-                          onClick={() =>
-                            handleUserAction(user.user_id, "promote")
-                          }
-                          disabled={actionLoading === `${user.user_id}-promote`}
-                          className="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 p-1 hover:bg-purple-50 dark:hover:bg-purple-900 rounded transition-colors disabled:opacity-50"
-                          title="Promote to admin"
-                        >
-                          {actionLoading === `${user.user_id}-promote` ? (
-                            <RefreshCw size={16} className="animate-spin" />
-                          ) : (
-                            <Crown size={16} />
-                          )}
-                        </button>
-                      ) : (
-                        user.user_role === "super_admin" &&
-                        user.user_id !== currentUserId && (
-                          <button
-                            onClick={() =>
-                              handleUserAction(user.user_id, "demote")
-                            }
-                            disabled={
-                              actionLoading === `${user.user_id}-demote`
-                            }
-                            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors disabled:opacity-50"
-                            title="Demote to user"
-                          >
-                            {actionLoading === `${user.user_id}-demote` ? (
-                              <RefreshCw size={16} className="animate-spin" />
-                            ) : (
-                              <ShieldOff size={16} />
-                            )}
-                          </button>
-                        )
-                      )}
-
-                      <button
-                        onClick={() => handleUserAction(user.user_id, "delete")}
-                        disabled={actionLoading === `${user.user_id}-delete`}
-                        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 p-1 hover:bg-red-50 dark:hover:bg-red-900 rounded transition-colors disabled:opacity-50"
-                        title="Delete user"
-                      >
-                        {actionLoading === `${user.user_id}-delete` ? (
-                          <RefreshCw size={16} className="animate-spin" />
-                        ) : (
-                          <Trash2 size={16} />
-                        )}
-                      </button>
-                    </div>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60 text-sm">
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                    No users matching the filter criteria.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredUsers.map((u) => (
+                  <tr key={u.user_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold text-sm">
+                          {(u.full_name || u.email).charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900 dark:text-white">{u.full_name || "Anonymous"}</p>
+                          <p className="text-xs text-slate-400">{u.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {u.user_role === "super_admin" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                          <Crown className="w-3 h-3" />
+                          Super Admin
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                          User
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {u.user_status === "active" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                          <CheckCircle className="w-3 h-3" />
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-500 border border-red-500/20">
+                          <ShieldOff className="w-3 h-3" />
+                          Banned
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-medium">
+                      {u.total_transactions}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-white font-semibold">
+                      ${u.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-400">
+                      {format(new Date(u.created_at), "MMM d, yyyy")}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setSelectedUser(u)}
+                          title="Inspect Details"
+                          className="p-2 text-slate-400 hover:text-indigo-500 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleRoleToggle(u)}
+                          disabled={actionLoading === `${u.user_id}-role` || u.user_id === user?.id}
+                          title={u.user_role === "super_admin" ? "Demote to Normal" : "Promote to Super Admin"}
+                          className="p-2 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
+                        >
+                          <Crown className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleStatusToggle(u)}
+                          disabled={actionLoading === `${u.user_id}-status` || u.user_id === user?.id}
+                          title={u.user_status === "active" ? "Ban User" : "Unban User"}
+                          className={`p-2 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer ${
+                            u.user_status === "active" ? "text-slate-400 hover:text-red-500" : "text-emerald-500"
+                          }`}
+                        >
+                          <ShieldOff className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(u)}
+                          disabled={actionLoading === `${u.user_id}-delete` || u.user_id === user?.id}
+                          title="Permanently Delete User"
+                          className="p-2 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -776,138 +450,74 @@ function Admin() {
 
       {/* User Details Modal */}
       <AnimatePresence>
-        {showUserModal && selectedUser && (
-          <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+        {selectedUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <motion.div
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-3xl w-full p-6"
-              initial={{ opacity: 0, scale: 0.95, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 30 }}
-              transition={{ duration: 0.25 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 w-full max-w-lg shadow-2xl relative"
             >
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4 mb-6">
-                <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
-                  User Details
-                </h2>
-                <button
-                  onClick={() => setShowUserModal(false)}
-                  className="text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-gray-100 text-3xl leading-none"
-                >
-                  &times;
-                </button>
-              </div>
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
 
-              {/* Body */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Basic Info */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
-                    👤 Basic Information
-                  </h3>
-                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                    <div>
-                      <span className="font-medium text-gray-800 dark:text-gray-100">
-                        Name:
-                      </span>{" "}
-                      {selectedUser.raw_user_meta_data?.full_name ||
-                        "Unknown User"}
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-800 dark:text-gray-100">
-                        Email:
-                      </span>{" "}
-                      {selectedUser.email}
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-800 dark:text-gray-100">
-                        Role:
-                      </span>{" "}
-                      {selectedUser.user_role}
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-800 dark:text-gray-100">
-                        Status:
-                      </span>{" "}
-                      {selectedUser.user_status}
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-800 dark:text-gray-100">
-                        Joined:
-                      </span>{" "}
-                      {format(
-                        parseISO(selectedUser.created_at),
-                        "MMM d, yyyy, hh:mm:ss a"
-                      )}
-                    </div>
-                    {selectedUser.last_sign_in_at && (
-                      <div>
-                        <span className="font-medium text-gray-800 dark:text-gray-100">
-                          Last Login:
-                        </span>{" "}
-                        {format(
-                          parseISO(selectedUser.last_sign_in_at),
-                          "MMM d, yyyy, hh:mm:ss a"
-                        )}
-                      </div>
-                    )}
-                  </div>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold text-xl">
+                  {(selectedUser.full_name || selectedUser.email).charAt(0).toUpperCase()}
                 </div>
-
-                {/* Activity Summary */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
-                    📊 Activity Summary
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                    {selectedUser.full_name || "Anonymous User"}
                   </h3>
-                  <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                    <div>
-                      <span className="font-medium text-gray-800 dark:text-gray-100">
-                        Total Transactions:
-                      </span>{" "}
-                      {selectedUser.total_transactions}
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-800 dark:text-gray-100">
-                        Total Amount:
-                      </span>{" "}
-                      {formatCurrency(selectedUser.total_amount)}
-                    </div>
-                    <div>
-                      <span className="font-medium text-gray-800 dark:text-gray-100">
-                        Average per Transaction:
-                      </span>{" "}
-                      {selectedUser.total_transactions > 0
-                        ? formatCurrency(
-                            selectedUser.total_amount /
-                              selectedUser.total_transactions
-                          )
-                        : formatCurrency(0)}
-                    </div>
-                  </div>
+                  <p className="text-sm text-slate-400">{selectedUser.email}</p>
                 </div>
               </div>
 
-              {/* Footer */}
-              <div className="mt-8 flex justify-end">
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
+                  <span className="text-slate-400">User ID</span>
+                  <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{selectedUser.user_id}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
+                  <span className="text-slate-400">Role</span>
+                  <span className="font-semibold text-indigo-500 capitalize">{selectedUser.user_role}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
+                  <span className="text-slate-400">Account Status</span>
+                  <span className={`font-semibold capitalize ${selectedUser.user_status === "active" ? "text-emerald-500" : "text-red-500"}`}>
+                    {selectedUser.user_status}
+                  </span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
+                  <span className="text-slate-400">Total Transactions</span>
+                  <span className="font-semibold text-slate-800 dark:text-white">{selectedUser.total_transactions}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
+                  <span className="text-slate-400">Total Tracked Volume</span>
+                  <span className="font-semibold text-slate-800 dark:text-white">${selectedUser.total_amount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
+                  <span className="text-slate-400">Registered On</span>
+                  <span className="text-slate-600 dark:text-slate-300">{format(new Date(selectedUser.created_at), "PPpp")}</span>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end">
                 <button
-                  onClick={() => setShowUserModal(false)}
-                  className="px-5 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-medium transition"
+                  onClick={() => setSelectedUser(null)}
+                  className="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold transition cursor-pointer"
                 >
                   Close
                 </button>
               </div>
             </motion.div>
-            /
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
   );
 }
-
-export default Admin;

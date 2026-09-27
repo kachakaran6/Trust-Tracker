@@ -1,10 +1,9 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useAuth } from "./AuthContext";
-import { supabase } from "../lib/supabase";
+import { api } from "../lib/api";
 import { Transaction } from "../types";
 import { parseISO, startOfMonth, endOfMonth } from "date-fns";
+import { toast } from "sonner";
 
 interface TransactionSummary {
   totalIncome: number;
@@ -20,14 +19,10 @@ interface TransactionSummary {
 
 interface TransactionsContextType {
   transactions: Transaction[];
-  addTransaction: (
-    transaction: Omit<Transaction, "id" | "user_id" | "created_at">
-  ) => Promise<void>;
-  updateTransaction: (
-    id: string,
-    transaction: Partial<Transaction>
-  ) => Promise<void>;
+  addTransaction: (transaction: Omit<Transaction, "id" | "user_id" | "created_at">) => Promise<Transaction>;
+  updateTransaction: (id: string, transaction: Partial<Transaction>) => Promise<Transaction>;
   deleteTransaction: (id: string) => Promise<void>;
+  refreshTransactions: () => Promise<void>;
   isLoading: boolean;
   getTransactionsByMonth: (month: Date) => Transaction[];
   getTransactionsByCategory: (category: string) => Transaction[];
@@ -35,83 +30,53 @@ interface TransactionsContextType {
   getRecentTransactions: (limit: number) => Transaction[];
 }
 
-const TransactionsContext = createContext<TransactionsContextType | undefined>(
-  undefined
-);
+const TransactionsContext = createContext<TransactionsContextType | undefined>(undefined);
 
 export function useTransactions() {
   const context = useContext(TransactionsContext);
   if (context === undefined) {
-    throw new Error(
-      "useTransactions must be used within a TransactionsProvider"
-    );
+    throw new Error("useTransactions must be used within a TransactionsProvider");
   }
   return context;
 }
 
-export function TransactionsProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function TransactionsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadTransactions();
-    } else {
+  const loadTransactions = useCallback(async () => {
+    if (!user) {
       setTransactions([]);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const data = await api.transactions.list();
+      setTransactions(data);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load transactions");
+    } finally {
       setIsLoading(false);
     }
   }, [user]);
 
-  const loadTransactions = async () => {
-    if (!user) return;
-
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("date", { ascending: false });
-
-      if (error) throw error;
-      setTransactions(data || []);
-    } catch (error) {
-      console.error("Error loading transactions:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    loadTransactions();
+  }, [loadTransactions]);
 
   const addTransaction = async (
     transaction: Omit<Transaction, "id" | "user_id" | "created_at">
-  ) => {
-    if (!user) return;
-
+  ): Promise<Transaction> => {
     try {
-      const { data, error } = await supabase
-        .from("transactions")
-        .insert([
-          {
-            ...transaction,
-            user_id: user.id,
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Insert error:", error);
-        throw error;
-      }
-
-      setTransactions((prev) => [data, ...prev]);
-    } catch (error) {
-      console.error("Error adding transaction:", error);
+      const created = await api.transactions.create(transaction);
+      setTransactions((prev) => [created, ...prev]);
+      toast.success("Transaction recorded!");
+      return created;
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add transaction");
       throw error;
     }
   };
@@ -119,46 +84,25 @@ export function TransactionsProvider({
   const updateTransaction = async (
     id: string,
     updatedFields: Partial<Transaction>
-  ) => {
-    if (!user) return;
-
+  ): Promise<Transaction> => {
     try {
-      const { data, error } = await supabase
-        .from("transactions")
-        .update(updatedFields)
-        .eq("id", id)
-        .eq("user_id", user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      setTransactions((prev) =>
-        prev.map((transaction) =>
-          transaction.id === id ? { ...transaction, ...data } : transaction
-        )
-      );
-    } catch (error) {
-      console.error("Error updating transaction:", error);
+      const updated = await api.transactions.update(id, updatedFields);
+      setTransactions((prev) => prev.map((tx) => (tx.id === id ? updated : tx)));
+      toast.success("Transaction updated!");
+      return updated;
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update transaction");
       throw error;
     }
   };
 
-  const deleteTransaction = async (id: string) => {
-    if (!user) return;
-
+  const deleteTransaction = async (id: string): Promise<void> => {
     try {
-      const { error } = await supabase
-        .from("transactions")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-      setTransactions((prev) =>
-        prev.filter((transaction) => transaction.id !== id)
-      );
-    } catch (error) {
-      console.error("Error deleting transaction:", error);
+      await api.transactions.delete(id);
+      setTransactions((prev) => prev.filter((tx) => tx.id !== id));
+      toast.success("Transaction deleted");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete transaction");
       throw error;
     }
   };
@@ -174,9 +118,7 @@ export function TransactionsProvider({
   };
 
   const getTransactionsByCategory = (categoryId: string): Transaction[] => {
-    return transactions.filter(
-      (transaction) => transaction.category_id === categoryId
-    );
+    return transactions.filter((transaction) => transaction.category_id === categoryId);
   };
 
   const getMonthlySummary = (month: Date): TransactionSummary => {
@@ -190,10 +132,11 @@ export function TransactionsProvider({
     };
 
     monthlyTransactions.forEach((transaction) => {
+      const amount = Number(transaction.amount) || 0;
       if (transaction.type === "income") {
-        summary.totalIncome += transaction.amount;
+        summary.totalIncome += amount;
       } else {
-        summary.totalExpense += transaction.amount;
+        summary.totalExpense += amount;
       }
 
       const categoryKey = transaction.category_id || "uncategorized";
@@ -201,12 +144,11 @@ export function TransactionsProvider({
         summary.categories[categoryKey] = { total: 0, count: 0 };
       }
 
-      summary.categories[categoryKey].total += transaction.amount;
+      summary.categories[categoryKey].total += amount;
       summary.categories[categoryKey].count += 1;
     });
 
     summary.balance = summary.totalIncome - summary.totalExpense;
-
     return summary;
   };
 
@@ -214,20 +156,21 @@ export function TransactionsProvider({
     return transactions.slice(0, limit);
   };
 
-  const value = {
-    transactions,
-    addTransaction,
-    updateTransaction,
-    deleteTransaction,
-    isLoading,
-    getTransactionsByMonth,
-    getTransactionsByCategory,
-    getMonthlySummary,
-    getRecentTransactions,
-  };
-
   return (
-    <TransactionsContext.Provider value={value}>
+    <TransactionsContext.Provider
+      value={{
+        transactions,
+        addTransaction,
+        updateTransaction,
+        deleteTransaction,
+        refreshTransactions: loadTransactions,
+        isLoading,
+        getTransactionsByMonth,
+        getTransactionsByCategory,
+        getMonthlySummary,
+        getRecentTransactions,
+      }}
+    >
       {children}
     </TransactionsContext.Provider>
   );

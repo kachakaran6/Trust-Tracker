@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useAuth } from "./AuthContext";
 import { useTransactions } from "./TransactionsContext";
-import { supabase, Budget } from "../lib/supabase";
-// import { startOfMonth, endOfMonth, format } from "date-fns";
+import { api } from "../lib/api";
+import { Budget } from "../types";
+import { toast } from "sonner";
 
 interface BudgetSummary {
   totalBudget: number;
@@ -22,15 +22,11 @@ interface BudgetSummary {
 
 interface BudgetContextType {
   budgets: Budget[];
-  addBudget: (
-    budget: Omit<Budget, "id" | "user_id" | "created_at">
-  ) => Promise<void>;
+  addBudget: (budget: { category_id: string; amount: number; month: string }) => Promise<Budget>;
   updateBudget: (id: string, budget: Partial<Budget>) => Promise<void>;
   deleteBudget: (id: string) => Promise<void>;
-  getBudgetByCategory: (
-    categoryId: string,
-    month: string
-  ) => Budget | undefined;
+  refreshBudgets: () => Promise<void>;
+  getBudgetByCategory: (categoryId: string, month: string) => Budget | undefined;
   getBudgetSummary: (month: string) => BudgetSummary;
   isLoading: boolean;
 }
@@ -47,122 +43,86 @@ export function useBudget() {
 
 export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const { transactions, getTransactionsByMonth } = useTransactions();
+  const { getTransactionsByMonth } = useTransactions();
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadBudgets();
-    } else {
+  const loadBudgets = useCallback(async () => {
+    if (!user) {
       setBudgets([]);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const data = await api.budgets.list();
+      setBudgets(data);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to load budgets");
+    } finally {
       setIsLoading(false);
     }
   }, [user]);
 
-  const loadBudgets = async () => {
-    if (!user) return;
+  useEffect(() => {
+    loadBudgets();
+  }, [loadBudgets]);
 
+  const addBudget = async (budget: {
+    category_id: string;
+    amount: number;
+    month: string;
+  }): Promise<Budget> => {
     try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from("budgets")
-        .select("*")
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-      setBudgets(data || []);
-    } catch (error) {
-      console.error("Error loading budgets:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const addBudget = async (
-    budget: Omit<Budget, "id" | "user_id" | "created_at">
-  ) => {
-    if (!user) return;
-
-    try {
-      const existingBudget = budgets.find(
-        (b) => b.category_id === budget.category_id && b.month === budget.month
-      );
-
-      if (existingBudget) {
-        return updateBudget(existingBudget.id, budget);
-      }
-
-      const { data, error } = await supabase
-        .from("budgets")
-        .insert([{ ...budget, user_id: user.id }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      setBudgets((prev) => [...prev, data]);
-    } catch (error) {
-      console.error("Error adding budget:", error);
+      const saved = await api.budgets.upsert(budget);
+      setBudgets((prev) => {
+        const index = prev.findIndex((b) => b.category_id === budget.category_id && b.month === budget.month);
+        if (index >= 0) {
+          const copy = [...prev];
+          copy[index] = saved;
+          return copy;
+        }
+        return [...prev, saved];
+      });
+      toast.success("Budget saved!");
+      return saved;
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save budget");
       throw error;
     }
   };
 
-  const updateBudget = async (id: string, updatedFields: Partial<Budget>) => {
-    if (!user) return;
+  const updateBudget = async (_id: string, budget: Partial<Budget>): Promise<void> => {
+    if (budget.category_id && budget.amount && budget.month) {
+      await addBudget({
+        category_id: budget.category_id,
+        amount: budget.amount,
+        month: budget.month,
+      });
+    }
+  };
 
+  const deleteBudget = async (id: string): Promise<void> => {
     try {
-      const { data, error } = await supabase
-        .from("budgets")
-        .update(updatedFields)
-        .eq("id", id)
-        .eq("user_id", user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      setBudgets((prev) =>
-        prev.map((budget) =>
-          budget.id === id ? { ...budget, ...data } : budget
-        )
-      );
-    } catch (error) {
-      console.error("Error updating budget:", error);
+      await api.budgets.delete(id);
+      setBudgets((prev) => prev.filter((b) => b.id !== id));
+      toast.success("Budget deleted");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete budget");
       throw error;
     }
   };
 
-  const deleteBudget = async (id: string) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from("budgets")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-      setBudgets((prev) => prev.filter((budget) => budget.id !== id));
-    } catch (error) {
-      console.error("Error deleting budget:", error);
-      throw error;
-    }
-  };
-
-  const getBudgetByCategory = (
-    categoryId: string,
-    month: string
-  ): Budget | undefined => {
-    return budgets.find(
-      (budget) => budget.category_id === categoryId && budget.month === month
-    );
+  const getBudgetByCategory = (categoryId: string, month: string): Budget | undefined => {
+    return budgets.find((b) => b.category_id === categoryId && b.month === month);
   };
 
   const getBudgetSummary = (month: string): BudgetSummary => {
-    const monthlyBudgets = budgets.filter((budget) => budget.month === month);
+    const monthlyBudgets = budgets.filter((b) => b.month === month);
 
-    const [year, monthNum] = month.split("-").map((n) => parseInt(n));
-    const startDate = new Date(year, monthNum - 1, 1);
+    const [year, monthNum] = month.split("-").map((n) => parseInt(n, 10));
+    const startDate = new Date(year, (monthNum || 1) - 1, 1);
     const monthlyTransactions = getTransactionsByMonth(startDate);
 
     const summary: BudgetSummary = {
@@ -173,57 +133,50 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       categories: {},
     };
 
-    summary.totalBudget = monthlyBudgets.reduce(
-      (total, budget) => total + budget.amount,
-      0
-    );
+    summary.totalBudget = monthlyBudgets.reduce((total, b) => total + Number(b.amount), 0);
 
-    // ✅ PRE-FILL CATEGORIES with budget even if no spending
-    monthlyBudgets.forEach((budget) => {
-      summary.categories[budget.category_id] = {
-        budget: budget.amount,
+    monthlyBudgets.forEach((b) => {
+      summary.categories[b.category_id] = {
+        budget: Number(b.amount),
         spent: 0,
-        remaining: budget.amount,
+        remaining: Number(b.amount),
         percentage: 0,
       };
     });
 
-    // Then calculate spending
-    monthlyTransactions.forEach((transaction) => {
-      if (transaction.type === "expense") {
-        const budget = monthlyBudgets.find(
-          (b) => b.category_id === transaction.category_id
-        );
-        if (!budget) return;
+    monthlyTransactions.forEach((tx) => {
+      if (tx.type === "expense" && tx.category_id && summary.categories[tx.category_id]) {
+        const amount = Number(tx.amount);
+        summary.totalSpent += amount;
 
-        summary.totalSpent += transaction.amount;
-
-        const catSummary = summary.categories[budget.category_id];
-        catSummary.spent += transaction.amount;
-        catSummary.remaining = catSummary.budget - catSummary.spent;
-        catSummary.percentage = (catSummary.spent / catSummary.budget) * 100;
+        const cat = summary.categories[tx.category_id];
+        cat.spent += amount;
+        cat.remaining = cat.budget - cat.spent;
+        cat.percentage = cat.budget > 0 ? (cat.spent / cat.budget) * 100 : 0;
       }
     });
+
     summary.remaining = summary.totalBudget - summary.totalSpent;
     summary.percentage =
-      summary.totalBudget > 0
-        ? (summary.totalSpent / summary.totalBudget) * 100
-        : 0;
+      summary.totalBudget > 0 ? (summary.totalSpent / summary.totalBudget) * 100 : 0;
 
     return summary;
   };
 
-  const value = {
-    budgets,
-    addBudget,
-    updateBudget,
-    deleteBudget,
-    getBudgetByCategory,
-    getBudgetSummary,
-    isLoading,
-  };
-
   return (
-    <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>
+    <BudgetContext.Provider
+      value={{
+        budgets,
+        addBudget,
+        updateBudget,
+        deleteBudget,
+        refreshBudgets: loadBudgets,
+        getBudgetByCategory,
+        getBudgetSummary,
+        isLoading,
+      }}
+    >
+      {children}
+    </BudgetContext.Provider>
   );
 }
