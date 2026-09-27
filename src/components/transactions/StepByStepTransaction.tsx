@@ -225,7 +225,6 @@ function StepByStepTransaction({
                 </div>
               ) : (
                 <div className="p-6">
-                  <Toaster position="top-center" />
                   {/* Header */}
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center">

@@ -233,7 +233,6 @@ const GroupBudgets: React.FC<GroupBudgetsProps> = ({
 
   return (
     <div className="space-y-6">
-      <Toaster position="top-right" />
       {!isPreview && (
         <div className="flex items-center justify-between">
           <div>

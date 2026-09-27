@@ -124,7 +124,7 @@ function Sidebar({ open, setOpen }: SidebarProps) {
           </NavLink>
         ))}
 
-        {!loadingRole && isSuperAdmin && (
+        {isSuperAdmin && (
           <NavLink
             to="/admin"
             className={({ isActive }) =>

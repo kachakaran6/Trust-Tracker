@@ -117,7 +117,6 @@ function Dashboard() {
 
   return (
     <div className="space-y-6 pb-20 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-      <Toaster position="top-right" />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
