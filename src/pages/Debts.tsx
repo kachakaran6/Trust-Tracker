@@ -203,7 +203,7 @@ export default function Debts() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Handshake className="w-7 h-7 text-indigo-500" />
+            <Handshake className="w-7 h-7 text-sky-500" />
             Personal Debts & Lender Ledger
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -216,7 +216,7 @@ export default function Debts() {
             setCurrency(user?.currency || "USD");
             setShowAddModal(true);
           }}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-600/20 transition cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-500 active:scale-[0.98] text-white rounded-xl text-sm font-bold shadow-md shadow-primary-500/20 transition cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Add Debt Record
@@ -296,7 +296,7 @@ export default function Debts() {
           onClick={() => setActiveTab("all")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeTab === "all"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-primary-600 text-white shadow-sm"
               : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
@@ -326,7 +326,7 @@ export default function Debts() {
           onClick={() => setActiveTab("settled")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeTab === "settled"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-primary-600 text-white shadow-sm"
               : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
@@ -337,11 +337,11 @@ export default function Debts() {
       {/* Debts List */}
       {loading ? (
         <div className="flex items-center justify-center min-h-[30vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
         </div>
       ) : filteredDebts.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-12 text-center shadow-sm">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-500 flex items-center justify-center mx-auto mb-4">
             <Handshake className="w-8 h-8" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Debt Records Found</h3>
@@ -350,7 +350,7 @@ export default function Debts() {
           </p>
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-sm cursor-pointer"
+            className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-bold shadow-sm cursor-pointer"
           >
             Add Your First Record
           </button>
@@ -469,7 +469,7 @@ export default function Debts() {
                           setPayAmount((debt.remaining_balance || debt.amount).toString());
                           setShowPayModal(true);
                         }}
-                        className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer flex items-center gap-1"
+                        className="px-3.5 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer flex items-center gap-1"
                       >
                         <CreditCard className="w-3.5 h-3.5" />
                         Record Repayment
@@ -491,7 +491,7 @@ export default function Debts() {
 
                     <button
                       onClick={() => viewHistory(debt)}
-                      className="p-2 text-slate-400 hover:text-indigo-500 rounded-lg transition cursor-pointer"
+                      className="p-2 text-slate-400 hover:text-primary-600 rounded-lg transition cursor-pointer"
                       title="Payment History"
                     >
                       <History className="w-4 h-4" />
@@ -524,7 +524,7 @@ export default function Debts() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Handshake className="w-5 h-5 text-indigo-500" />
+                  <Handshake className="w-5 h-5 text-sky-500" />
                   Add Personal Debt Record
                 </h3>
                 <button
@@ -577,7 +577,7 @@ export default function Debts() {
                       value={counterpartyName}
                       onChange={(e) => setCounterpartyName(e.target.value)}
                       placeholder="e.g. Rahul Sharma, Alice"
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
 
@@ -590,7 +590,7 @@ export default function Debts() {
                       value={counterpartyContact}
                       onChange={(e) => setCounterpartyContact(e.target.value)}
                       placeholder="+91 9876543210"
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
                 </div>
@@ -654,7 +654,7 @@ export default function Debts() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-600/20 transition cursor-pointer disabled:opacity-50"
+                    className="px-6 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20 transition cursor-pointer disabled:opacity-50"
                   >
                     {isSubmitting ? "Saving..." : "Save Record"}
                   </button>
@@ -738,7 +738,7 @@ export default function Debts() {
                     id="recordDebtTx"
                     checked={recordInTx}
                     onChange={(e) => setRecordInTx(e.target.checked)}
-                    className="rounded text-indigo-600"
+                    className="rounded text-primary-600"
                   />
                   <label htmlFor="recordDebtTx" className="text-xs text-slate-600 dark:text-slate-300">
                     Also record entry in general transactions
@@ -779,7 +779,7 @@ export default function Debts() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <History className="w-5 h-5 text-indigo-500" />
+                  <History className="w-5 h-5 text-sky-500" />
                   Repayment History
                 </h3>
                 <button

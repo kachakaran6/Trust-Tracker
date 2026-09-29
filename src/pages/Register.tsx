@@ -64,10 +64,10 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 text-white">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex items-center justify-center p-3 bg-indigo-500/20 border border-indigo-500/30 rounded-2xl shadow-xl backdrop-blur-md mb-4">
-          <ShieldCheck className="w-10 h-10 text-indigo-400" />
+        <div className="inline-flex items-center justify-center p-3 bg-sky-500/20 border border-sky-500/30 rounded-2xl shadow-xl backdrop-blur-md mb-4">
+          <ShieldCheck className="w-10 h-10 text-sky-400" />
         </div>
         <h2 className="text-3xl font-extrabold tracking-tight text-white">
           Create Account
@@ -94,7 +94,7 @@ export default function Register() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Alex Morgan"
-                  className="block w-full pl-11 pr-4 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                  className="block w-full pl-11 pr-4 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
                 />
               </div>
             </div>
@@ -113,7 +113,7 @@ export default function Register() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="alex@example.com"
-                  className="block w-full pl-11 pr-4 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                  className="block w-full pl-11 pr-4 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
                 />
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function Register() {
                 <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                   Primary Currency
                 </label>
-                <span className="text-[11px] text-indigo-400 font-medium flex items-center gap-1">
+                <span className="text-[11px] text-sky-400 font-medium flex items-center gap-1">
                   <Sparkles className="w-3 h-3" /> Auto-detected
                 </span>
               </div>
@@ -151,7 +151,7 @@ export default function Register() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 6 characters"
-                  className="block w-full pl-11 pr-11 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                  className="block w-full pl-11 pr-11 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
                 />
                 <button
                   type="button"
@@ -177,7 +177,7 @@ export default function Register() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repeat your password"
-                  className="block w-full pl-11 pr-4 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+                  className="block w-full pl-11 pr-4 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
                 />
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex justify-center items-center gap-2 mt-4 py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all cursor-pointer"
+              className="w-full flex justify-center items-center gap-2 mt-4 py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-primary-600 hover:bg-primary-500 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 transition-all cursor-pointer"
             >
               {isSubmitting ? "Creating account..." : "Sign Up"}
               <ArrowRight className="w-4 h-4" />
@@ -196,7 +196,7 @@ export default function Register() {
             Already have an account?{" "}
             <Link
               to={redirectTarget ? `/login?redirect=${encodeURIComponent(redirectTarget)}` : "/login"}
-              className="font-semibold text-indigo-400 hover:text-indigo-300"
+              className="font-semibold text-sky-400 hover:text-sky-300"
             >
               Sign in
             </Link>

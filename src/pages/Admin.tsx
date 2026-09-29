@@ -195,7 +195,7 @@ export default function Admin() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Crown className="w-7 h-7 text-indigo-500" />
+            <Crown className="w-7 h-7 text-amber-500" />
             Admin Command Center
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -213,7 +213,7 @@ export default function Admin() {
           </button>
           <button
             onClick={exportCSV}
-            className="flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-medium transition shadow-sm cursor-pointer"
+            className="flex items-center gap-2 px-3 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-medium transition shadow-sm cursor-pointer"
           >
             <Download className="w-4 h-4" />
             Export CSV
@@ -229,7 +229,7 @@ export default function Admin() {
             <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stats.totalUsers}</p>
             <p className="text-xs text-emerald-500 font-medium mt-1">+{stats.newUsersThisMonth} this month</p>
           </div>
-          <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-xl">
+          <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl">
             <Users className="w-6 h-6" />
           </div>
         </div>
@@ -281,7 +281,7 @@ export default function Admin() {
             placeholder="Search users by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-white"
           />
         </div>
 
@@ -322,7 +322,7 @@ export default function Admin() {
                 <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Status</th>
                 <th
                   onClick={() => toggleSort("total_transactions")}
-                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-indigo-500"
+                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-primary-600 dark:hover:text-sky-400"
                 >
                   <span className="flex items-center gap-1">
                     Transactions
@@ -331,7 +331,7 @@ export default function Admin() {
                 </th>
                 <th
                   onClick={() => toggleSort("total_amount")}
-                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-indigo-500"
+                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-primary-600 dark:hover:text-sky-400"
                 >
                   <span className="flex items-center gap-1">
                     Volume
@@ -340,7 +340,7 @@ export default function Admin() {
                 </th>
                 <th
                   onClick={() => toggleSort("created_at")}
-                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-indigo-500"
+                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-primary-600 dark:hover:text-sky-400"
                 >
                   <span className="flex items-center gap-1">
                     Joined
@@ -362,7 +362,7 @@ export default function Admin() {
                   <tr key={u.user_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold text-sm">
+                        <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold text-sm">
                           {(u.full_name || u.email).charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -410,7 +410,7 @@ export default function Admin() {
                         <button
                           onClick={() => setSelectedUser(u)}
                           title="Inspect Details"
-                          className="p-2 text-slate-400 hover:text-indigo-500 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                          className="p-2 text-slate-400 hover:text-primary-600 dark:hover:text-sky-400 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -468,7 +468,7 @@ export default function Admin() {
               </button>
 
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center font-bold text-xl">
+                <div className="w-14 h-14 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold text-xl">
                   {(selectedUser.full_name || selectedUser.email).charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -486,7 +486,7 @@ export default function Admin() {
                 </div>
                 <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
                   <span className="text-slate-400">Role</span>
-                  <span className="font-semibold text-indigo-500 capitalize">{selectedUser.user_role}</span>
+                  <span className="font-semibold text-primary-600 dark:text-sky-400 capitalize">{selectedUser.user_role}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
                   <span className="text-slate-400">Account Status</span>

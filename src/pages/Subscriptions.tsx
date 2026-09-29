@@ -235,7 +235,7 @@ export default function Subscriptions() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <RefreshCw className="w-7 h-7 text-indigo-500" />
+            <RefreshCw className="w-7 h-7 text-sky-500" />
             Recurring Subscriptions
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -245,7 +245,7 @@ export default function Subscriptions() {
 
         <button
           onClick={openAddModal}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-600/20 transition cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-500 active:scale-[0.98] text-white rounded-xl text-sm font-bold shadow-md shadow-primary-500/20 transition cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Add Subscription
@@ -257,7 +257,7 @@ export default function Subscriptions() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl shadow-sm">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Monthly Burn Rate</span>
-            <p className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
+            <p className="text-2xl font-extrabold text-primary-600 dark:text-sky-400 mt-1">
               {formatCurrency(summary.totalMonthlyBurn, user?.currency)}
             </p>
             <p className="text-xs text-slate-400 mt-1">Normalized recurring cost / mo</p>
@@ -296,7 +296,7 @@ export default function Subscriptions() {
             onClick={() => setFilterStatus("all")}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
               filterStatus === "all"
-                ? "bg-indigo-600 text-white shadow-sm"
+                ? "bg-primary-600 text-white shadow-sm"
                 : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
             }`}
           >
@@ -346,11 +346,11 @@ export default function Subscriptions() {
       {/* Subscriptions Grid */}
       {loading ? (
         <div className="flex items-center justify-center min-h-[30vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
         </div>
       ) : filteredSubs.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-12 text-center shadow-sm">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-500 flex items-center justify-center mx-auto mb-4">
             <RefreshCw className="w-8 h-8" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Subscriptions Found</h3>
@@ -359,7 +359,7 @@ export default function Subscriptions() {
           </p>
           <button
             onClick={openAddModal}
-            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-sm cursor-pointer"
+            className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-bold shadow-sm cursor-pointer"
           >
             Add Your First Subscription
           </button>
@@ -387,7 +387,7 @@ export default function Subscriptions() {
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div
                       className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-extrabold text-lg shadow-sm"
-                      style={{ backgroundColor: sub.color || "#6366F1" }}
+                      style={{ backgroundColor: sub.color || "#0284c7" }}
                     >
                       {sub.name.charAt(0).toUpperCase()}
                     </div>
@@ -450,7 +450,7 @@ export default function Subscriptions() {
                       </button>
                       <button
                         onClick={() => openEditModal(sub)}
-                        className="p-2 text-slate-400 hover:text-indigo-500 rounded-lg transition cursor-pointer"
+                        className="p-2 text-slate-400 hover:text-primary-600 rounded-lg transition cursor-pointer"
                         title="Edit"
                       >
                         <Edit2 className="w-4 h-4" />
@@ -484,7 +484,7 @@ export default function Subscriptions() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <RefreshCw className="w-5 h-5 text-indigo-500" />
+                  <RefreshCw className="w-5 h-5 text-sky-500" />
                   {editingSub ? "Edit Subscription" : "Add Subscription"}
                 </h3>
                 <button
@@ -527,7 +527,7 @@ export default function Subscriptions() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. Netflix, Spotify, AWS"
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
 
@@ -539,7 +539,7 @@ export default function Subscriptions() {
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
                       placeholder="e.g. Entertainment, Cloud, Fitness"
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
                 </div>
@@ -623,7 +623,7 @@ export default function Subscriptions() {
                       id="trialToggle"
                       checked={isTrial}
                       onChange={(e) => setIsTrial(e.target.checked)}
-                      className="rounded text-indigo-600 cursor-pointer"
+                      className="rounded text-primary-600 cursor-pointer"
                     />
                   </div>
                   {isTrial && (
@@ -650,7 +650,7 @@ export default function Subscriptions() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-600/20 transition cursor-pointer disabled:opacity-50"
+                    className="px-6 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20 transition cursor-pointer disabled:opacity-50"
                   >
                     {isSubmitting ? "Saving..." : editingSub ? "Update Subscription" : "Save Subscription"}
                   </button>

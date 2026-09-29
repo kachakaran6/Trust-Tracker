@@ -84,7 +84,7 @@ export default function DiaryTransactionInput() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Sparkles className="w-7 h-7 text-indigo-500" />
+          <Sparkles className="w-7 h-7 text-sky-500" />
           Smart AI Diary & Receipt Parser
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -99,18 +99,18 @@ export default function DiaryTransactionInput() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Example: Spent $45.50 on groceries at Walmart, paid $12.00 for Uber to office, earned $350 from freelance design project."
-          className="w-full p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
 
         <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-3">
           <div className="text-xs text-slate-400 flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-indigo-400" />
+            <Sparkles className="w-4 h-4 text-sky-400" />
             AI extracts amounts, categories, types, and descriptions automatically
           </div>
           <button
             onClick={handleParse}
             disabled={isParsing || !text.trim()}
-            className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+            className="w-full sm:w-auto px-6 py-2.5 bg-primary-600 hover:bg-primary-500 active:scale-[0.98] text-white rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
           >
             {isParsing ? "Extracting..." : "Parse Transactions"}
             <ArrowRight className="w-4 h-4" />

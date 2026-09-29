@@ -278,7 +278,7 @@ function Dashboard() {
           className="p-4 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm transition flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
               <Users className="w-5 h-5" />
             </div>
             <div>
@@ -286,7 +286,7 @@ function Dashboard() {
               <p className="text-[11px] text-slate-400">Splitwise-style ledger</p>
             </div>
           </div>
-          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition group-hover:translate-x-0.5" />
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary-600 dark:group-hover:text-sky-400 transition group-hover:translate-x-0.5" />
         </Link>
 
         {/* Loans Quick Link */}

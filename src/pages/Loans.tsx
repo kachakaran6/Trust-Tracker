@@ -234,7 +234,7 @@ export default function Loans() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Landmark className="w-7 h-7 text-indigo-500" />
+            <Landmark className="w-7 h-7 text-sky-500" />
             Loan & EMI Management
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -247,7 +247,7 @@ export default function Loans() {
             setCurrency(user?.currency || "USD");
             setShowAddModal(true);
           }}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-600/20 transition cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-500 active:scale-[0.98] text-white rounded-xl text-sm font-bold shadow-md shadow-primary-500/20 transition cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Add New Loan / EMI
@@ -297,7 +297,7 @@ export default function Loans() {
           <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl shadow-sm">
             <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-400">
               <span>Active Portfolios</span>
-              <Landmark className="w-4 h-4 text-indigo-500" />
+              <Landmark className="w-4 h-4 text-sky-500" />
             </div>
             <p className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">
               {summary.activeLoansCount}
@@ -308,11 +308,11 @@ export default function Loans() {
       )}
 
       {/* Interactive EMI Simulator Accordion Widget */}
-      <div className="bg-gradient-to-br from-indigo-950/60 via-slate-900 to-slate-900 border border-indigo-500/20 rounded-3xl p-6 shadow-xl text-white space-y-4">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-3xl p-6 shadow-sm text-slate-900 dark:text-white space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Calculator className="w-5 h-5 text-indigo-400" />
-            <h3 className="text-base font-bold text-white">Smart EMI Calculator & Simulator</h3>
+            <Calculator className="w-5 h-5 text-sky-500" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">Smart EMI Calculator & Simulator</h3>
           </div>
           <Badge variant="primary" size="sm">
             Real-time Estimator
@@ -323,9 +323,9 @@ export default function Loans() {
           {/* Controls */}
           <div className="space-y-3 lg:col-span-2">
             <div>
-              <div className="flex justify-between text-xs text-slate-300 mb-1">
+              <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                 <span>Loan Principal Amount</span>
-                <span className="font-bold text-white">{formatCurrency(calcPrincipal, user?.currency)}</span>
+                <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(calcPrincipal, user?.currency)}</span>
               </div>
               <input
                 type="range"
@@ -334,15 +334,15 @@ export default function Loans() {
                 step="5000"
                 value={calcPrincipal}
                 onChange={(e) => setCalcPrincipal(parseFloat(e.target.value))}
-                className="w-full accent-indigo-500 h-2 bg-slate-800 rounded-lg cursor-pointer"
+                className="w-full accent-primary-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <div className="flex justify-between text-xs text-slate-300 mb-1">
+                <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                   <span>Interest Rate (% per annum)</span>
-                  <span className="font-bold text-white">{calcRate}%</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{calcRate}%</span>
                 </div>
                 <input
                   type="range"
@@ -351,14 +351,14 @@ export default function Loans() {
                   step="0.25"
                   value={calcRate}
                   onChange={(e) => setCalcRate(parseFloat(e.target.value))}
-                  className="w-full accent-indigo-500 h-2 bg-slate-800 rounded-lg cursor-pointer"
+                  className="w-full accent-primary-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
                 />
               </div>
 
               <div>
-                <div className="flex justify-between text-xs text-slate-300 mb-1">
+                <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                   <span>Tenure (Months)</span>
-                  <span className="font-bold text-white">
+                  <span className="font-bold text-slate-900 dark:text-white">
                     {calcMonths} mos ({(calcMonths / 12).toFixed(1)} yrs)
                   </span>
                 </div>
@@ -369,30 +369,30 @@ export default function Loans() {
                   step="3"
                   value={calcMonths}
                   onChange={(e) => setCalcMonths(parseInt(e.target.value, 10))}
-                  className="w-full accent-indigo-500 h-2 bg-slate-800 rounded-lg cursor-pointer"
+                  className="w-full accent-primary-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
                 />
               </div>
             </div>
           </div>
 
           {/* Results Card */}
-          <div className="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between space-y-3">
+          <div className="bg-sky-50/60 dark:bg-slate-900/60 border border-sky-100 dark:border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between space-y-3">
             <div>
-              <span className="text-xs text-slate-400 uppercase font-semibold">Estimated Monthly EMI</span>
-              <p className="text-2xl font-extrabold text-indigo-400 mt-0.5">
+              <span className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold">Estimated Monthly EMI</span>
+              <p className="text-2xl font-extrabold text-primary-600 dark:text-sky-400 mt-0.5">
                 {formatCurrency(simEMI, user?.currency)}
                 <span className="text-xs text-slate-400 font-normal"> / month</span>
               </p>
             </div>
 
-            <div className="pt-2 border-t border-slate-700 text-xs space-y-1">
+            <div className="pt-2 border-t border-sky-200/50 dark:border-slate-700 text-xs space-y-1">
               <div className="flex justify-between">
-                <span className="text-slate-400">Total Interest Payable:</span>
-                <span className="font-semibold text-rose-300">{formatCurrency(simTotalInterest, user?.currency)}</span>
+                <span className="text-slate-500 dark:text-slate-400">Total Interest:</span>
+                <span className="font-semibold text-rose-500">{formatCurrency(simTotalInterest, user?.currency)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Total Amount Payable:</span>
-                <span className="font-bold text-white">{formatCurrency(simTotalPayable, user?.currency)}</span>
+                <span className="text-slate-500 dark:text-slate-400">Total Amount:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(simTotalPayable, user?.currency)}</span>
               </div>
             </div>
           </div>
@@ -405,7 +405,7 @@ export default function Loans() {
           onClick={() => setActiveTab("all")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeTab === "all"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-primary-600 text-white shadow-sm"
               : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
@@ -415,7 +415,7 @@ export default function Loans() {
           onClick={() => setActiveTab("borrowed")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeTab === "borrowed"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-primary-600 text-white shadow-sm"
               : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
@@ -425,7 +425,7 @@ export default function Loans() {
           onClick={() => setActiveTab("lent")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeTab === "lent"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-primary-600 text-white shadow-sm"
               : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
@@ -435,7 +435,7 @@ export default function Loans() {
           onClick={() => setActiveTab("closed")}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
             activeTab === "closed"
-              ? "bg-indigo-600 text-white shadow-sm"
+              ? "bg-primary-600 text-white shadow-sm"
               : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
@@ -446,11 +446,11 @@ export default function Loans() {
       {/* Loans List */}
       {loading ? (
         <div className="flex items-center justify-center min-h-[30vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
         </div>
       ) : filteredLoans.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-12 text-center shadow-sm">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-500 flex items-center justify-center mx-auto mb-4">
             <Landmark className="w-8 h-8" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Loans in this Category</h3>
@@ -459,7 +459,7 @@ export default function Loans() {
           </p>
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-sm cursor-pointer"
+            className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-bold shadow-sm cursor-pointer"
           >
             Add Your First Loan
           </button>
@@ -518,7 +518,7 @@ export default function Loans() {
                   <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
                     <div className="text-right">
                       <span className="text-xs text-slate-400">Monthly EMI</span>
-                      <p className="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">
+                      <p className="text-xl font-extrabold text-primary-600 dark:text-sky-400">
                         {formatCurrency(loan.monthly_emi, lCurr)}
                       </p>
                     </div>
@@ -568,7 +568,7 @@ export default function Loans() {
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-slate-700/60 h-2.5 rounded-full overflow-hidden">
                     <div
-                      className="bg-indigo-600 h-full rounded-full transition-all duration-500"
+                      className="bg-primary-600 h-full rounded-full transition-all duration-500"
                       style={{ width: `${loan.progress_percent || 0}%` }}
                     />
                   </div>
@@ -585,7 +585,7 @@ export default function Loans() {
                     >
                       <div className="flex items-center justify-between">
                         <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                          <Calendar className="w-4 h-4 text-indigo-500" />
+                          <Calendar className="w-4 h-4 text-sky-500" />
                           Amortization Schedule & Payment Log
                         </h4>
                         {loadingDetail && <span className="text-xs text-slate-400">Loading schedule...</span>}
@@ -655,7 +655,7 @@ export default function Loans() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Landmark className="w-5 h-5 text-indigo-500" />
+                  <Landmark className="w-5 h-5 text-sky-500" />
                   Add New Loan / EMI Contract
                 </h3>
                 <button
@@ -706,7 +706,7 @@ export default function Loans() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. HDFC Home Loan, Car Loan"
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
 
@@ -720,7 +720,7 @@ export default function Loans() {
                       value={counterparty}
                       onChange={(e) => setCounterparty(e.target.value)}
                       placeholder="e.g. HDFC Bank, Sarah Connor"
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
                 </div>
@@ -806,9 +806,9 @@ export default function Loans() {
                 </div>
 
                 {calculatedLiveEmi > 0 && (
-                  <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-500/30 rounded-2xl flex items-center justify-between text-xs">
-                    <span className="text-indigo-900 dark:text-indigo-200 font-medium">Calculated Monthly EMI:</span>
-                    <span className="text-base font-extrabold text-indigo-600 dark:text-indigo-400">
+                  <div className="p-3 bg-sky-50 dark:bg-sky-950/40 border border-sky-500/30 rounded-2xl flex items-center justify-between text-xs">
+                    <span className="text-sky-900 dark:text-sky-200 font-medium">Calculated Monthly EMI:</span>
+                    <span className="text-base font-extrabold text-primary-600 dark:text-sky-400">
                       {formatCurrency(calculatedLiveEmi, currency)} / mo
                     </span>
                   </div>
@@ -825,7 +825,7 @@ export default function Loans() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-600/20 transition cursor-pointer disabled:opacity-50"
+                    className="px-6 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20 transition cursor-pointer disabled:opacity-50"
                   >
                     {isSubmitting ? "Creating..." : "Save Loan"}
                   </button>
@@ -909,7 +909,7 @@ export default function Loans() {
                     id="recordInTx"
                     checked={recordInTx}
                     onChange={(e) => setRecordInTx(e.target.checked)}
-                    className="rounded text-indigo-600"
+                    className="rounded text-primary-600"
                   />
                   <label htmlFor="recordInTx" className="text-xs text-slate-600 dark:text-slate-300">
                     Also record an expense entry in general transactions

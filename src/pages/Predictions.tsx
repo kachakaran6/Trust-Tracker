@@ -66,7 +66,7 @@ export default function Predictions() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Brain className="w-7 h-7 text-indigo-500" />
+            <Brain className="w-7 h-7 text-sky-500" />
             Predictive AI Financial Forecasting
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -81,7 +81,7 @@ export default function Predictions() {
               onClick={() => setRange(m)}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                 range === m
-                  ? "bg-indigo-600 text-white shadow-sm"
+                  ? "bg-primary-600 text-white shadow-sm font-bold"
                   : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
               }`}
             >
@@ -103,7 +103,7 @@ export default function Predictions() {
         <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Monthly Avg Spending</span>
-            <DollarSign className="w-5 h-5 text-indigo-500" />
+            <DollarSign className="w-5 h-5 text-sky-500" />
           </div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
             {formatCurrency(data?.avgMonthlyExpense || 0)}
@@ -142,7 +142,7 @@ export default function Predictions() {
       {/* Main Forecast Chart */}
       <div className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-          <Target className="w-5 h-5 text-indigo-500" />
+          <Target className="w-5 h-5 text-sky-500" />
           Historical vs Predicted Spend Trajectory
         </h3>
         <div className="h-80 w-full">
@@ -222,7 +222,7 @@ export default function Predictions() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-slate-400">Projected</p>
-                    <p className="text-base font-bold text-indigo-600 dark:text-indigo-400">
+                    <p className="text-base font-bold text-primary-600 dark:text-sky-400">
                       {formatCurrency(cat.predicted)}
                     </p>
                   </div>
