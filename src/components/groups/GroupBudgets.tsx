@@ -16,7 +16,7 @@ import { groupService } from "../../services/groupService";
 import { toast } from "sonner";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
-// import Badge from "../ui/Badge";
+import { formatCurrency as globalFormatCurrency } from "../../utils/currency";
 
 interface GroupBudget {
   id: string;
@@ -38,11 +38,13 @@ interface GroupBudget {
 interface GroupBudgetsProps {
   groupId: string;
   isPreview?: boolean;
+  currency?: string;
 }
 
 const GroupBudgets: React.FC<GroupBudgetsProps> = ({
   groupId,
   isPreview = false,
+  currency = "USD",
 }) => {
   const [budgets, setBudgets] = useState<GroupBudget[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -195,11 +197,7 @@ const GroupBudgets: React.FC<GroupBudgetsProps> = ({
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      minimumFractionDigits: 0,
-    }).format(amount);
+    return globalFormatCurrency(amount, currency);
   };
 
   const getBudgetStatus = (budget: GroupBudget) => {

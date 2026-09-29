@@ -20,6 +20,7 @@ import { groupService } from "../../services/groupService";
 import { GroupTransaction } from "../../types/group";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
+import { formatCurrency as globalFormatCurrency } from "../../utils/currency";
 
 interface SplitMember {
   id: string;
@@ -37,6 +38,7 @@ interface TransactionSplitModalProps {
   categories: any[];
   existingTransaction?: GroupTransaction | null;
   onTransactionAdded: () => void;
+  currency?: string;
 }
 
 const TransactionSplitModal: React.FC<TransactionSplitModalProps> = ({
@@ -46,6 +48,7 @@ const TransactionSplitModal: React.FC<TransactionSplitModalProps> = ({
   categories,
   existingTransaction,
   onTransactionAdded,
+  currency = "USD",
 }) => {
   const [step, setStep] = useState(1);
   const [members, setMembers] = useState<SplitMember[]>([]);
@@ -309,11 +312,7 @@ const TransactionSplitModal: React.FC<TransactionSplitModalProps> = ({
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      minimumFractionDigits: 2,
-    }).format(amount);
+    return globalFormatCurrency(amount, currency);
   };
 
   const modalTitle = existingTransaction
