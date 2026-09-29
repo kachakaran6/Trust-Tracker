@@ -18,6 +18,7 @@ pdfMake.vfs = pdfFonts.vfs;
 import { useTransactions } from "../contexts/TransactionsContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
+import { formatCurrency as globalFormatCurrency } from "../utils/currency";
 import { Transaction } from "../types";
 import {
   format,
@@ -35,7 +36,6 @@ import {
   ArrowDown,
   ArrowUp,
   Trash,
-  // Plus,
   Pencil,
   FileText,
   Download,
@@ -51,6 +51,8 @@ function Transactions() {
   const { transactions, deleteTransaction, updateTransaction } =
     useTransactions();
   const { categories, getCategoryById } = useCategories();
+
+  const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
 
   // State for transaction modal
   const [showAddModal, setShowAddModal] = useState(false);
@@ -167,16 +169,6 @@ function Transactions() {
   const sortedTransactions = sortTransactions(filteredTransactions);
 
   const filteredAndSortedTransactions = sortTransactions(filterTransactions());
-
-  // Format currency using user's preferred currency
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: user?.currency || "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
 
   // Function to toggle sort
   const toggleSort = (field: SortField) => {

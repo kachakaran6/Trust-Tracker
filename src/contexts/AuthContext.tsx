@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { api, authStorage } from "../lib/api";
 import { User } from "../types";
+import { detectUserCurrency } from "../utils/currency";
 import { toast } from "sonner";
 
 interface AuthContextType {
@@ -8,7 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, options?: { currency?: string; timezone?: string }) => Promise<void>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => Promise<void>;
 }
@@ -61,10 +62,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    options?: { currency?: string; timezone?: string }
+  ) => {
     try {
       setIsLoading(true);
-      const res = await api.auth.register({ name, email, password });
+      const autodetectedCurrency = detectUserCurrency();
+      const autodetectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+      const res = await api.auth.register({
+        name,
+        email,
+        password,
+        currency: options?.currency || autodetectedCurrency,
+        timezone: options?.timezone || autodetectedTimezone,
+      });
+
       authStorage.setToken(res.token);
       setUser(res.user);
       toast.success("Account created successfully!");

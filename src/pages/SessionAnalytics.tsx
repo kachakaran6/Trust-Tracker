@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
+import { formatCurrency as globalFormatCurrency } from "../utils/currency";
 import {
   PlusCircle,
   MinusCircle,
@@ -29,6 +31,8 @@ interface Transaction {
 }
 
 export default function SessionAnalytics() {
+  const { user } = useAuth();
+  const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Transaction[]>([]);
@@ -191,14 +195,14 @@ export default function SessionAnalytics() {
               <span className="text-gray-500 text-sm font-medium">TOTAL REVENUE</span>
               <PlusCircle className="text-green-500 w-5 h-5 opacity-80" />
             </div>
-            <div className="text-3xl font-bold text-green-600">₹ {totalIncome.toLocaleString()}</div>
+            <div className="text-3xl font-bold text-green-600">{formatCurrency(totalIncome)}</div>
           </div>
           <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border dark:border-gray-800">
             <div className="flex items-center justify-between mb-4">
               <span className="text-gray-500 text-sm font-medium">TOTAL SPENDING</span>
               <MinusCircle className="text-red-500 w-5 h-5 opacity-80" />
             </div>
-            <div className="text-3xl font-bold text-red-600">₹ {totalExpense.toLocaleString()}</div>
+            <div className="text-3xl font-bold text-red-600">{formatCurrency(totalExpense)}</div>
           </div>
           <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border dark:border-gray-800">
             <div className="flex items-center justify-between mb-4">
@@ -206,7 +210,7 @@ export default function SessionAnalytics() {
               <Calendar className="text-blue-500 w-5 h-5 opacity-80" />
             </div>
             <div className={`text-3xl font-bold ${netBalance >= 0 ? "text-blue-600" : "text-amber-600"}`}>
-              ₹ {netBalance.toLocaleString()}
+              {formatCurrency(netBalance)}
             </div>
           </div>
         </div>
@@ -294,7 +298,7 @@ export default function SessionAnalytics() {
                     </td>
                     <td className={`px-6 py-4 text-sm font-bold text-right ${t.type === 'income' ? "text-green-600" : "text-red-600"
                       }`}>
-                      ₹ {Number(t.amount).toLocaleString()}
+                      {formatCurrency(t.amount)}
                     </td>
                   </tr>
                 ))}

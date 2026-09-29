@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
 import { PredictionResponse } from "../types";
+import { formatCurrency as globalFormatCurrency } from "../utils/currency";
 import {
   LineChart,
   Line,
@@ -28,9 +30,12 @@ import {
 import { toast } from "sonner";
 
 export default function Predictions() {
+  const { user } = useAuth();
   const [range, setRange] = useState(3);
   const [data, setData] = useState<PredictionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
 
   const loadForecast = async (r: number) => {
     try {
@@ -101,7 +106,7 @@ export default function Predictions() {
             <DollarSign className="w-5 h-5 text-indigo-500" />
           </div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-            ${data?.avgMonthlyExpense.toFixed(2) || "0.00"}
+            {formatCurrency(data?.avgMonthlyExpense || 0)}
           </p>
           <p className="text-xs text-slate-400 mt-1">Based on historical trailing activity</p>
         </div>
@@ -117,7 +122,7 @@ export default function Predictions() {
           </div>
           <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2 flex items-center gap-1.5">
             {(data?.monthlyTrendSlope || 0) >= 0 ? "+" : ""}
-            ${(data?.monthlyTrendSlope || 0).toFixed(2)}/mo
+            {formatCurrency(data?.monthlyTrendSlope || 0)}/mo
           </p>
           <p className="text-xs text-slate-400 mt-1">Linear trend velocity</p>
         </div>
@@ -145,7 +150,7 @@ export default function Predictions() {
             <LineChart data={combinedChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
               <XAxis dataKey="month" stroke="#94A3B8" fontSize={12} />
-              <YAxis stroke="#94A3B8" fontSize={12} tickFormatter={(val) => `$${val}`} />
+              <YAxis stroke="#94A3B8" fontSize={12} tickFormatter={(val) => formatCurrency(val).replace(/\.\d+/, "")} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "#1E293B",
@@ -153,7 +158,7 @@ export default function Predictions() {
                   borderRadius: "12px",
                   color: "#fff",
                 }}
-                formatter={(value: any) => [`$${Number(value).toFixed(2)}`, ""]}
+                formatter={(value: any) => [formatCurrency(Number(value)), ""]}
               />
               <Legend />
               <Line
@@ -212,13 +217,13 @@ export default function Predictions() {
                   <div>
                     <p className="text-xs text-slate-400">Current Avg</p>
                     <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                      ${cat.currentAverage.toFixed(2)}
+                      {formatCurrency(cat.currentAverage)}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-slate-400">Projected</p>
                     <p className="text-base font-bold text-indigo-600 dark:text-indigo-400">
-                      ${cat.predicted.toFixed(2)}
+                      {formatCurrency(cat.predicted)}
                     </p>
                   </div>
                 </div>

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
 import { useCategories } from "../contexts/CategoriesContext";
+import { CURRENCIES, detectUserCurrency, formatCurrency as globalFormatCurrency } from "../utils/currency";
+import { Dropdown } from "../components/ui/Dropdown";
 import {
   User,
   Shield,
@@ -11,6 +13,8 @@ import {
   Check,
   Eye,
   EyeOff,
+  Sparkles,
+  Globe,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -194,12 +198,19 @@ function Settings() {
 
   // Format currency display
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: user?.currency || "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return globalFormatCurrency(amount, user?.currency);
+  };
+
+  const currencyOptions = CURRENCIES.map((c) => ({
+    value: c.code,
+    label: `${c.flag || ""} ${c.code} (${c.symbol}) - ${c.name}`,
+    badge: c.symbol,
+  }));
+
+  const handleAutoDetectCurrency = () => {
+    const detected = detectUserCurrency();
+    setProfileData((prev) => ({ ...prev, currency: detected }));
+    toast.success(`Detected currency: ${detected}`);
   };
 
   // Render tab content
@@ -312,33 +323,31 @@ function Settings() {
                         </select>
                       </div>
                       <div>
-                        <label
-                          htmlFor="currency"
-                          className="form-label text-gray-700 dark:text-gray-200"
-                        >
-                          Default Currency
-                        </label>
-                        <select
-                          id="currency"
-                          name="currency"
-                          className="select-field border border-gray-300 dark:border-gray-600 rounded-md p-2 w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label
+                            htmlFor="currency"
+                            className="form-label text-gray-700 dark:text-gray-200"
+                          >
+                            Default Currency
+                          </label>
+                          {isEditingProfile && (
+                            <button
+                              type="button"
+                              onClick={handleAutoDetectCurrency}
+                              className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                            >
+                              <Sparkles className="w-3 h-3" /> Auto-Detect
+                            </button>
+                          )}
+                        </div>
+                        <Dropdown
+                          options={currencyOptions}
                           value={profileData.currency}
-                          onChange={handleProfileInputChange}
+                          onChange={(val) => setProfileData((prev) => ({ ...prev, currency: val }))}
                           disabled={!isEditingProfile}
-                        >
-                          <option value="USD">US Dollar ($)</option>
-                          <option value="EUR">Euro (€)</option>
-                          <option value="GBP">British Pound (£)</option>
-                          <option value="JPY">Japanese Yen (¥)</option>
-                          <option value="CAD">Canadian Dollar (C$)</option>
-                          <option value="AUD">Australian Dollar (A$)</option>
-                          <option value="CHF">Swiss Franc (CHF)</option>
-                          <option value="CNY">Chinese Yuan (¥)</option>
-                          <option value="INR">Indian Rupee (₹)</option>
-                          <option value="KRW">South Korean Won (₩)</option>
-                          <option value="BRL">Brazilian Real (R$)</option>
-                          <option value="MXN">Mexican Peso ($)</option>
-                        </select>
+                          searchable
+                          searchPlaceholder="Search currency..."
+                        />
                       </div>
                     </div>
 

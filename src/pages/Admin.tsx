@@ -24,9 +24,11 @@ import {
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatCurrency as globalFormatCurrency } from "../utils/currency";
 
 export default function Admin() {
   const { user } = useAuth();
+  const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -260,7 +262,7 @@ export default function Admin() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Global Volume</p>
             <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-              ${stats.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {formatCurrency(stats.totalAmount)}
             </p>
             <p className="text-xs text-slate-400 mt-1">Platform-wide tracked spend</p>
           </div>
@@ -398,7 +400,7 @@ export default function Admin() {
                       {u.total_transactions}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-white font-semibold">
-                      ${u.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {formatCurrency(u.total_amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-400">
                       {format(new Date(u.created_at), "MMM d, yyyy")}
@@ -498,7 +500,7 @@ export default function Admin() {
                 </div>
                 <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
                   <span className="text-slate-400">Total Tracked Volume</span>
-                  <span className="font-semibold text-slate-800 dark:text-white">${selectedUser.total_amount.toFixed(2)}</span>
+                  <span className="font-semibold text-slate-800 dark:text-white">{formatCurrency(selectedUser.total_amount)}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
                   <span className="text-slate-400">Registered On</span>

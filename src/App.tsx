@@ -28,6 +28,10 @@ import Preview from "./pages/Preview";
 import UpdatePassword from "./pages/UpdatePassword";
 import Groups from "./pages/Group";
 import GroupDetail from "./pages/GroupDetail";
+import JoinGroup from "./pages/JoinGroup";
+import Loans from "./pages/Loans";
+import Subscriptions from "./pages/Subscriptions";
+import Debts from "./pages/Debts";
 import DiaryTransactionInput from "./pages/DiaryTransactionInput";
 import SessionAnalytics from "./pages/SessionAnalytics";
 import { Toaster } from "sonner";
@@ -36,7 +40,7 @@ function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <Router>
-        <Toaster position="top-right" />
+        <Toaster position="top-right" richColors />
         <AuthProvider>
           <TransactionsProvider>
             <CategoriesProvider>
@@ -49,6 +53,8 @@ function App() {
                     <Route path="/register" element={<Register />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/session/:id" element={<SessionAnalytics />} />
+                    <Route path="/join-group/:code" element={<JoinGroup />} />
+                    <Route path="/invite/:code" element={<JoinGroup />} />
                     <Route
                       path="/update-password"
                       element={<UpdatePassword />}
@@ -66,6 +72,9 @@ function App() {
                       <Route path="/preview" element={<Preview />} />
                       <Route path="/group" element={<Groups />} />
                       <Route path="/group/:groupId" element={<GroupDetail />} />
+                      <Route path="/loans" element={<Loans />} />
+                      <Route path="/subscriptions" element={<Subscriptions />} />
+                      <Route path="/debts" element={<Debts />} />
                       <Route
                         path="/manualentry"
                         element={<DiaryTransactionInput />}

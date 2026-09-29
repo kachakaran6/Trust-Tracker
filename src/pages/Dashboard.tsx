@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useTransactions } from "../contexts/TransactionsContext";
 import { useBudget } from "../contexts/BudgetContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
+import { api } from "../lib/api";
+import { formatCurrency as globalFormatCurrency } from "../utils/currency";
 import { format, parseISO, subMonths } from "date-fns";
 import CountUp from "react-countup";
 import {
@@ -17,7 +20,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  // Legend,
 } from "recharts";
 import {
   ArrowUpRight,
@@ -27,6 +29,12 @@ import {
   TrendingUp,
   AlertTriangle,
   Plus,
+  Users,
+  Landmark,
+  RefreshCw,
+  Handshake,
+  ArrowRight,
+  Clock,
 } from "lucide-react";
 import StepByStepTransaction from "../components/transactions/StepByStepTransaction";
 import FloatingAddButton from "../components/transactions/FloatingAddButton";
@@ -88,14 +96,20 @@ function Dashboard() {
     "#EC4899",
   ];
 
+  // Quick summaries for new features
+  const [loansSummary, setLoansSummary] = useState<any>(null);
+  const [subsSummary, setSubsSummary] = useState<any>(null);
+  const [debtsSummary, setDebtsSummary] = useState<any>(null);
+
+  useEffect(() => {
+    api.loans.list().then((res) => setLoansSummary(res.summary)).catch(() => {});
+    api.subscriptions.list().then((res) => setSubsSummary(res.summary)).catch(() => {});
+    api.debts.list().then((res) => setDebtsSummary(res.summary)).catch(() => {});
+  }, []);
+
   // Format currency using user's preferred currency
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: user?.currency || "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+    return globalFormatCurrency(value, user?.currency);
   };
 
   // Custom tooltip for charts
@@ -254,6 +268,87 @@ function Dashboard() {
             ></div>
           </div>
         </div>
+      </div>
+
+      {/* Quick Financial Overview Hub (Loans, Subscriptions, Groups, Debts) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Groups Quick Link */}
+        <Link
+          to="/group"
+          className="p-4 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm transition flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">Groups & Splits</p>
+              <p className="text-[11px] text-slate-400">Splitwise-style ledger</p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition group-hover:translate-x-0.5" />
+        </Link>
+
+        {/* Loans Quick Link */}
+        <Link
+          to="/loans"
+          className="p-4 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm transition flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+              <Landmark className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">Loans & EMIs</p>
+              <p className="text-[11px] text-slate-400">
+                {loansSummary ? `${formatCurrency(loansSummary.monthlyEmiBurden)} / mo` : "Track schedules"}
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-rose-500 transition group-hover:translate-x-0.5" />
+        </Link>
+
+        {/* Subscriptions Quick Link */}
+        <Link
+          to="/subscriptions"
+          className="p-4 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm transition flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+              <RefreshCw className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">Subscriptions</p>
+              <p className="text-[11px] text-slate-400">
+                {subsSummary ? `${formatCurrency(subsSummary.totalMonthlyBurn)} / mo` : "Track recurring"}
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-purple-500 transition group-hover:translate-x-0.5" />
+        </Link>
+
+        {/* Debts Quick Link */}
+        <Link
+          to="/debts"
+          className="p-4 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm transition flex items-center justify-between group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+              <Handshake className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">Debts & Lenders</p>
+              <p className="text-[11px] text-slate-400">
+                {debtsSummary
+                  ? debtsSummary.netBalance >= 0
+                    ? `+${formatCurrency(debtsSummary.netBalance)} net`
+                    : `-${formatCurrency(Math.abs(debtsSummary.netBalance))} net`
+                  : "Personal credit"}
+              </p>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition group-hover:translate-x-0.5" />
+        </Link>
       </div>
 
       {/* Spending trend chart */}

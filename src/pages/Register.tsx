@@ -1,21 +1,40 @@
-import React, { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { Mail, Lock, User as UserIcon, Eye, EyeOff, ShieldCheck, ArrowRight } from "lucide-react";
+import { CURRENCIES, detectUserCurrency } from "../utils/currency";
+import { Dropdown } from "../components/ui/Dropdown";
+import { Mail, Lock, User as UserIcon, Eye, EyeOff, ShieldCheck, ArrowRight, Sparkles, Globe } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Register() {
   const { register, isAuthenticated, isLoading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const redirectTarget = searchParams.get("redirect") || sessionStorage.getItem("tt_join_redirect") || "/dashboard";
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [currency, setCurrency] = useState(detectUserCurrency());
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    setCurrency(detectUserCurrency());
+  }, []);
+
   if (isAuthenticated && !isLoading) {
-    return <Navigate to="/dashboard" replace />;
+    if (sessionStorage.getItem("tt_join_redirect")) {
+      sessionStorage.removeItem("tt_join_redirect");
+    }
+    return <Navigate to={redirectTarget} replace />;
   }
+
+  const currencyOptions = CURRENCIES.map((c) => ({
+    value: c.code,
+    label: `${c.flag || ""} ${c.code} (${c.symbol}) - ${c.name}`,
+    badge: c.symbol,
+  }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +55,7 @@ export default function Register() {
 
     try {
       setIsSubmitting(true);
-      await register(name, email, password);
+      await register(name, email, password, { currency });
     } catch {
       // Error handled in AuthContext
     } finally {
@@ -54,7 +73,7 @@ export default function Register() {
           Create Account
         </h2>
         <p className="mt-2 text-sm text-slate-400">
-          Join Trust-Tracker and take control of your financial destiny
+          Join Trust-Tracker and manage loans, subscriptions, shared splits & daily expenses
         </p>
       </div>
 
@@ -99,6 +118,25 @@ export default function Register() {
               </div>
             </div>
 
+            {/* Currency Auto-detection field */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                  Primary Currency
+                </label>
+                <span className="text-[11px] text-indigo-400 font-medium flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> Auto-detected
+                </span>
+              </div>
+              <Dropdown
+                options={currencyOptions}
+                value={currency}
+                onChange={setCurrency}
+                searchable
+                searchPlaceholder="Search currency..."
+              />
+            </div>
+
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
                 Password
@@ -118,7 +156,7 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -156,7 +194,10 @@ export default function Register() {
 
           <div className="mt-6 text-center text-sm text-slate-400">
             Already have an account?{" "}
-            <Link to="/login" className="font-semibold text-indigo-400 hover:text-indigo-300">
+            <Link
+              to={redirectTarget ? `/login?redirect=${encodeURIComponent(redirectTarget)}` : "/login"}
+              className="font-semibold text-indigo-400 hover:text-indigo-300"
+            >
               Sign in
             </Link>
           </div>

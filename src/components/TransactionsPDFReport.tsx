@@ -1,6 +1,7 @@
 import React from "react";
 import { format } from "date-fns";
 import { Transaction, Category, User } from "../types";
+import { formatCurrency as globalFormatCurrency } from "../utils/currency";
 
 
 interface TransactionsPDFReportProps {
@@ -61,11 +62,7 @@ const TransactionsPDFReport: React.FC<TransactionsPDFReportProps> = ({
     }, {} as Record<string, number>);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      minimumFractionDigits: 0,
-    }).format(amount);
+    return globalFormatCurrency(amount, user?.currency);
   };
 
   const reportDate = format(new Date(), "MMMM dd, yyyy, hh:mm:ss a");

@@ -20,6 +20,8 @@ import {
 } from "recharts";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+import { formatCurrency as globalFormatCurrency } from "../utils/currency";
+
 function Analytics() {
   const { user } = useAuth();
   const { getTransactionsByMonth, getMonthlySummary } = useTransactions();
@@ -34,12 +36,7 @@ function Analytics() {
 
   // Format currency using user's preferred currency
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: user?.currency || "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+    return globalFormatCurrency(value, user?.currency);
   };
 
   // Change month functions

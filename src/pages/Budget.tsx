@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useBudget } from "../contexts/BudgetContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
+import { formatCurrency as globalFormatCurrency } from "../utils/currency";
 import { format, addMonths } from "date-fns";
 import { PlusCircle, Pencil, Trash } from "lucide-react";
 
@@ -89,12 +90,7 @@ function Budget() {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: user?.currency || "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+    return globalFormatCurrency(value, user?.currency);
   };
 
   // const formatPercentage = (value: number) => Math.round(value) + "%";

@@ -24,6 +24,7 @@ import {
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency as globalFormatCurrency, getCurrencySymbol } from "../../utils/currency";
 
 interface StepByStepTransactionProps {
   isOpen: boolean;
@@ -35,24 +36,7 @@ function StepByStepTransaction({
   onClose,
 }: StepByStepTransactionProps) {
   const { user } = useAuth();
-  const currencyFormatter = new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: user?.currency || "USD",
-    minimumFractionDigits: 0,
-  });
-
-  const getCurrencySymbol = (currency: string): string => {
-    return (0)
-      .toLocaleString(undefined, {
-        style: "currency",
-        currency,
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      })
-      .replace(/\d/g, "")
-      .trim(); // removes digits, keeps symbol
-  };
-
+  const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
   const currencySymbol = getCurrencySymbol(user?.currency || "USD");
 
   // const currencySymbol = user?.currency || "$";
@@ -414,7 +398,7 @@ function StepByStepTransaction({
                               }
                               className="p-2 text-sm rounded-lg border border-neutral-200 hover:border-primary-300 hover:bg-primary-50 transition-all duration-200"
                             >
-                              {currencyFormatter.format(amount)}
+                              {formatCurrency(amount)}
                             </button>
                           ))}
                         </div>
@@ -563,10 +547,7 @@ function StepByStepTransaction({
                               <div className="flex justify-between">
                                 <span>Amount:</span>
                                 <span className="font-medium">
-                                  {/* ₹{formData.amount} */}
-                                  {currencyFormatter.format(
-                                    Number(formData.amount)
-                                  )}
+                                  {formatCurrency(Number(formData.amount))}
                                 </span>
                               </div>
                             </div>
