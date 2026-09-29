@@ -40,7 +40,7 @@ export default function Loans() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setPageHeader("Loans & EMI Management", "Track bank loans, personal loans, monthly EMIs, and amortization schedules");
+    setPageHeader("Loans & EMI Management");
   }, [setPageHeader]);
 
   // Filter Tabs: all, borrowed, lent, closed

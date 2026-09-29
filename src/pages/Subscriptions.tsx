@@ -55,7 +55,7 @@ export default function Subscriptions() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setPageHeader("Recurring Subscriptions", "Track streaming, software, and recurring services with renewal alerts");
+    setPageHeader("Recurring Subscriptions");
   }, [setPageHeader]);
 
   // Filters

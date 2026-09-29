@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   LayoutDashboard,
@@ -8,7 +8,6 @@ import {
   PiggyBank,
   TrendingUp,
   Settings,
-  LogOut,
   X,
   Shield,
   Users,
@@ -17,7 +16,6 @@ import {
   RefreshCw,
   Handshake,
   ShieldCheck,
-  ChevronRight,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -26,8 +24,7 @@ interface SidebarProps {
 }
 
 function Sidebar({ open, setOpen }: SidebarProps) {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const isSuperAdmin = user?.role === "super_admin";
 
   if (!user) return null;
@@ -65,15 +62,6 @@ function Sidebar({ open, setOpen }: SidebarProps) {
       ],
     },
   ];
-
-  const handleLogout = (e: React.MouseEvent) => {
-    e.preventDefault();
-    logout();
-  };
-
-  const initials = user.name
-    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-    : "U";
 
   return (
     <div
@@ -148,37 +136,6 @@ function Sidebar({ open, setOpen }: SidebarProps) {
           </div>
         )}
       </nav>
-
-      {/* User Profile + Logout */}
-      <div className="border-t border-slate-200 dark:border-slate-800 shrink-0">
-        {/* Profile card */}
-        <button
-          onClick={() => { navigate("/settings"); setOpen(false); }}
-          className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition group"
-        >
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
-            {initials}
-          </div>
-          <div className="flex-1 min-w-0 text-left">
-            <p className="text-xs font-semibold text-slate-900 dark:text-white truncate leading-tight">
-              {user.name || "User"}
-            </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate leading-tight font-mono">
-              {user.currency || "USD"} · {user.email}
-            </p>
-          </div>
-          <ChevronRight size={13} className="text-slate-300 group-hover:text-slate-500 dark:group-hover:text-slate-400 shrink-0" />
-        </button>
-
-        {/* Logout */}
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer border-t border-slate-100 dark:border-slate-800"
-        >
-          <LogOut size={15} />
-          <span>Sign Out</span>
-        </button>
-      </div>
     </div>
   );
 }

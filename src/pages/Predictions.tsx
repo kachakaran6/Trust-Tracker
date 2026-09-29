@@ -38,10 +38,7 @@ export default function Predictions() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setPageHeader(
-      "Predictive AI Financial Forecasting",
-      "Deterministic statistical modeling & trend projections based on your real spending history"
-    );
+    setPageHeader("Predictive AI Financial Forecasting");
   }, [setPageHeader]);
 
   const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);

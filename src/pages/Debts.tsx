@@ -40,7 +40,7 @@ export default function Debts() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setPageHeader("Debts & Lender Ledger", "Track money lent to friends and money borrowed, with partial repayments");
+    setPageHeader("Debts & Lender Ledger");
   }, [setPageHeader]);
 
   // Tab filter

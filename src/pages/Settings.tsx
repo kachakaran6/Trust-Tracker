@@ -25,7 +25,7 @@ function Settings() {
   const { categories, addCategory, updateCategory, deleteCategory } =
     useCategories();
 
-  useEffect(() => { setPageHeader("Settings", "Manage your account and preferences"); }, [setPageHeader]);
+  useEffect(() => { setPageHeader("Settings"); }, [setPageHeader]);
 
   // State for active tab
   const [activeTab, setActiveTab] = useState("profile");

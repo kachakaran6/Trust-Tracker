@@ -33,7 +33,7 @@ export default function Admin() {
   const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
 
   useEffect(() => {
-    setPageHeader("Admin Command Center", "System overview, user role management, and global platform statistics");
+    setPageHeader("Admin Command Center");
   }, [setPageHeader]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [stats, setStats] = useState<AdminStats>({

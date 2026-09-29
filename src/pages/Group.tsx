@@ -28,7 +28,7 @@ export default function Groups() {
   const { setPageHeader } = usePageHeader();
 
   useEffect(() => {
-    setPageHeader("Groups & Splits", "Splitwise-style expense sharing, debt settling, and group invites");
+    setPageHeader("Groups & Splits");
   }, [setPageHeader]);
   const { groups, loading, createGroup, joinGroup } = useGroups();
 

@@ -29,7 +29,7 @@ function Analytics() {
   const { getTransactionsByMonth, getMonthlySummary } = useTransactions();
   const { getCategoryById } = useCategories();
 
-  useEffect(() => { setPageHeader("Analytics", "Monthly spending breakdown & trends"); }, [setPageHeader]);
+  useEffect(() => { setPageHeader("Analytics"); }, [setPageHeader]);
 
   // State for selected month
   const [selectedMonth, setSelectedMonth] = useState(new Date());

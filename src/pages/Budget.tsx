@@ -15,7 +15,7 @@ function Budget() {
     useBudget();
   const { getExpenseCategories, getCategoryById } = useCategories();
 
-  useEffect(() => { setPageHeader("Budget Planning", "Set and track monthly spending limits"); }, [setPageHeader]);
+  useEffect(() => { setPageHeader("Budget Planning"); }, [setPageHeader]);
 
   const [isAddingBudget, setIsAddingBudget] = useState(false);
   const [isEditingBudget, setIsEditingBudget] = useState(false);

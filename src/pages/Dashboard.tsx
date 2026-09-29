@@ -48,7 +48,7 @@ function Dashboard() {
   const { getCategoryById } = useCategories();
 
   useEffect(() => {
-    setPageHeader("Dashboard", format(new Date(), "MMMM d, yyyy"));
+    setPageHeader("Dashboard");
   }, [setPageHeader]);
 
   // State for quick add modal

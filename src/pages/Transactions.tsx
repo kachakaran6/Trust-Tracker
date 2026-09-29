@@ -54,7 +54,7 @@ function Transactions() {
     useTransactions();
   const { categories, getCategoryById } = useCategories();
 
-  useEffect(() => { setPageHeader("Transactions", "Your full transaction history"); }, [setPageHeader]);
+  useEffect(() => { setPageHeader("Transactions"); }, [setPageHeader]);
 
   const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
 

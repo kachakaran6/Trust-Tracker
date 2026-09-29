@@ -21,7 +21,7 @@ export default function DiaryTransactionInput() {
   const { setPageHeader } = usePageHeader();
 
   useEffect(() => {
-    setPageHeader("AI Diary & Receipt Parser", "Paste your diary entry or receipt notes in free-form English");
+    setPageHeader("AI Diary & Receipt Parser");
   }, [setPageHeader]);
 
   const [text, setText] = useState("");
