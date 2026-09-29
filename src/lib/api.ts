@@ -8,6 +8,18 @@ import {
   GroupCategory,
   GroupTransaction,
   GroupSettlementData,
+  GroupInvitePreview,
+  GroupSettlementPayment,
+  GroupSplitType,
+  Loan,
+  LoanSummary,
+  AmortizationScheduleItem,
+  LoanPayment,
+  Subscription,
+  SubscriptionSummary,
+  Debt,
+  DebtSummary,
+  DebtPayment,
   PredictionResponse,
   MonthlySummary,
   AdminUser,
@@ -39,7 +51,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 
   if (response.status === 401) {
     authStorage.clearToken();
-    if (!window.location.pathname.includes("/login") && !window.location.pathname.includes("/register")) {
+    if (!window.location.pathname.includes("/login") && !window.location.pathname.includes("/register") && !window.location.pathname.includes("/join-group")) {
       window.location.href = "/login";
     }
   }
@@ -150,10 +162,10 @@ export const api = {
       }),
   },
 
-  // Groups
+  // Groups & Expense Splitting
   groups: {
     list: () => apiFetch<Group[]>("/groups"),
-    create: (payload: { name: string; description?: string }) =>
+    create: (payload: { name: string; description?: string; currency?: string }) =>
       apiFetch<Group>("/groups", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -163,6 +175,8 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ code }),
       }),
+    getInvitePreview: (code: string) =>
+      apiFetch<GroupInvitePreview>(`/groups/invite/${code}`),
     getDetails: (groupId: string) =>
       apiFetch<{ group: Group; myRole: "admin" | "member"; members: GroupMember[] }>(`/groups/${groupId}`),
     getTransactions: (groupId: string) =>
@@ -173,7 +187,7 @@ export const api = {
       category_id?: string | null;
       description?: string;
       date?: string;
-      split_type?: "equal" | "custom";
+      split_type?: GroupSplitType;
       split_details?: Record<string, number>;
       paid_by?: string;
     }) =>
@@ -194,6 +208,140 @@ export const api = {
       }),
     getSettlements: (groupId: string) =>
       apiFetch<GroupSettlementData>(`/groups/${groupId}/settlements`),
+    settlePayment: (groupId: string, payload: {
+      to_user_id: string;
+      from_user_id?: string;
+      amount: number;
+      date?: string;
+      notes?: string;
+      payment_method?: string;
+      auto_confirm?: boolean;
+    }) =>
+      apiFetch<{ message: string; settlement: GroupSettlementPayment }>(`/groups/${groupId}/settle`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    approveSettlement: (groupId: string, settleId: string, action: "approve" | "reject") =>
+      apiFetch<{ message: string; settlement: GroupSettlementPayment }>(`/groups/${groupId}/settle/${settleId}/approve`, {
+        method: "PUT",
+        body: JSON.stringify({ action }),
+      }),
+    deleteSettlement: (groupId: string, settleId: string) =>
+      apiFetch<{ message: string }>(`/groups/${groupId}/settle/${settleId}`, {
+        method: "DELETE",
+      }),
+  },
+
+  // Loans & EMI
+  loans: {
+    list: () => apiFetch<{ loans: Loan[]; summary: LoanSummary }>("/loans"),
+    create: (payload: {
+      name: string;
+      type: "borrowed" | "lent";
+      counterparty: string;
+      principal_amount: number;
+      interest_rate?: number;
+      tenure_months: number;
+      start_date: string;
+      emi_day?: number;
+      currency?: string;
+      monthly_emi?: number;
+      notes?: string;
+    }) =>
+      apiFetch<Loan>("/loans", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    get: (id: string) =>
+      apiFetch<{ loan: Loan; schedule: AmortizationScheduleItem[]; payments: LoanPayment[] }>(`/loans/${id}`),
+    pay: (id: string, payload: {
+      payment_number?: number;
+      amount?: number;
+      payment_date?: string;
+      notes?: string;
+      record_in_transactions?: boolean;
+    }) =>
+      apiFetch<{ message: string; payment: LoanPayment }>(`/loans/${id}/pay`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    delete: (id: string) =>
+      apiFetch<{ message: string }>(`/loans/${id}`, {
+        method: "DELETE",
+      }),
+  },
+
+  // Subscriptions
+  subscriptions: {
+    list: () => apiFetch<{ subscriptions: Subscription[]; summary: SubscriptionSummary }>("/subscriptions"),
+    create: (payload: {
+      name: string;
+      category?: string;
+      cost: number;
+      currency?: string;
+      billing_cycle?: string;
+      next_billing_date: string;
+      payment_method?: string;
+      icon?: string;
+      color?: string;
+      status?: string;
+      reminder_days?: number;
+      is_trial?: boolean;
+      trial_ends_at?: string | null;
+      notes?: string;
+    }) =>
+      apiFetch<Subscription>("/subscriptions", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    update: (id: string, payload: Partial<Subscription>) =>
+      apiFetch<Subscription>(`/subscriptions/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      }),
+    renew: (id: string, record_in_transactions = false) =>
+      apiFetch<{ message: string; subscription: Subscription }>(`/subscriptions/${id}/renew`, {
+        method: "POST",
+        body: JSON.stringify({ record_in_transactions }),
+      }),
+    delete: (id: string) =>
+      apiFetch<{ message: string }>(`/subscriptions/${id}`, {
+        method: "DELETE",
+      }),
+  },
+
+  // Personal Debts & Lender
+  debts: {
+    list: () => apiFetch<{ debts: Debt[]; summary: DebtSummary }>("/debts"),
+    create: (payload: {
+      counterparty_name: string;
+      counterparty_contact?: string;
+      type: "i_owe" | "owed_to_me";
+      amount: number;
+      currency?: string;
+      due_date?: string | null;
+      notes?: string;
+    }) =>
+      apiFetch<Debt>("/debts", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    get: (id: string) =>
+      apiFetch<{ debt: Debt; payments: DebtPayment[] }>(`/debts/${id}`),
+    recordPayment: (id: string, payload: {
+      amount: number;
+      payment_date?: string;
+      notes?: string;
+      record_in_transactions?: boolean;
+    }) =>
+      apiFetch<{ message: string; payment: DebtPayment; totalPaid: number; status: string }>(`/debts/${id}/payments`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    delete: (id: string) =>
+      apiFetch<{ message: string }>(`/debts/${id}`, {
+        method: "DELETE",
+      }),
   },
 
   // Predictions

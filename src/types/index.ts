@@ -80,16 +80,30 @@ export interface Budget {
   percentage?: number;
 }
 
+/* ==================== GROUPS & EXPENSE SPLITTING ==================== */
+
 export interface Group {
   id: string;
   name: string;
   description?: string;
   code: string;
+  currency?: string;
   created_by: string;
   created_at: string;
   my_role?: "admin" | "member";
   member_count?: number;
   total_spent?: number;
+}
+
+export interface GroupInvitePreview {
+  id: string;
+  name: string;
+  description?: string;
+  code: string;
+  currency: string;
+  created_at: string;
+  creator_name: string;
+  member_count: number;
 }
 
 export interface GroupMember {
@@ -101,6 +115,7 @@ export interface GroupMember {
   name?: string;
   email?: string;
   avatar_url?: string;
+  user_currency?: string;
 }
 
 export interface GroupCategory {
@@ -112,6 +127,8 @@ export interface GroupCategory {
   icon: string;
   created_at?: string;
 }
+
+export type GroupSplitType = "equal" | "exact" | "percentage" | "shares" | "custom";
 
 export interface GroupTransaction {
   id: string;
@@ -125,10 +142,28 @@ export interface GroupTransaction {
   category_id: string | null;
   description: string;
   date: string;
-  split_type: "equal" | "custom";
+  split_type: GroupSplitType;
   split_details: Record<string, number>;
   created_at: string;
   category?: GroupCategory | null;
+}
+
+export interface GroupSettlementPayment {
+  id: string;
+  group_id: string;
+  from_user_id: string;
+  from_name?: string;
+  from_email?: string;
+  to_user_id: string;
+  to_name?: string;
+  to_email?: string;
+  amount: number;
+  date: string;
+  notes?: string;
+  payment_method: string;
+  status: "pending" | "confirmed" | "rejected";
+  created_at: string;
+  approved_at?: string;
 }
 
 export interface SettlementInstruction {
@@ -148,7 +183,148 @@ export interface NetBalance {
 export interface GroupSettlementData {
   netBalances: NetBalance[];
   settlements: SettlementInstruction[];
+  recordedSettlements?: GroupSettlementPayment[];
 }
+
+/* ==================== LOANS & EMI MANAGEMENT ==================== */
+
+export interface Loan {
+  id: string;
+  user_id: string;
+  name: string;
+  type: "borrowed" | "lent";
+  counterparty: string;
+  principal_amount: number;
+  interest_rate: number;
+  tenure_months: number;
+  start_date: string;
+  emi_day: number;
+  monthly_emi: number;
+  currency: string;
+  status: "active" | "closed" | "defaulted";
+  notes?: string;
+  created_at: string;
+  total_paid?: number;
+  paid_installments?: number;
+  total_expected?: number;
+  total_interest?: number;
+  remaining_balance?: number;
+  progress_percent?: number;
+  next_due_date?: string;
+}
+
+export interface LoanPayment {
+  id: string;
+  loan_id: string;
+  payment_number: number;
+  amount: number;
+  principal_component: number;
+  interest_component: number;
+  payment_date: string;
+  status: "paid" | "pending" | "skipped";
+  notes?: string;
+  created_at: string;
+}
+
+export interface AmortizationScheduleItem {
+  paymentNumber: number;
+  dueDate: string;
+  emiAmount: number;
+  principalComponent: number;
+  interestComponent: number;
+  remainingBalance: number;
+  isPaid?: boolean;
+  paymentId?: string | null;
+  paidDate?: string | null;
+  paidAmount?: number | null;
+}
+
+export interface LoanSummary {
+  totalBorrowedPrincipal: number;
+  totalBorrowedRemaining: number;
+  monthlyEmiBurden: number;
+  totalLentPrincipal: number;
+  totalLentRemaining: number;
+  monthlyLentReceivable: number;
+  activeLoansCount: number;
+}
+
+/* ==================== SUBSCRIPTIONS MANAGEMENT ==================== */
+
+export type BillingCycle = "monthly" | "quarterly" | "yearly" | "weekly";
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  name: string;
+  category: string;
+  cost: number;
+  currency: string;
+  billing_cycle: BillingCycle;
+  next_billing_date: string;
+  payment_method: string;
+  icon: string;
+  color: string;
+  status: "active" | "paused" | "cancelled";
+  reminder_days: number;
+  is_trial: boolean;
+  trial_ends_at?: string | null;
+  notes?: string;
+  created_at: string;
+  monthly_cost?: number;
+  yearly_cost?: number;
+  days_until_renewal?: number;
+  is_renewing_soon?: boolean;
+}
+
+export interface SubscriptionSummary {
+  totalMonthlyBurn: number;
+  totalAnnualBurn: number;
+  activeCount: number;
+  pausedCount: number;
+  renewingIn7DaysCount: number;
+  categoryBreakdown: { name: string; monthlyTotal: number }[];
+}
+
+/* ==================== DEBTS & LENDER MANAGEMENT ==================== */
+
+export interface Debt {
+  id: string;
+  user_id: string;
+  counterparty_name: string;
+  counterparty_contact: string;
+  type: "i_owe" | "owed_to_me";
+  amount: number;
+  amount_paid: number;
+  currency: string;
+  due_date?: string | null;
+  status: "active" | "partially_paid" | "settled" | "overdue";
+  notes?: string;
+  created_at: string;
+  remaining_balance?: number;
+  progress_percent?: number;
+  payment_count?: number;
+}
+
+export interface DebtPayment {
+  id: string;
+  debt_id: string;
+  amount: number;
+  payment_date: string;
+  notes?: string;
+  created_at: string;
+}
+
+export interface DebtSummary {
+  totalIOwe: number;
+  totalOwedToMe: number;
+  netBalance: number;
+  activeCount: number;
+  settledCount: number;
+  overdueCount: number;
+}
+
+/* ==================== PREDICTIONS & ANALYTICS ==================== */
 
 export interface PredictionForecastPoint {
   month: string;

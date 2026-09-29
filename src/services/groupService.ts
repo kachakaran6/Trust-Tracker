@@ -5,6 +5,9 @@ import {
   GroupCategory,
   GroupTransaction,
   GroupSettlementData,
+  GroupInvitePreview,
+  GroupSplitType,
+  GroupSettlementPayment,
 } from "../types";
 
 export const groupService = {
@@ -12,12 +15,16 @@ export const groupService = {
     return api.groups.list();
   },
 
-  async createGroup(name: string, description?: string): Promise<Group> {
-    return api.groups.create({ name, description });
+  async createGroup(name: string, description?: string, currency?: string): Promise<Group> {
+    return api.groups.create({ name, description, currency });
   },
 
   async joinGroup(code: string): Promise<{ message: string; group: Group }> {
     return api.groups.join(code);
+  },
+
+  async getInvitePreview(code: string): Promise<GroupInvitePreview> {
+    return api.groups.getInvitePreview(code);
   },
 
   async getGroup(groupId: string): Promise<{ group: Group; myRole: "admin" | "member"; members: GroupMember[] }> {
@@ -47,7 +54,7 @@ export const groupService = {
       category_id?: string | null;
       description?: string;
       date?: string;
-      split_type?: "equal" | "custom";
+      split_type?: GroupSplitType;
       split_details?: Record<string, number>;
       paid_by?: string;
     }
@@ -61,5 +68,32 @@ export const groupService = {
 
   async getGroupSettlements(groupId: string): Promise<GroupSettlementData> {
     return api.groups.getSettlements(groupId);
+  },
+
+  async settlePayment(
+    groupId: string,
+    payload: {
+      to_user_id: string;
+      from_user_id?: string;
+      amount: number;
+      date?: string;
+      notes?: string;
+      payment_method?: string;
+      auto_confirm?: boolean;
+    }
+  ): Promise<{ message: string; settlement: GroupSettlementPayment }> {
+    return api.groups.settlePayment(groupId, payload);
+  },
+
+  async approveSettlement(
+    groupId: string,
+    settleId: string,
+    action: "approve" | "reject"
+  ): Promise<{ message: string; settlement: GroupSettlementPayment }> {
+    return api.groups.approveSettlement(groupId, settleId, action);
+  },
+
+  async deleteSettlement(groupId: string, settleId: string): Promise<{ message: string }> {
+    return api.groups.deleteSettlement(groupId, settleId);
   },
 };
