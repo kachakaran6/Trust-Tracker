@@ -14,6 +14,9 @@ import predictionRoutes from "./routes/predictions";
 import aiRoutes from "./routes/ai";
 import adminRoutes from "./routes/admin";
 import analyticsRoutes from "./routes/analytics";
+import loanRoutes from "./routes/loans";
+import subscriptionRoutes from "./routes/subscriptions";
+import debtRoutes from "./routes/debts";
 
 dotenv.config();
 
@@ -56,6 +59,9 @@ app.use("/api/predictions", predictionRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/loans", loanRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/debts", debtRoutes);
 
 // In production, serve the compiled Vite frontend
 const distPath = path.resolve(__dirname, "../../dist");
