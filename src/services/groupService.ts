@@ -31,6 +31,10 @@ export const groupService = {
     return api.groups.getDetails(groupId);
   },
 
+  async updateGroup(groupId: string, data: { name?: string; description?: string; currency?: string }): Promise<Group> {
+    return api.groups.update(groupId, data);
+  },
+
   async getGroupCategories(groupId: string): Promise<GroupCategory[]> {
     return api.groups.getCategories(groupId);
   },

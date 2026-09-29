@@ -233,6 +233,56 @@ router.get("/:groupId", requireAuth, async (req: AuthenticatedRequest, res: Resp
   }
 });
 
+// PATCH /api/groups/:groupId - Update group details (currency, name, description)
+router.patch("/:groupId", requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    const { groupId } = req.params;
+    const { name, description, currency } = req.body;
+
+    const memberCheck = await query(
+      "SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2",
+      [groupId, userId]
+    );
+
+    if (memberCheck.rows.length === 0) {
+      res.status(403).json({ error: "Access denied. You are not a member of this group." });
+      return;
+    }
+
+    const updates: string[] = [];
+    const values: any[] = [];
+    let idx = 1;
+
+    if (name !== undefined && name.trim()) {
+      updates.push(`name = $${idx++}`);
+      values.push(name.trim());
+    }
+    if (description !== undefined) {
+      updates.push(`description = $${idx++}`);
+      values.push(description);
+    }
+    if (currency !== undefined && currency.trim()) {
+      updates.push(`currency = $${idx++}`);
+      values.push(currency.trim().toUpperCase());
+    }
+
+    if (updates.length === 0) {
+      res.status(400).json({ error: "No fields to update." });
+      return;
+    }
+
+    values.push(groupId);
+    const updateQuery = `UPDATE groups SET ${updates.join(", ")} WHERE id = $${idx} RETURNING *`;
+    const result = await query(updateQuery, values);
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Update group error:", err);
+    res.status(500).json({ error: "Failed to update group." });
+  }
+});
+
 // GET /api/groups/:groupId/transactions - Fetch all group activity
 router.get("/:groupId/transactions", requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {

@@ -179,6 +179,11 @@ export const api = {
       apiFetch<GroupInvitePreview>(`/groups/invite/${code}`),
     getDetails: (groupId: string) =>
       apiFetch<{ group: Group; myRole: "admin" | "member"; members: GroupMember[] }>(`/groups/${groupId}`),
+    update: (groupId: string, payload: { name?: string; description?: string; currency?: string }) =>
+      apiFetch<Group>(`/groups/${groupId}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
     getTransactions: (groupId: string) =>
       apiFetch<GroupTransaction[]>(`/groups/${groupId}/transactions`),
     createTransaction: (groupId: string, payload: {
