@@ -88,7 +88,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500/80 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all cursor-pointer ${
+        className={`w-full flex items-center justify-between gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 shadow-sm hover:border-primary-500 dark:hover:border-sky-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition-all cursor-pointer ${
           sizeClasses[size]
         } ${disabled ? "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800" : ""}`}
       >
@@ -101,7 +101,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
         <ChevronDown
           className={`w-4 h-4 text-slate-400 transition-transform duration-200 flex-shrink-0 ${
-            isOpen ? "rotate-180 text-indigo-500" : ""
+            isOpen ? "rotate-180 text-primary-600 dark:text-sky-400" : ""
           }`}
         />
       </button>
@@ -125,7 +125,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder={searchPlaceholder}
-                    className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary-500"
                   />
                 </div>
               </div>
@@ -147,7 +147,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                       }}
                       className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs sm:text-sm rounded-xl transition-all cursor-pointer text-left ${
                         isSelected
-                          ? "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-semibold"
+                          ? "bg-sky-50 dark:bg-sky-950/50 text-primary-700 dark:text-sky-300 font-semibold"
                           : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70"
                       }`}
                     >
@@ -167,7 +167,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                             {opt.badge}
                           </span>
                         )}
-                        {isSelected && <Check className="w-4 h-4 text-indigo-500" />}
+                        {isSelected && <Check className="w-4 h-4 text-primary-600 dark:text-sky-400" />}
                       </div>
                     </button>
                   );

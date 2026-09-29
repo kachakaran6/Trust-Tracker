@@ -80,14 +80,14 @@ function Sidebar({ open, setOpen }: SidebarProps) {
       <div>
         <div className="flex items-center justify-between h-16 px-5 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-800 flex items-center justify-center text-white shadow-md shadow-indigo-600/30">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-primary-600 flex items-center justify-center text-white shadow-md shadow-primary-500/20">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
               <span className="font-extrabold text-lg text-slate-900 dark:text-white tracking-tight leading-none block">
-                Trust<span className="text-indigo-600 dark:text-indigo-400">Tracker</span>
+                Trust<span className="text-primary-600 dark:text-sky-400">Tracker</span>
               </span>
-              <span className="text-[10px] text-slate-400 font-mono tracking-wider">SMART FINANCE</span>
+              <span className="text-[10px] text-sky-600 dark:text-sky-400 font-mono tracking-wider font-semibold">SMART FINANCE</span>
             </div>
           </div>
           <button
@@ -99,16 +99,16 @@ function Sidebar({ open, setOpen }: SidebarProps) {
         </div>
 
         {/* User Mini Profile */}
-        <div className="p-4 mx-3 my-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between">
+        <div className="p-3.5 mx-3 my-2.5 bg-sky-50/60 dark:bg-slate-800/60 rounded-2xl border border-sky-100 dark:border-slate-700/50 flex items-center justify-between">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0 shadow-sm">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-primary-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-sm">
               {user.name?.charAt(0)?.toUpperCase() || "U"}
             </div>
             <div className="overflow-hidden">
               <p className="font-bold text-xs text-slate-900 dark:text-white truncate">
                 {user.name || "User"}
               </p>
-              <p className="text-[11px] text-slate-400 truncate font-mono">
+              <p className="text-[11px] text-sky-700 dark:text-sky-300 truncate font-mono font-medium">
                 {user.currency || "USD"} • {user.email}
               </p>
             </div>
@@ -116,7 +116,7 @@ function Sidebar({ open, setOpen }: SidebarProps) {
         </div>
 
         {/* Nav Links */}
-        <nav className="px-3 py-1 space-y-4 max-h-[calc(100vh-260px)] overflow-y-auto">
+        <nav className="px-3 py-1 space-y-3.5 max-h-[calc(100vh-250px)] overflow-y-auto">
           {mainSections.map((section) => (
             <div key={section.title} className="space-y-1">
               <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -130,8 +130,8 @@ function Sidebar({ open, setOpen }: SidebarProps) {
                   className={({ isActive }) =>
                     `flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-150 ${
                       isActive
-                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-bold"
-                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white"
+                        ? "bg-primary-600 text-white shadow-md shadow-primary-600/20 font-bold"
+                        : "text-slate-600 dark:text-slate-300 hover:bg-sky-50 dark:hover:bg-slate-800/80 hover:text-primary-600 dark:hover:text-sky-400"
                     }`
                   }
                 >
@@ -141,7 +141,7 @@ function Sidebar({ open, setOpen }: SidebarProps) {
                   </div>
                   {link.badge && (
                     <span
-                      className="px-1.5 py-0.5 text-[9px] font-bold rounded-md uppercase bg-indigo-500/20 text-indigo-300"
+                      className="px-1.5 py-0.5 text-[9px] font-bold rounded-md uppercase bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800"
                     >
                       {link.badge}
                     </span>
