@@ -63,14 +63,14 @@ export default function JoinGroup() {
   if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-500" />
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500" />
       </div>
     );
   }
 
   if (error || !preview) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center p-4 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 flex items-center justify-center p-4 text-white">
         <div className="max-w-md w-full bg-slate-800/80 border border-slate-700/60 rounded-3xl p-8 text-center backdrop-blur-xl shadow-2xl">
           <div className="w-16 h-16 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8" />
@@ -79,7 +79,7 @@ export default function JoinGroup() {
           <p className="text-sm text-slate-400 mt-2 mb-6">{error || "This group invite link could not be found."}</p>
           <Link
             to="/dashboard"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-xl shadow-lg shadow-primary-600/30 transition"
           >
             Go to Trust-Tracker
           </Link>
@@ -89,7 +89,7 @@ export default function JoinGroup() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center p-4 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 flex items-center justify-center p-4 text-white">
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -97,10 +97,10 @@ export default function JoinGroup() {
         className="max-w-lg w-full bg-slate-800/80 border border-slate-700/60 rounded-3xl p-8 backdrop-blur-xl shadow-2xl space-y-6"
       >
         <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-3xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center mx-auto shadow-inner">
+          <div className="w-16 h-16 rounded-3xl bg-sky-500/20 border border-sky-500/30 text-sky-400 flex items-center justify-center mx-auto shadow-inner">
             <Users className="w-8 h-8" />
           </div>
-          <span className="inline-block px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-mono font-bold rounded-full">
+          <span className="inline-block px-3 py-1 bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs font-mono font-bold rounded-full">
             GROUP INVITATION
           </span>
           <h1 className="text-3xl font-extrabold text-white">{preview.name}</h1>
@@ -121,7 +121,7 @@ export default function JoinGroup() {
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-slate-400">Group Currency:</span>
-            <span className="font-semibold text-indigo-300 font-mono">{preview.currency || "USD"}</span>
+            <span className="font-semibold text-sky-300 font-mono">{preview.currency || "USD"}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-slate-400">Invite Code:</span>
@@ -134,8 +134,8 @@ export default function JoinGroup() {
         {/* User state action */}
         {isAuthenticated ? (
           <div className="space-y-3">
-            <div className="p-3 bg-indigo-950/40 border border-indigo-500/30 rounded-xl flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">
+            <div className="p-3 bg-sky-950/40 border border-sky-500/30 rounded-xl flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs">
                 {user?.name?.charAt(0).toUpperCase() || "U"}
               </div>
               <div className="text-xs">
@@ -147,7 +147,7 @@ export default function JoinGroup() {
             <button
               onClick={handleJoin}
               disabled={joining}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-bold rounded-2xl shadow-xl shadow-indigo-600/30 transition cursor-pointer disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary-600 hover:bg-primary-500 active:scale-[0.98] text-white font-bold rounded-2xl shadow-xl shadow-primary-600/30 transition cursor-pointer disabled:opacity-50"
             >
               {joining ? (
                 <span>Joining group...</span>
@@ -163,7 +163,7 @@ export default function JoinGroup() {
           <div className="space-y-3">
             <button
               onClick={handleJoin}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white font-bold rounded-2xl shadow-xl shadow-indigo-600/30 transition cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary-600 hover:bg-primary-500 active:scale-[0.98] text-white font-bold rounded-2xl shadow-xl shadow-primary-600/30 transition cursor-pointer"
             >
               <LogIn className="w-5 h-5" />
               <span>Log in to Join Group</span>
