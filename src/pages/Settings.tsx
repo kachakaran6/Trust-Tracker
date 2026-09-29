@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
 import { useCategories } from "../contexts/CategoriesContext";
@@ -17,11 +17,15 @@ import {
   Globe,
 } from "lucide-react";
 import { toast } from "sonner";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 function Settings() {
   const { user, updateProfile } = useAuth();
+  const { setPageHeader } = usePageHeader();
   const { categories, addCategory, updateCategory, deleteCategory } =
     useCategories();
+
+  useEffect(() => { setPageHeader("Settings", "Manage your account and preferences"); }, [setPageHeader]);
 
   // State for active tab
   const [activeTab, setActiveTab] = useState("profile");
@@ -788,15 +792,6 @@ function Settings() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-1">
-          Settings
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400">
-          Manage your account and preferences
-        </p>
-      </div>
 
       {/* Tab Navigation */}
       <div className="flex flex-wrap gap-2 mb-6">

@@ -28,12 +28,21 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 export default function Predictions() {
   const { user } = useAuth();
+  const { setPageHeader } = usePageHeader();
   const [range, setRange] = useState(3);
   const [data, setData] = useState<PredictionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setPageHeader(
+      "Predictive AI Financial Forecasting",
+      "Deterministic statistical modeling & trend projections based on your real spending history"
+    );
+  }, [setPageHeader]);
 
   const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
 
@@ -62,19 +71,8 @@ export default function Predictions() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Brain className="w-7 h-7 text-sky-500" />
-            Predictive AI Financial Forecasting
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Deterministic statistical modeling & trend projections based on your real spending history
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
+      {/* Forecast range + refresh controls */}
+      <div className="flex items-center justify-end gap-2">
           {[1, 3, 6, 12].map((m) => (
             <button
               key={m}
@@ -95,7 +93,6 @@ export default function Predictions() {
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           </button>
-        </div>
       </div>
 
       {/* Metrics Row */}

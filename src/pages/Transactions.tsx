@@ -42,15 +42,19 @@ import {
 } from "lucide-react";
 import StepByStepTransaction from "../components/transactions/StepByStepTransaction";
 import FloatingAddButton from "../components/transactions/FloatingAddButton";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 type SortField = "date" | "amount" | "category";
 type SortOrder = "asc" | "desc";
 
 function Transactions() {
   const { user } = useAuth();
+  const { setPageHeader } = usePageHeader();
   const { transactions, deleteTransaction, updateTransaction } =
     useTransactions();
   const { categories, getCategoryById } = useCategories();
+
+  useEffect(() => { setPageHeader("Transactions", "Your full transaction history"); }, [setPageHeader]);
 
   const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
 
@@ -280,20 +284,10 @@ function Transactions() {
 
   return (
     <div className="space-y-6 pb-20">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-            Transactions
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {sortedTransactions.length} transaction
-            {sortedTransactions.length !== 1 ? "s" : ""} found
-          </p>
-        </div>
-
+      {/* Export actions */}
+      <div className="flex items-center justify-end gap-2 mb-4">
         {/* Desktop export buttons */}
-        <div className="hidden sm:flex gap-3">
+        <div className="hidden sm:flex gap-2">
           <Button
             variant="outline"
             icon={<FileText size={20} />}
@@ -313,7 +307,6 @@ function Transactions() {
               Export Excel
             </Button>
 
-            {/* Dropdown for Excel options */}
             <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
               <div className="p-2">
                 <button
@@ -321,64 +314,43 @@ function Transactions() {
                   className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 >
                   📊 Detailed Report
-                  <div className="text-xs text-neutral-500 dark:text-gray-400">
-                    Multiple sheets with analysis
-                  </div>
+                  <div className="text-xs text-neutral-500 dark:text-gray-400">Multiple sheets with analysis</div>
                 </button>
                 <button
                   onClick={handleExportSimpleExcel}
                   className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md transition-colors"
                 >
                   📋 Simple List
-                  <div className="text-xs text-neutral-500 dark:text-gray-400">
-                    Basic transaction list
-                  </div>
+                  <div className="text-xs text-neutral-500 dark:text-gray-400">Basic transaction list</div>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Mobile export dropdown */}
+        {/* Mobile export button */}
         <div className="sm:hidden relative">
           <Button
             variant="outline"
             icon={<FileText size={20} />}
             onClick={() => setShowMobileExport(!showMobileExport)}
-            className="shadow-sm hover:shadow-md transition-all duration-200 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+            className="shadow-sm dark:border-gray-600 dark:text-gray-200"
             children={undefined}
           />
-
           {showMobileExport && (
             <div
               ref={dropdownRef}
-              className="absolute right-4 top-[60px] w-52 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-lg shadow-lg z-20"
+              className="absolute right-0 top-[48px] w-52 bg-white dark:bg-gray-800 border border-neutral-200 dark:border-gray-700 rounded-lg shadow-lg z-20"
             >
               <div className="p-1">
-                <button
-                  onClick={handleExportPDF}
-                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
-                >
-                  📄 Export PDF
-                </button>
-                <button
-                  onClick={handleExportExcel}
-                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
-                >
-                  📊 Export Excel (Detailed)
-                </button>
-                <button
-                  onClick={handleExportSimpleExcel}
-                  className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md"
-                >
-                  📋 Export Excel (Simple)
-                </button>
+                <button onClick={handleExportPDF} className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md">📄 Export PDF</button>
+                <button onClick={handleExportExcel} className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md">📊 Export Excel</button>
+                <button onClick={handleExportSimpleExcel} className="w-full text-left px-3 py-2 text-sm text-neutral-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-gray-700 rounded-md">📋 Simple List</button>
               </div>
             </div>
           )}
         </div>
       </div>
-      {/* </div> */}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

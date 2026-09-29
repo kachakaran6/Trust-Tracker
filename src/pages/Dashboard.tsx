@@ -38,12 +38,18 @@ import {
 } from "lucide-react";
 import StepByStepTransaction from "../components/transactions/StepByStepTransaction";
 import FloatingAddButton from "../components/transactions/FloatingAddButton";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 function Dashboard() {
   const { user } = useAuth();
+  const { setPageHeader } = usePageHeader();
   const { getRecentTransactions, getMonthlySummary } = useTransactions();
   const { getBudgetSummary } = useBudget();
   const { getCategoryById } = useCategories();
+
+  useEffect(() => {
+    setPageHeader("Dashboard", format(new Date(), "MMMM d, yyyy"));
+  }, [setPageHeader]);
 
   // State for quick add modal
   const [showQuickAdd, setShowQuickAdd] = useState(false);
@@ -131,15 +137,8 @@ function Dashboard() {
 
   return (
     <div className="space-y-6 pb-20 bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-            Dashboard
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {format(new Date(), "MMMM d, yyyy")}
-          </p>
-        </div>
+      {/* Quick Add button */}
+      <div className="flex justify-end mb-4">
         <button
           onClick={() => setShowQuickAdd(true)}
           className="btn-primary flex items-center"

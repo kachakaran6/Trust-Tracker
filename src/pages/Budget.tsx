@@ -1,17 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useBudget } from "../contexts/BudgetContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
 import { formatCurrency as globalFormatCurrency } from "../utils/currency";
 import { format, addMonths } from "date-fns";
 import { PlusCircle, Pencil, Trash } from "lucide-react";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 function Budget() {
   const { user } = useAuth();
+  const { setPageHeader } = usePageHeader();
   const { budgets, addBudget, updateBudget, deleteBudget, getBudgetSummary } =
     useBudget();
   const { getExpenseCategories, getCategoryById } = useCategories();
+
+  useEffect(() => { setPageHeader("Budget Planning", "Set and track monthly spending limits"); }, [setPageHeader]);
 
   const [isAddingBudget, setIsAddingBudget] = useState(false);
   const [isEditingBudget, setIsEditingBudget] = useState(false);
@@ -105,10 +109,8 @@ function Budget() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-          Budget Planning
-        </h1>
+      <div className="flex items-center justify-between mb-4">
+        <span />
         <button
           onClick={openAddForm}
           className="btn-primary bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"

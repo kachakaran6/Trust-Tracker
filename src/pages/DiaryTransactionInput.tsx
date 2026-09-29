@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTransactions } from "../contexts/TransactionsContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { api } from "../lib/api";
 import { Sparkles, ArrowRight, Check, Trash2, Calendar, Tag, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 interface ParsedTransaction {
   amount: number;
@@ -17,6 +18,11 @@ interface ParsedTransaction {
 export default function DiaryTransactionInput() {
   const { addTransaction } = useTransactions();
   const { categories } = useCategories();
+  const { setPageHeader } = usePageHeader();
+
+  useEffect(() => {
+    setPageHeader("AI Diary & Receipt Parser", "Paste your diary entry or receipt notes in free-form English");
+  }, [setPageHeader]);
 
   const [text, setText] = useState("");
   const [isParsing, setIsParsing] = useState(false);
@@ -81,16 +87,6 @@ export default function DiaryTransactionInput() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Sparkles className="w-7 h-7 text-sky-500" />
-          Smart AI Diary & Receipt Parser
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Paste your day's diary entry, receipt notes, or multiple expenses in free-form English
-        </p>
-      </div>
 
       {/* Input Box */}
       <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-6 shadow-sm">

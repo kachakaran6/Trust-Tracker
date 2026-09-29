@@ -25,10 +25,16 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatCurrency as globalFormatCurrency } from "../utils/currency";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 export default function Admin() {
   const { user } = useAuth();
+  const { setPageHeader } = usePageHeader();
   const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
+
+  useEffect(() => {
+    setPageHeader("Admin Command Center", "System overview, user role management, and global platform statistics");
+  }, [setPageHeader]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -191,18 +197,8 @@ export default function Admin() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Crown className="w-7 h-7 text-amber-500" />
-            Admin Command Center
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            System overview, user role management, and global platform statistics
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      {/* Actions bar */}
+      <div className="flex items-center justify-end gap-2">
           <button
             onClick={loadData}
             disabled={isLoading}
@@ -218,7 +214,6 @@ export default function Admin() {
             <Download className="w-4 h-4" />
             Export CSV
           </button>
-        </div>
       </div>
 
       {/* Stats Grid */}

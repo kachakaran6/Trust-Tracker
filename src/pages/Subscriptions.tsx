@@ -34,6 +34,7 @@ import {
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 const POPULAR_PRESETS = [
   { name: "Netflix", category: "Entertainment", cost: 15.99, icon: "Film", color: "#E50914" },
@@ -48,9 +49,14 @@ const POPULAR_PRESETS = [
 
 export default function Subscriptions() {
   const { user } = useAuth();
+  const { setPageHeader } = usePageHeader();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [summary, setSummary] = useState<SubscriptionSummary | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setPageHeader("Recurring Subscriptions", "Track streaming, software, and recurring services with renewal alerts");
+  }, [setPageHeader]);
 
   // Filters
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -231,18 +237,7 @@ export default function Subscriptions() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <RefreshCw className="w-7 h-7 text-sky-500" />
-            Recurring Subscriptions
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Track streaming, software, fitness, and recurring services with renewal alerts and burn rate analytics
-          </p>
-        </div>
-
+      <div className="flex justify-end mb-2">
         <button
           onClick={openAddModal}
           className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-500 active:scale-[0.98] text-white rounded-xl text-sm font-bold shadow-md shadow-primary-500/20 transition cursor-pointer"

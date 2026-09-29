@@ -30,12 +30,18 @@ import {
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 export default function Loans() {
   const { user } = useAuth();
+  const { setPageHeader } = usePageHeader();
   const [loans, setLoans] = useState<Loan[]>([]);
   const [summary, setSummary] = useState<LoanSummary | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setPageHeader("Loans & EMI Management", "Track bank loans, personal loans, monthly EMIs, and amortization schedules");
+  }, [setPageHeader]);
 
   // Filter Tabs: all, borrowed, lent, closed
   const [activeTab, setActiveTab] = useState<"all" | "borrowed" | "lent" | "closed">("all");
@@ -230,18 +236,7 @@ export default function Loans() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Landmark className="w-7 h-7 text-sky-500" />
-            Loan & EMI Management
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Track bank loans, personal loans, monthly EMIs, and full amortization schedules
-          </p>
-        </div>
-
+      <div className="flex justify-end mb-2">
         <button
           onClick={() => {
             setCurrency(user?.currency || "USD");

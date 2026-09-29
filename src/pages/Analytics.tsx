@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTransactions } from "../contexts/TransactionsContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -21,11 +21,15 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { formatCurrency as globalFormatCurrency } from "../utils/currency";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 function Analytics() {
   const { user } = useAuth();
+  const { setPageHeader } = usePageHeader();
   const { getTransactionsByMonth, getMonthlySummary } = useTransactions();
   const { getCategoryById } = useCategories();
+
+  useEffect(() => { setPageHeader("Analytics", "Monthly spending breakdown & trends"); }, [setPageHeader]);
 
   // State for selected month
   const [selectedMonth, setSelectedMonth] = useState(new Date());
@@ -143,11 +147,6 @@ function Analytics() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-          Analytics
-        </h1>
-      </div>
 
       {/* Month selector */}
       <div className="flex items-center justify-center space-x-4 mb-6 text-gray-800 dark:text-gray-200">

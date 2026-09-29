@@ -9,6 +9,7 @@ import { TransactionsProvider } from "./contexts/TransactionsContext";
 import { CategoriesProvider } from "./contexts/CategoriesContext";
 import { BudgetProvider } from "./contexts/BudgetContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
+import { PageHeaderProvider } from "./contexts/PageHeaderContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { ThemeProvider } from "./contexts/ThemeProvider";
 
@@ -46,6 +47,7 @@ function App() {
             <CategoriesProvider>
               <BudgetProvider>
                 <NotificationsProvider>
+                  <PageHeaderProvider>
                   <Routes>
                     {/* Public routes */}
                     <Route path="/" element={<LandingPage />} />
@@ -87,6 +89,7 @@ function App() {
                       element={<Navigate to="/" replace />}
                     />
                   </Routes>
+                  </PageHeaderProvider>
                 </NotificationsProvider>
               </BudgetProvider>
             </CategoriesProvider>

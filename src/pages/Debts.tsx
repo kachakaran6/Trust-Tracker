@@ -30,12 +30,18 @@ import {
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 export default function Debts() {
   const { user } = useAuth();
+  const { setPageHeader } = usePageHeader();
   const [debts, setDebts] = useState<Debt[]>([]);
   const [summary, setSummary] = useState<DebtSummary | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setPageHeader("Debts & Lender Ledger", "Track money lent to friends and money borrowed, with partial repayments");
+  }, [setPageHeader]);
 
   // Tab filter
   const [activeTab, setActiveTab] = useState<"all" | "i_owe" | "owed_to_me" | "settled">("all");
@@ -199,18 +205,7 @@ export default function Debts() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Handshake className="w-7 h-7 text-sky-500" />
-            Personal Debts & Lender Ledger
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Track money you lent to friends and money you borrowed, with partial repayments and 1-click reminders
-          </p>
-        </div>
-
+      <div className="flex justify-end mb-2">
         <button
           onClick={() => {
             setCurrency(user?.currency || "USD");

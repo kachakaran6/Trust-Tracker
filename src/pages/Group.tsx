@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGroups } from "../hooks/useGroup";
 import { useAuth } from "../contexts/AuthContext";
@@ -20,10 +20,16 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePageHeader } from "../contexts/PageHeaderContext";
 
 export default function Groups() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { setPageHeader } = usePageHeader();
+
+  useEffect(() => {
+    setPageHeader("Groups & Splits", "Splitwise-style expense sharing, debt settling, and group invites");
+  }, [setPageHeader]);
   const { groups, loading, createGroup, joinGroup } = useGroups();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -107,19 +113,7 @@ export default function Groups() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Users className="w-6 h-6 text-sky-500" />
-            Shared Groups & Expense Splitting
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Splitwise-style expense sharing, min-cash-flow debt settling, and instant group invites
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center justify-end gap-2.5 mb-2">
           <button
             onClick={() => setShowJoinModal(true)}
             className="flex items-center gap-2 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer"
@@ -137,7 +131,6 @@ export default function Groups() {
             <Plus className="w-4 h-4" />
             Create Group
           </button>
-        </div>
       </div>
 
       {/* Groups Grid */}
