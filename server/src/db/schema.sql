@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS groups (
     name VARCHAR(255) NOT NULL,
     description TEXT DEFAULT '',
     code VARCHAR(10) UNIQUE NOT NULL,
+    currency VARCHAR(10) NOT NULL DEFAULT 'USD',
     created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -103,7 +104,22 @@ CREATE TABLE IF NOT EXISTS group_transactions (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 9. Group Budgets Table
+-- 9. Group Settlements Table (Settle-Up Payments)
+CREATE TABLE IF NOT EXISTS group_settlements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    from_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    to_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    date DATE NOT NULL DEFAULT CURRENT_DATE,
+    notes TEXT DEFAULT '',
+    payment_method VARCHAR(50) NOT NULL DEFAULT 'cash',
+    status VARCHAR(50) NOT NULL DEFAULT 'confirmed' CHECK (status IN ('pending', 'confirmed', 'rejected')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    approved_at TIMESTAMPTZ
+);
+
+-- 10. Group Budgets Table
 CREATE TABLE IF NOT EXISTS group_budgets (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
@@ -114,7 +130,87 @@ CREATE TABLE IF NOT EXISTS group_budgets (
     UNIQUE(group_id, category_id, month)
 );
 
--- 10. Temporary Analytics Sharing Table
+-- 11. Loans & EMI Table
+CREATE TABLE IF NOT EXISTS loans (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL CHECK (type IN ('borrowed', 'lent')),
+    counterparty VARCHAR(255) NOT NULL,
+    principal_amount NUMERIC(12, 2) NOT NULL CHECK (principal_amount > 0),
+    interest_rate NUMERIC(6, 2) NOT NULL DEFAULT 0,
+    tenure_months INT NOT NULL CHECK (tenure_months > 0),
+    start_date DATE NOT NULL,
+    emi_day INT NOT NULL DEFAULT 1,
+    monthly_emi NUMERIC(12, 2) NOT NULL CHECK (monthly_emi >= 0),
+    currency VARCHAR(10) NOT NULL DEFAULT 'USD',
+    status VARCHAR(50) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'closed', 'defaulted')),
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 12. Loan Payments Table
+CREATE TABLE IF NOT EXISTS loan_payments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    loan_id UUID NOT NULL REFERENCES loans(id) ON DELETE CASCADE,
+    payment_number INT NOT NULL,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    principal_component NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    interest_component NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    payment_date DATE NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'paid' CHECK (status IN ('paid', 'pending', 'skipped')),
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 13. Subscriptions Table
+CREATE TABLE IF NOT EXISTS subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL DEFAULT 'General',
+    cost NUMERIC(12, 2) NOT NULL CHECK (cost >= 0),
+    currency VARCHAR(10) NOT NULL DEFAULT 'USD',
+    billing_cycle VARCHAR(50) NOT NULL DEFAULT 'monthly' CHECK (billing_cycle IN ('monthly', 'quarterly', 'yearly', 'weekly')),
+    next_billing_date DATE NOT NULL,
+    payment_method VARCHAR(100) DEFAULT 'Card',
+    icon VARCHAR(50) DEFAULT 'Film',
+    color VARCHAR(50) DEFAULT '#6366F1',
+    status VARCHAR(50) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'paused', 'cancelled')),
+    reminder_days INT NOT NULL DEFAULT 3,
+    is_trial BOOLEAN NOT NULL DEFAULT false,
+    trial_ends_at DATE,
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 14. Personal Debts & Lender Table
+CREATE TABLE IF NOT EXISTS debts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    counterparty_name VARCHAR(255) NOT NULL,
+    counterparty_contact VARCHAR(255) DEFAULT '',
+    type VARCHAR(50) NOT NULL CHECK (type IN ('i_owe', 'owed_to_me')),
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    amount_paid NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    currency VARCHAR(10) NOT NULL DEFAULT 'USD',
+    due_date DATE,
+    status VARCHAR(50) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'partially_paid', 'settled', 'overdue')),
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 15. Debt Payments Table
+CREATE TABLE IF NOT EXISTS debt_payments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    debt_id UUID NOT NULL REFERENCES debts(id) ON DELETE CASCADE,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    payment_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 16. Temporary Analytics Sharing Table
 CREATE TABLE IF NOT EXISTS temporary_analytics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_data JSONB NOT NULL,
@@ -131,5 +227,12 @@ CREATE INDEX IF NOT EXISTS idx_budgets_user_month ON budgets(user_id, month);
 CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_group ON group_members(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_tx_group_date ON group_transactions(group_id, date);
+CREATE INDEX IF NOT EXISTS idx_group_settlements_group ON group_settlements(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_budgets_group ON group_budgets(group_id, month);
+CREATE INDEX IF NOT EXISTS idx_loans_user ON loans(user_id);
+CREATE INDEX IF NOT EXISTS idx_loan_payments_loan ON loan_payments(loan_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_next_billing ON subscriptions(user_id, next_billing_date);
+CREATE INDEX IF NOT EXISTS idx_debts_user ON debts(user_id);
+CREATE INDEX IF NOT EXISTS idx_debt_payments_debt ON debt_payments(debt_id);
 CREATE INDEX IF NOT EXISTS idx_temp_analytics_expiry ON temporary_analytics (expires_at);

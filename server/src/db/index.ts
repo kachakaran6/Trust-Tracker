@@ -33,7 +33,15 @@ export async function initDatabase(): Promise<void> {
     const schemaPath = path.resolve(__dirname, "schema.sql");
     const schemaSql = fs.readFileSync(schemaPath, "utf-8");
     await pool.query(schemaSql);
-    console.log("✅ PostgreSQL schema initialized successfully.");
+
+    // Safe runtime migrations for existing databases
+    await pool.query(`
+      ALTER TABLE groups ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'USD';
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'USD';
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(50) NOT NULL DEFAULT 'UTC';
+    `);
+
+    console.log("✅ PostgreSQL schema & migrations initialized successfully.");
   } catch (err) {
     console.error("❌ Failed to initialize database schema:", err);
     throw err;

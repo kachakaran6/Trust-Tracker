@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 .env
 old_codes_and_components.txt
+
+# Skill and prompt guidelines
+engineering-backend-architect.md
+engineering-frontend-developer.md
