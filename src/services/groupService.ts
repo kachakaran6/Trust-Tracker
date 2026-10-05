@@ -4,6 +4,7 @@ import {
   GroupMember,
   GroupCategory,
   GroupTransaction,
+  GroupSplitRequest,
   GroupSettlementData,
   GroupInvitePreview,
   GroupSplitType,
@@ -99,5 +100,32 @@ export const groupService = {
 
   async deleteSettlement(groupId: string, settleId: string): Promise<{ message: string }> {
     return api.groups.deleteSettlement(groupId, settleId);
+  },
+
+  async getGroupSplitRequests(groupId: string): Promise<GroupSplitRequest[]> {
+    return api.groups.getSplitRequests(groupId);
+  },
+
+  async getMySplitRequests(): Promise<GroupSplitRequest[]> {
+    return api.groups.getMySplitRequests();
+  },
+
+  async paySplitRequest(
+    requestId: string,
+    payload: { payment_method?: string; notes?: string; date?: string }
+  ): Promise<{ message: string; paidAmount: number }> {
+    return api.groups.paySplitRequest(requestId, payload);
+  },
+
+  async acceptSplitRequest(requestId: string): Promise<{ message: string; request: GroupSplitRequest }> {
+    return api.groups.acceptSplitRequest(requestId);
+  },
+
+  async declineSplitRequest(requestId: string, notes?: string): Promise<{ message: string; request: GroupSplitRequest }> {
+    return api.groups.declineSplitRequest(requestId, notes);
+  },
+
+  async remindSplitRequest(requestId: string): Promise<{ message: string }> {
+    return api.groups.remindSplitRequest(requestId);
   },
 };

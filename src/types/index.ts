@@ -59,6 +59,12 @@ export interface Transaction {
   id: string;
   user_id: string;
   amount: number;
+  original_amount?: number | null;
+  split_received_amount?: number;
+  split_status?: string; // 'none' | 'pending_split' | 'partially_settled' | 'fully_settled' | 'settled_share'
+  group_id?: string | null;
+  group_transaction_id?: string | null;
+  group_name?: string | null;
   type: TransactionType;
   category_id: string | null;
   description: string;
@@ -130,10 +136,18 @@ export interface GroupCategory {
 
 export type GroupSplitType = "equal" | "exact" | "percentage" | "shares" | "custom";
 
+export interface GroupTransactionSplitSummary {
+  totalRequests: number;
+  paidRequests: number;
+  paidSum: number;
+  pendingSum: number;
+}
+
 export interface GroupTransaction {
   id: string;
   group_id: string;
   paid_by: string;
+  personal_transaction_id?: string | null;
   paid_by_name?: string;
   paid_by_email?: string;
   paid_by_avatar?: string;
@@ -146,6 +160,35 @@ export interface GroupTransaction {
   split_details: Record<string, number>;
   created_at: string;
   category?: GroupCategory | null;
+  split_summary?: GroupTransactionSplitSummary | null;
+}
+
+export interface GroupSplitRequest {
+  id: string;
+  group_id: string;
+  group_transaction_id: string;
+  from_user_id: string;
+  from_name?: string;
+  from_email?: string;
+  from_avatar?: string;
+  to_user_id: string;
+  to_name?: string;
+  to_email?: string;
+  to_avatar?: string;
+  amount: number;
+  status: "pending" | "accepted" | "paid" | "declined";
+  payment_method?: string;
+  notes?: string;
+  paid_at?: string | null;
+  settlement_id?: string | null;
+  created_at: string;
+  expense_description?: string;
+  expense_total_amount?: number;
+  expense_date?: string;
+  group_name?: string;
+  group_currency?: string;
+  is_incoming?: boolean; // Current user is recipient (owes money)
+  is_outgoing?: boolean; // Current user is creator (is owed money)
 }
 
 export interface GroupSettlementPayment {

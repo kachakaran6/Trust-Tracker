@@ -7,6 +7,7 @@ import {
   GroupMember,
   GroupCategory,
   GroupTransaction,
+  GroupSplitRequest,
   GroupSettlementData,
   GroupInvitePreview,
   GroupSettlementPayment,
@@ -234,6 +235,28 @@ export const api = {
     deleteSettlement: (groupId: string, settleId: string) =>
       apiFetch<{ message: string }>(`/groups/${groupId}/settle/${settleId}`, {
         method: "DELETE",
+      }),
+    getSplitRequests: (groupId: string) =>
+      apiFetch<GroupSplitRequest[]>(`/groups/${groupId}/split-requests`),
+    getMySplitRequests: () =>
+      apiFetch<GroupSplitRequest[]>("/groups/split-requests/my"),
+    paySplitRequest: (requestId: string, payload: { payment_method?: string; notes?: string; date?: string }) =>
+      apiFetch<{ message: string; paidAmount: number }>(`/groups/split-requests/${requestId}/pay`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    acceptSplitRequest: (requestId: string) =>
+      apiFetch<{ message: string; request: GroupSplitRequest }>(`/groups/split-requests/${requestId}/accept`, {
+        method: "POST",
+      }),
+    declineSplitRequest: (requestId: string, notes?: string) =>
+      apiFetch<{ message: string; request: GroupSplitRequest }>(`/groups/split-requests/${requestId}/decline`, {
+        method: "POST",
+        body: JSON.stringify({ notes }),
+      }),
+    remindSplitRequest: (requestId: string) =>
+      apiFetch<{ message: string }>(`/groups/split-requests/${requestId}/remind`, {
+        method: "POST",
       }),
   },
 
