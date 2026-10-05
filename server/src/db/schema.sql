@@ -257,8 +257,4 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_next_billing ON subscriptions(user_id, next_billing_date);
 CREATE INDEX IF NOT EXISTS idx_debts_user ON debts(user_id);
 CREATE INDEX IF NOT EXISTS idx_debt_payments_debt ON debt_payments(debt_id);
-CREATE INDEX IF NOT EXISTS idx_group_split_req_to_user ON group_split_requests(to_user_id, status);
-CREATE INDEX IF NOT EXISTS idx_group_split_req_from_user ON group_split_requests(from_user_id, status);
-CREATE INDEX IF NOT EXISTS idx_group_split_req_tx ON group_split_requests(group_transaction_id);
-CREATE INDEX IF NOT EXISTS idx_transactions_group_tx ON transactions(group_transaction_id);
 CREATE INDEX IF NOT EXISTS idx_temp_analytics_expiry ON temporary_analytics (expires_at);

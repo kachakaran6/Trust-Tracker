@@ -30,7 +30,10 @@ export async function query<T extends pg.QueryResultRow = any>(text: string, par
 export async function initDatabase(): Promise<void> {
   console.log("🐘 Initializing PostgreSQL database schema...");
   try {
-    const schemaPath = path.resolve(__dirname, "schema.sql");
+    let schemaPath = path.resolve(__dirname, "schema.sql");
+    if (!fs.existsSync(schemaPath)) {
+      schemaPath = path.resolve(__dirname, "../src/db/schema.sql");
+    }
     const schemaSql = fs.readFileSync(schemaPath, "utf-8");
     await pool.query(schemaSql);
 
@@ -47,6 +50,17 @@ export async function initDatabase(): Promise<void> {
     await pool.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS split_status VARCHAR(50) NOT NULL DEFAULT 'none'`);
     await pool.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS group_id UUID REFERENCES groups(id) ON DELETE SET NULL`);
     await pool.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS group_transaction_id UUID`);
+
+    // Safely relax transactions amount check to allow 0 (e.g. when fully split/reimbursed)
+    await pool.query(`
+      DO $$
+      BEGIN
+        ALTER TABLE transactions DROP CONSTRAINT IF EXISTS transactions_amount_check;
+        ALTER TABLE transactions ADD CONSTRAINT transactions_amount_check CHECK (amount >= 0);
+      EXCEPTION WHEN OTHERS THEN
+        NULL;
+      END $$;
+    `);
 
     await pool.query(`ALTER TABLE group_transactions ADD COLUMN IF NOT EXISTS personal_transaction_id UUID REFERENCES transactions(id) ON DELETE SET NULL`);
 
