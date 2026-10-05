@@ -35,7 +35,11 @@ import {
   Handshake,
   ArrowRight,
   Clock,
+  Receipt,
+  CheckCircle2,
+  Sparkles,
 } from "lucide-react";
+import { GroupSplitRequest } from "../types";
 import StepByStepTransaction from "../components/transactions/StepByStepTransaction";
 import FloatingAddButton from "../components/transactions/FloatingAddButton";
 import { usePageHeader } from "../contexts/PageHeaderContext";
@@ -106,12 +110,18 @@ function Dashboard() {
   const [loansSummary, setLoansSummary] = useState<any>(null);
   const [subsSummary, setSubsSummary] = useState<any>(null);
   const [debtsSummary, setDebtsSummary] = useState<any>(null);
+  const [splitRequests, setSplitRequests] = useState<GroupSplitRequest[]>([]);
 
   useEffect(() => {
     api.loans.list().then((res) => setLoansSummary(res.summary)).catch(() => {});
     api.subscriptions.list().then((res) => setSubsSummary(res.summary)).catch(() => {});
     api.debts.list().then((res) => setDebtsSummary(res.summary)).catch(() => {});
+    api.groups.getMySplitRequests().then((res) => setSplitRequests(res || [])).catch(() => {});
   }, []);
+
+  const pendingIncomingSplits = splitRequests.filter(
+    (r) => r.is_incoming && (r.status === "pending" || r.status === "accepted")
+  );
 
   // Format currency using user's preferred currency
   const formatCurrency = (value: number) => {
@@ -269,6 +279,77 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* Pending Split Requests Interactive Banner */}
+      {pendingIncomingSplits.length > 0 && (
+        <div className="p-4 md:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-indigo-500/10 border border-amber-300 dark:border-amber-600/40 shadow-sm animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow">
+                <Receipt className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Split Requests Awaiting Your Review & Payment
+                  </h3>
+                  <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-amber-500 text-white animate-pulse">
+                    {pendingIncomingSplits.length} Action Needed
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Direct Ledger Sync enabled: once paid, the amount is deducted directly from the original payer's transaction without creating duplicate logs.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {pendingIncomingSplits.slice(0, 3).map((req) => (
+              <div
+                key={req.id}
+                className="bg-white dark:bg-slate-800/90 rounded-xl p-3.5 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between"
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold text-slate-900 dark:text-white">
+                        {req.from_name || "Group Member"}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">in {req.group_name || "Group"}</span>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium line-clamp-1 mt-0.5">
+                      {req.expense_description || "Group Expense"}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-black text-rose-600 dark:text-rose-400">
+                      {globalFormatCurrency(req.amount, req.group_currency || user?.currency)}
+                    </p>
+                    <span
+                      className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-full ${
+                        req.status === "accepted"
+                          ? "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300"
+                          : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                      }`}
+                    >
+                      {req.status === "accepted" ? "Approved, Ready to Pay" : "Needs Review"}
+                    </span>
+                  </div>
+                </div>
+
+                <Link
+                  to={`/group/${req.group_id}`}
+                  className="mt-2 w-full py-1.5 px-3 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-semibold text-center flex items-center justify-center gap-1.5 transition shadow-sm"
+                >
+                  <span>Review & Pay Share</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Quick Financial Overview Hub (Loans, Subscriptions, Groups, Debts) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Groups Quick Link */}
@@ -281,8 +362,19 @@ function Dashboard() {
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-900 dark:text-white">Groups & Splits</p>
-              <p className="text-[11px] text-slate-400">Splitwise-style ledger</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-bold text-slate-900 dark:text-white">Groups & Splits</p>
+                {pendingIncomingSplits.length > 0 && (
+                  <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-full bg-amber-500 text-white">
+                    {pendingIncomingSplits.length}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-400">
+                {pendingIncomingSplits.length > 0
+                  ? `${pendingIncomingSplits.length} pending split action${pendingIncomingSplits.length > 1 ? "s" : ""}`
+                  : "Splitwise-style ledger"}
+              </p>
             </div>
           </div>
           <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary-600 dark:group-hover:text-sky-400 transition group-hover:translate-x-0.5" />

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { api } from "../../lib/api";
 import {
   LayoutDashboard,
   CreditCard,
@@ -26,6 +27,20 @@ interface SidebarProps {
 function Sidebar({ open, setOpen }: SidebarProps) {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === "super_admin";
+  const [pendingSplitCount, setPendingSplitCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!user) return;
+    api.groups
+      .getMySplitRequests()
+      .then((reqs) => {
+        const count = (reqs || []).filter(
+          (r) => r.is_incoming && (r.status === "pending" || r.status === "accepted")
+        ).length;
+        setPendingSplitCount(count);
+      })
+      .catch(() => {});
+  }, [user]);
 
   if (!user) return null;
 
@@ -102,14 +117,21 @@ function Sidebar({ open, setOpen }: SidebarProps) {
                 to={link.path}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg transition-all duration-150 ${isActive
+                  `flex items-center justify-between px-2.5 py-2 text-xs font-medium rounded-lg transition-all duration-150 ${isActive
                     ? "bg-sky-500 text-white"
                     : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
                   }`
                 }
               >
-                <span className="flex-shrink-0 opacity-80">{link.icon}</span>
-                <span>{link.name}</span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="flex-shrink-0 opacity-80">{link.icon}</span>
+                  <span className="truncate">{link.name}</span>
+                </div>
+                {link.path === "/group" && pendingSplitCount > 0 && (
+                  <span className="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-amber-500 text-white shadow-sm shrink-0">
+                    {pendingSplitCount}
+                  </span>
+                )}
               </NavLink>
             ))}
           </div>
