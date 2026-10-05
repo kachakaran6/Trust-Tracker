@@ -35,19 +35,22 @@ export async function initDatabase(): Promise<void> {
     await pool.query(schemaSql);
 
     // Safe runtime migrations for existing databases
+    // NOTE: Each statement is executed individually so that PostgreSQL
+    // commits the DDL (e.g. ALTER TABLE ADD COLUMN) before any subsequent
+    // index creation references those columns in its own planning phase.
+    await pool.query(`ALTER TABLE groups ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'USD'`);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'USD'`);
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(50) NOT NULL DEFAULT 'UTC'`);
+
+    await pool.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS original_amount NUMERIC(12, 2)`);
+    await pool.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS split_received_amount NUMERIC(12, 2) NOT NULL DEFAULT 0`);
+    await pool.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS split_status VARCHAR(50) NOT NULL DEFAULT 'none'`);
+    await pool.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS group_id UUID REFERENCES groups(id) ON DELETE SET NULL`);
+    await pool.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS group_transaction_id UUID`);
+
+    await pool.query(`ALTER TABLE group_transactions ADD COLUMN IF NOT EXISTS personal_transaction_id UUID REFERENCES transactions(id) ON DELETE SET NULL`);
+
     await pool.query(`
-      ALTER TABLE groups ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'USD';
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'USD';
-      ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(50) NOT NULL DEFAULT 'UTC';
-      
-      ALTER TABLE transactions ADD COLUMN IF NOT EXISTS original_amount NUMERIC(12, 2);
-      ALTER TABLE transactions ADD COLUMN IF NOT EXISTS split_received_amount NUMERIC(12, 2) NOT NULL DEFAULT 0;
-      ALTER TABLE transactions ADD COLUMN IF NOT EXISTS split_status VARCHAR(50) NOT NULL DEFAULT 'none';
-      ALTER TABLE transactions ADD COLUMN IF NOT EXISTS group_id UUID REFERENCES groups(id) ON DELETE SET NULL;
-      ALTER TABLE transactions ADD COLUMN IF NOT EXISTS group_transaction_id UUID;
-
-      ALTER TABLE group_transactions ADD COLUMN IF NOT EXISTS personal_transaction_id UUID REFERENCES transactions(id) ON DELETE SET NULL;
-
       CREATE TABLE IF NOT EXISTS group_split_requests (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
@@ -61,13 +64,14 @@ export async function initDatabase(): Promise<void> {
           paid_at TIMESTAMPTZ,
           settlement_id UUID REFERENCES group_settlements(id) ON DELETE SET NULL,
           created_at TIMESTAMPTZ DEFAULT NOW()
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_group_split_req_to_user ON group_split_requests(to_user_id, status);
-      CREATE INDEX IF NOT EXISTS idx_group_split_req_from_user ON group_split_requests(from_user_id, status);
-      CREATE INDEX IF NOT EXISTS idx_group_split_req_tx ON group_split_requests(group_transaction_id);
-      CREATE INDEX IF NOT EXISTS idx_transactions_group_tx ON transactions(group_transaction_id);
+      )
     `);
+
+    // Indexes are created AFTER all column/table DDL to avoid planning errors
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_group_split_req_to_user ON group_split_requests(to_user_id, status)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_group_split_req_from_user ON group_split_requests(from_user_id, status)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_group_split_req_tx ON group_split_requests(group_transaction_id)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_transactions_group_tx ON transactions(group_transaction_id)`);
 
     console.log("✅ PostgreSQL schema & migrations initialized successfully.");
   } catch (err) {
