@@ -37,7 +37,12 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount >= 0),
+    original_amount NUMERIC(12, 2),
+    split_received_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+    split_status VARCHAR(50) NOT NULL DEFAULT 'none',
+    group_id UUID REFERENCES groups(id) ON DELETE SET NULL,
+    group_transaction_id UUID,
     type VARCHAR(50) NOT NULL CHECK (type IN ('income', 'expense')),
     category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
     description TEXT NOT NULL DEFAULT '',
@@ -94,6 +99,7 @@ CREATE TABLE IF NOT EXISTS group_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
     paid_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    personal_transaction_id UUID REFERENCES transactions(id) ON DELETE SET NULL,
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
     type VARCHAR(50) NOT NULL DEFAULT 'expense' CHECK (type IN ('income', 'expense')),
     category_id UUID REFERENCES group_categories(id) ON DELETE SET NULL,
@@ -117,6 +123,22 @@ CREATE TABLE IF NOT EXISTS group_settlements (
     status VARCHAR(50) NOT NULL DEFAULT 'confirmed' CHECK (status IN ('pending', 'confirmed', 'rejected')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     approved_at TIMESTAMPTZ
+);
+
+-- 9.1 Group Split Requests Table (Interactive Approval & Dynamic Transaction Deduction)
+CREATE TABLE IF NOT EXISTS group_split_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    group_transaction_id UUID NOT NULL REFERENCES group_transactions(id) ON DELETE CASCADE,
+    from_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    to_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+    status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'paid', 'declined')),
+    payment_method VARCHAR(50) DEFAULT 'upi',
+    notes TEXT DEFAULT '',
+    paid_at TIMESTAMPTZ,
+    settlement_id UUID REFERENCES group_settlements(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 10. Group Budgets Table
@@ -235,4 +257,8 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_next_billing ON subscriptions(user_id, next_billing_date);
 CREATE INDEX IF NOT EXISTS idx_debts_user ON debts(user_id);
 CREATE INDEX IF NOT EXISTS idx_debt_payments_debt ON debt_payments(debt_id);
+CREATE INDEX IF NOT EXISTS idx_group_split_req_to_user ON group_split_requests(to_user_id, status);
+CREATE INDEX IF NOT EXISTS idx_group_split_req_from_user ON group_split_requests(from_user_id, status);
+CREATE INDEX IF NOT EXISTS idx_group_split_req_tx ON group_split_requests(group_transaction_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_group_tx ON transactions(group_transaction_id);
 CREATE INDEX IF NOT EXISTS idx_temp_analytics_expiry ON temporary_analytics (expires_at);

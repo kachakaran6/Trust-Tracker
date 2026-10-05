@@ -39,6 +39,34 @@ export async function initDatabase(): Promise<void> {
       ALTER TABLE groups ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'USD';
       ALTER TABLE users ADD COLUMN IF NOT EXISTS currency VARCHAR(10) NOT NULL DEFAULT 'USD';
       ALTER TABLE users ADD COLUMN IF NOT EXISTS timezone VARCHAR(50) NOT NULL DEFAULT 'UTC';
+      
+      ALTER TABLE transactions ADD COLUMN IF NOT EXISTS original_amount NUMERIC(12, 2);
+      ALTER TABLE transactions ADD COLUMN IF NOT EXISTS split_received_amount NUMERIC(12, 2) NOT NULL DEFAULT 0;
+      ALTER TABLE transactions ADD COLUMN IF NOT EXISTS split_status VARCHAR(50) NOT NULL DEFAULT 'none';
+      ALTER TABLE transactions ADD COLUMN IF NOT EXISTS group_id UUID REFERENCES groups(id) ON DELETE SET NULL;
+      ALTER TABLE transactions ADD COLUMN IF NOT EXISTS group_transaction_id UUID;
+
+      ALTER TABLE group_transactions ADD COLUMN IF NOT EXISTS personal_transaction_id UUID REFERENCES transactions(id) ON DELETE SET NULL;
+
+      CREATE TABLE IF NOT EXISTS group_split_requests (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          group_id UUID NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+          group_transaction_id UUID NOT NULL REFERENCES group_transactions(id) ON DELETE CASCADE,
+          from_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          to_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
+          status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'paid', 'declined')),
+          payment_method VARCHAR(50) DEFAULT 'upi',
+          notes TEXT DEFAULT '',
+          paid_at TIMESTAMPTZ,
+          settlement_id UUID REFERENCES group_settlements(id) ON DELETE SET NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_group_split_req_to_user ON group_split_requests(to_user_id, status);
+      CREATE INDEX IF NOT EXISTS idx_group_split_req_from_user ON group_split_requests(from_user_id, status);
+      CREATE INDEX IF NOT EXISTS idx_group_split_req_tx ON group_split_requests(group_transaction_id);
+      CREATE INDEX IF NOT EXISTS idx_transactions_group_tx ON transactions(group_transaction_id);
     `);
 
     console.log("✅ PostgreSQL schema & migrations initialized successfully.");
