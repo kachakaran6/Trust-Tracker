@@ -11,7 +11,9 @@ router.get("/", requireAuth, async (req: AuthenticatedRequest, res: Response): P
     const { month, category_id, type, search, limit, offset, sort_by, order } = req.query;
 
     let queryText = `
-      SELECT t.id, t.user_id, t.amount, t.type, t.category_id, t.description, t.date, t.created_at,
+      SELECT t.id, t.user_id, t.amount, t.original_amount, t.split_received_amount, t.split_status,
+             t.group_id, t.group_transaction_id, g.name as group_name,
+             t.type, t.category_id, t.description, t.date, t.created_at,
              json_build_object(
                'id', c.id,
                'name', c.name,
@@ -21,6 +23,7 @@ router.get("/", requireAuth, async (req: AuthenticatedRequest, res: Response): P
              ) as category
       FROM transactions t
       LEFT JOIN categories c ON t.category_id = c.id
+      LEFT JOIN groups g ON t.group_id = g.id
       WHERE t.user_id = $1
     `;
 
@@ -73,6 +76,10 @@ router.get("/", requireAuth, async (req: AuthenticatedRequest, res: Response): P
     const mapped = result.rows.map((row) => ({
       ...row,
       amount: parseFloat(row.amount),
+      original_amount: row.original_amount !== null && row.original_amount !== undefined ? parseFloat(row.original_amount) : null,
+      split_received_amount: row.split_received_amount !== null && row.split_received_amount !== undefined ? parseFloat(row.split_received_amount) : 0,
+      split_status: row.split_status || "none",
+      group_name: row.group_name || null,
       category: row.category_id ? row.category : null,
     }));
 
