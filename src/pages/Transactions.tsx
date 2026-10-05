@@ -759,19 +759,47 @@ function Transactions() {
                                   .toUpperCase()}
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                              {transaction.description || "No Description..."}
+                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                              <span>{transaction.description || "No Description..."}</span>
+                              {transaction.group_name && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300">
+                                  👥 {transaction.group_name}
+                                </span>
+                              )}
                             </div>
-                            <div
-                              className={`text-xs ${
-                                transaction.type === "income"
-                                  ? "text-green-600 dark:text-green-400"
-                                  : "text-red-600 dark:text-red-400"
-                              }`}
-                            >
-                              {transaction.type === "income"
-                                ? "Income"
-                                : "Expense"}
+                            <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                              <span
+                                className={`text-xs ${
+                                  transaction.type === "income"
+                                    ? "text-green-600 dark:text-green-400"
+                                    : "text-red-600 dark:text-red-400"
+                                }`}
+                              >
+                                {transaction.type === "income"
+                                  ? "Income"
+                                  : "Expense"}
+                              </span>
+
+                              {transaction.split_status === "pending_split" && (
+                                <span className="text-[10px] px-2 py-0.2 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 rounded font-semibold">
+                                  ⏳ Split in Progress (Reimbursed: {formatCurrency(transaction.split_received_amount || 0)})
+                                </span>
+                              )}
+                              {transaction.split_status === "partially_settled" && (
+                                <span className="text-[10px] px-2 py-0.2 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded font-semibold">
+                                  ⚡ Partially Reimbursed ({formatCurrency(transaction.split_received_amount || 0)} deducted)
+                                </span>
+                              )}
+                              {transaction.split_status === "fully_settled" && (
+                                <span className="text-[10px] px-2 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded font-semibold">
+                                  ✓ Fully Reimbursed & Deducted
+                                </span>
+                              )}
+                              {transaction.split_status === "settled_share" && (
+                                <span className="text-[10px] px-2 py-0.2 bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 rounded font-semibold">
+                                  🟣 Group Split Share Paid
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -803,6 +831,13 @@ function Transactions() {
                           {transaction.type === "income" ? "+" : "-"}
                           {formatCurrency(transaction.amount)}
                         </span>
+                        {transaction.original_amount !== null &&
+                          transaction.original_amount !== undefined &&
+                          transaction.original_amount > transaction.amount && (
+                            <span className="text-[10px] text-gray-400 line-through block">
+                              was {formatCurrency(transaction.original_amount)}
+                            </span>
+                          )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
