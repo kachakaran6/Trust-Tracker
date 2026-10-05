@@ -7,6 +7,7 @@ import {
   GroupMember,
   GroupCategory,
   GroupTransaction,
+  GroupSplitRequest,
   GroupSettlementData,
   GroupSplitType,
   GroupSettlementPayment,
@@ -43,6 +44,11 @@ import {
   CheckSquare,
   Square,
   ChevronDown,
+  BellRing,
+  XCircle,
+  ThumbsUp,
+  ArrowDownRight,
+  TrendingDown,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -57,6 +63,7 @@ export default function GroupDetail() {
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [categories, setCategories] = useState<GroupCategory[]>([]);
   const [transactions, setTransactions] = useState<GroupTransaction[]>([]);
+  const [splitRequests, setSplitRequests] = useState<GroupSplitRequest[]>([]);
   const [settlementData, setSettlementData] = useState<GroupSettlementData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -65,6 +72,15 @@ export default function GroupDetail() {
   const [showSettleModal, setShowSettleModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showPaySplitModal, setShowPaySplitModal] = useState(false);
+  const [selectedSplitReq, setSelectedSplitReq] = useState<GroupSplitRequest | null>(null);
+  const [paySplitMethod, setPaySplitMethod] = useState("upi");
+  const [paySplitNotes, setPaySplitNotes] = useState("");
+  const [isPayingSplit, setIsPayingSplit] = useState(false);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [selectedDeclineReq, setSelectedDeclineReq] = useState<GroupSplitRequest | null>(null);
+  const [declineNotes, setDeclineNotes] = useState("");
+  const [isDecliningSplit, setIsDecliningSplit] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Add Expense Form State
@@ -97,11 +113,12 @@ export default function GroupDetail() {
     if (!groupId) return;
     try {
       setIsLoading(true);
-      const [groupDetails, cats, txs, settlements] = await Promise.all([
+      const [groupDetails, cats, txs, settlements, splitReqs] = await Promise.all([
         groupService.getGroup(groupId),
         groupService.getGroupCategories(groupId),
         groupService.getGroupTransactions(groupId),
         groupService.getGroupSettlements(groupId),
+        groupService.getGroupSplitRequests(groupId).catch(() => []),
       ]);
 
       setGroup(groupDetails.group);
@@ -109,6 +126,7 @@ export default function GroupDetail() {
       setCategories(cats);
       setTransactions(txs);
       setSettlementData(settlements);
+      setSplitRequests(splitReqs || []);
 
       // Initialize default selections
       if (groupDetails.members.length > 0) {
@@ -298,6 +316,79 @@ export default function GroupDetail() {
       loadAll();
     } catch (err: any) {
       toast.error(err.message || "Failed to delete settlement");
+    }
+  };
+
+  // Split Request Handlers
+  const handleOpenPaySplit = (req: GroupSplitRequest) => {
+    setSelectedSplitReq(req);
+    setPaySplitMethod("upi");
+    setPaySplitNotes(`Settled split for ${req.expense_description}`);
+    setShowPaySplitModal(true);
+  };
+
+  const handlePaySplitSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSplitReq) return;
+
+    try {
+      setIsPayingSplit(true);
+      const res = await groupService.paySplitRequest(selectedSplitReq.id, {
+        payment_method: paySplitMethod,
+        notes: paySplitNotes.trim(),
+      });
+
+      toast.success(res.message || "Split paid and payer's transaction auto-deducted!");
+      setShowPaySplitModal(false);
+      setSelectedSplitReq(null);
+      loadAll();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to pay split share");
+    } finally {
+      setIsPayingSplit(false);
+    }
+  };
+
+  const handleAcceptSplit = async (req: GroupSplitRequest) => {
+    try {
+      const res = await groupService.acceptSplitRequest(req.id);
+      toast.success(res.message || "Split accepted!");
+      loadAll();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to accept split");
+    }
+  };
+
+  const handleOpenDeclineSplit = (req: GroupSplitRequest) => {
+    setSelectedDeclineReq(req);
+    setDeclineNotes("");
+    setShowDeclineModal(true);
+  };
+
+  const handleDeclineSplitSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDeclineReq) return;
+
+    try {
+      setIsDecliningSplit(true);
+      const res = await groupService.declineSplitRequest(selectedDeclineReq.id, declineNotes.trim());
+      toast.info(res.message || "Split request declined.");
+      setShowDeclineModal(false);
+      setSelectedDeclineReq(null);
+      loadAll();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to decline split request");
+    } finally {
+      setIsDecliningSplit(false);
+    }
+  };
+
+  const handleRemindSplit = async (req: GroupSplitRequest) => {
+    try {
+      const res = await groupService.remindSplitRequest(req.id);
+      toast.success(res.message || "Payment reminder sent!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send reminder");
     }
   };
 
@@ -586,6 +677,251 @@ export default function GroupDetail() {
         </div>
       </div>
 
+      {/* Split Requests & Dynamic Reimbursements Engine */}
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700/60 pb-3">
+          <div className="space-y-0.5">
+            <h3 className="text-base sm:text-lg font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+              <BellRing className="w-5 h-5 text-sky-500" />
+              Split Requests & Approval Workflow
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Review split shares, accept/decline entered amounts, and pay. When paid, the payer's personal expense is automatically reduced in-place!
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 px-3 py-1 rounded-full font-semibold border border-sky-200 dark:border-sky-800">
+              ⚡ Live Ledger Auto-Deduction
+            </span>
+          </div>
+        </div>
+
+        {/* Informative Feature Explainer Alert */}
+        <div className="p-3 bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-950/30 dark:to-blue-950/30 border border-sky-200/80 dark:border-sky-800/50 rounded-xl flex items-start gap-3 text-xs text-slate-700 dark:text-slate-300">
+          <Sparkles className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-bold text-sky-800 dark:text-sky-200">How Trust-Tracker's Innovation Works: </span>
+            When you pay for a shared group expense, your full out-of-pocket payment is recorded in your personal transactions. When other participants pay their split share, the amount is <strong>directly deducted from that original transaction</strong> (e.g. ₹1,000 reduced to ₹500), keeping your net spending 100% accurate without cluttering your books with messy extra transactions.
+          </div>
+        </div>
+
+        {/* Two Columns: Incoming Requests (You Owe) vs Outgoing Requests (You Paid) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {/* Column 1: Incoming Split Requests (Action Required by Current User) */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <ArrowDownRight className="w-4 h-4 text-amber-500" />
+                Requests Waiting For You ({splitRequests.filter((r) => r.to_user_id === user?.id && r.status !== "paid").length})
+              </span>
+            </div>
+
+            {splitRequests.filter((r) => r.to_user_id === user?.id).length === 0 ? (
+              <div className="p-6 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-700/50 rounded-xl text-center space-y-1">
+                <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto" />
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">No split requests pending for you</p>
+                <p className="text-[11px] text-slate-400">You're all settled on group expenses!</p>
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                {splitRequests
+                  .filter((r) => r.to_user_id === user?.id)
+                  .map((req) => {
+                    const isPending = req.status === "pending";
+                    const isAccepted = req.status === "accepted";
+                    const isPaid = req.status === "paid";
+                    const isDeclined = req.status === "declined";
+
+                    return (
+                      <div
+                        key={req.id}
+                        className={`p-3.5 rounded-xl border transition space-y-2.5 ${
+                          isPaid
+                            ? "bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-700/60 opacity-80"
+                            : isDeclined
+                            ? "bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/40"
+                            : "bg-white dark:bg-slate-800/90 border-sky-200 dark:border-sky-800 shadow-sm"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-primary-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+                              {(req.from_name || "M").charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-slate-900 dark:text-white">
+                                {req.from_name} <span className="font-normal text-slate-500">paid for</span> "{req.expense_description}"
+                              </p>
+                              <p className="text-[11px] text-slate-400 mt-0.5">
+                                Total bill: {formatCurrency(req.expense_total_amount || 0, groupCurrency)} • {req.expense_date}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <span className="text-sm font-extrabold text-slate-900 dark:text-white block">
+                              {formatCurrency(req.amount, groupCurrency)}
+                            </span>
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-0.5 ${
+                                isPaid
+                                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                                  : isAccepted
+                                  ? "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300"
+                                  : isDeclined
+                                  ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300"
+                                  : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                              }`}
+                            >
+                              {isPaid ? "Paid ✓" : isAccepted ? "Accepted" : isDeclined ? "Declined" : "Pending Review"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {req.notes && (
+                          <p className="text-[11px] text-slate-500 italic bg-slate-100/70 dark:bg-slate-700/50 p-1.5 rounded-lg">
+                            Note: "{req.notes}"
+                          </p>
+                        )}
+
+                        {/* Interactive Buttons for incoming split */}
+                        {!isPaid && !isDeclined && (
+                          <div className="flex flex-wrap items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-slate-700/60">
+                            {isPending && (
+                              <button
+                                onClick={() => handleAcceptSplit(req)}
+                                className="px-2.5 py-1 text-xs font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition cursor-pointer flex items-center gap-1"
+                              >
+                                <ThumbsUp className="w-3.5 h-3.5" />
+                                Accept Amount
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleOpenDeclineSplit(req)}
+                              className="px-2.5 py-1 text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-600 dark:text-rose-400 rounded-lg transition cursor-pointer flex items-center gap-1"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                              Decline
+                            </button>
+                            <button
+                              onClick={() => handleOpenPaySplit(req)}
+                              className="px-3.5 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg shadow-sm transition cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Wallet className="w-3.5 h-3.5" />
+                              Pay Share ({formatCurrency(req.amount, groupCurrency)})
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+
+          {/* Column 2: Outgoing Split Requests (You are Payer / Waiting for Others) */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <TrendingDown className="w-4 h-4 text-sky-500" />
+                Requests You Sent ({splitRequests.filter((r) => r.from_user_id === user?.id).length})
+              </span>
+            </div>
+
+            {splitRequests.filter((r) => r.from_user_id === user?.id).length === 0 ? (
+              <div className="p-6 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-700/50 rounded-xl text-center space-y-1">
+                <Receipt className="w-6 h-6 text-slate-400 mx-auto" />
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">No outgoing split requests</p>
+                <p className="text-[11px] text-slate-400">When you add a group expense, members' split requests show here.</p>
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                {splitRequests
+                  .filter((r) => r.from_user_id === user?.id)
+                  .map((req) => {
+                    const isPaid = req.status === "paid";
+                    const isDeclined = req.status === "declined";
+
+                    return (
+                      <div
+                        key={req.id}
+                        className={`p-3.5 rounded-xl border transition space-y-2 ${
+                          isPaid
+                            ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200/80 dark:border-emerald-900/40"
+                            : isDeclined
+                            ? "bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/40"
+                            : "bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700/70"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-400 to-slate-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
+                              {(req.to_name || "M").charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-slate-900 dark:text-white">
+                                {req.to_name} <span className="font-normal text-slate-500">owes share for</span> "{req.expense_description}"
+                              </p>
+                              <p className="text-[11px] text-slate-400 mt-0.5">
+                                Total bill: {formatCurrency(req.expense_total_amount || 0, groupCurrency)} • {req.expense_date}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <span className="text-sm font-extrabold text-slate-900 dark:text-white block">
+                              {formatCurrency(req.amount, groupCurrency)}
+                            </span>
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-0.5 ${
+                                isPaid
+                                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                                  : isDeclined
+                                  ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300"
+                                  : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                              }`}
+                            >
+                              {isPaid ? "Paid ✓" : isDeclined ? "Declined" : "Pending"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Status message or reminder */}
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-700/60 text-[11px]">
+                          {isPaid ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              Auto-deducted {formatCurrency(req.amount, groupCurrency)} from your personal transaction!
+                            </span>
+                          ) : isDeclined ? (
+                            <span className="text-rose-600 dark:text-rose-400 font-semibold">
+                              Declined: {req.notes || "Disputed amount"}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">
+                              Awaiting payment via UPI / Cash
+                            </span>
+                          )}
+
+                          {!isPaid && !isDeclined && (
+                            <button
+                              onClick={() => handleRemindSplit(req)}
+                              className="px-2.5 py-1 text-xs font-semibold text-sky-600 hover:text-sky-700 dark:text-sky-400 hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <Send className="w-3 h-3" />
+                              Remind
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Debt Minimization Engine (Clean Sky Blue / Light Design) */}
       {settlementData && (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm text-slate-900 dark:text-white space-y-4">
@@ -733,9 +1069,9 @@ export default function GroupDetail() {
             transactions.map((tx) => (
               <div
                 key={tx.id}
-                className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition"
+                className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-start sm:items-center gap-3">
                   <div
                     className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-xs shadow-sm flex-shrink-0"
                     style={{ backgroundColor: tx.category?.color || "#3B82F6" }}
@@ -745,7 +1081,7 @@ export default function GroupDetail() {
                   <div>
                     <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">{tx.description}</p>
                     <p className="text-[11px] text-slate-400 flex flex-wrap items-center gap-1.5 mt-0.5">
-                      <span>Paid by {tx.paid_by_name || tx.paid_by_email || "Member"}</span>
+                      <span>Paid by {tx.paid_by_name || tx.paid_by_email || "Member"} {tx.paid_by === user?.id ? "(You)" : ""}</span>
                       <span>•</span>
                       <span>{format(new Date(tx.date), "MMM d, yyyy")}</span>
                       <span>•</span>
@@ -753,13 +1089,38 @@ export default function GroupDetail() {
                         {tx.split_type} split
                       </span>
                     </p>
+
+                    {/* Split summary and auto-deduction status */}
+                    {tx.split_summary && tx.split_summary.totalRequests > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          tx.split_summary.paidRequests === tx.split_summary.totalRequests
+                            ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300"
+                            : "bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300"
+                        }`}>
+                          {tx.split_summary.paidRequests}/{tx.split_summary.totalRequests} Splits Settled
+                        </span>
+                        {tx.split_summary.paidSum > 0 && (
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                            ✓ {formatCurrency(tx.split_summary.paidSum, groupCurrency)} reimbursed & deducted
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5">
-                  <span className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
-                    {formatCurrency(tx.amount, groupCurrency)}
-                  </span>
+                <div className="flex items-center justify-between sm:justify-end gap-3 self-end sm:self-center">
+                  <div className="text-right">
+                    <span className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base block">
+                      {formatCurrency(tx.amount, groupCurrency)}
+                    </span>
+                    {tx.paid_by === user?.id && tx.split_summary && tx.split_summary.paidSum > 0 && (
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">
+                        Net: {formatCurrency(Math.max(0, tx.amount - tx.split_summary.paidSum), groupCurrency)}
+                      </span>
+                    )}
+                  </div>
                   {(tx.paid_by === user?.id || group.my_role === "admin") && (
                     <button
                       onClick={() => handleDeleteTransaction(tx.id)}
@@ -1251,6 +1612,186 @@ export default function GroupDetail() {
                   </a>
                 </div>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Modal: Pay Split Request (With Real-Time Personal Transaction Deduction Explainer) */}
+      <AnimatePresence>
+        {showPaySplitModal && selectedSplitReq && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Wallet className="w-5 h-5 text-emerald-500" />
+                  Settle Your Split Share
+                </h3>
+                <button
+                  onClick={() => setShowPaySplitModal(false)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-sm cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Bill Details Summary Card */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Expense Item</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">{selectedSplitReq.expense_description}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Paid Originally By</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{selectedSplitReq.from_name}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Total Bill Amount</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {formatCurrency(selectedSplitReq.expense_total_amount || 0, groupCurrency)}
+                  </span>
+                </div>
+                <div className="border-t border-slate-200 dark:border-slate-700/60 pt-2 flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Your Assigned Split Share</span>
+                  <span className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">
+                    {formatCurrency(selectedSplitReq.amount, groupCurrency)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Real-Time Auto-Deduction Explanation Illustration */}
+              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-1.5 text-xs text-emerald-900 dark:text-emerald-200">
+                <div className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-300">
+                  <Sparkles className="w-4 h-4 text-emerald-500" />
+                  <span>How Ledger Sync Works:</span>
+                </div>
+                <p className="text-[11px] leading-relaxed">
+                  When you confirm this payment of <strong>{formatCurrency(selectedSplitReq.amount, groupCurrency)}</strong>, it will automatically:
+                </p>
+                <ul className="text-[11px] list-disc list-inside space-y-0.5 text-slate-600 dark:text-slate-300">
+                  <li><strong>Deduct {formatCurrency(selectedSplitReq.amount, groupCurrency)} in-place</strong> from {selectedSplitReq.from_name}'s original personal transaction.</li>
+                  <li>Prevent messy duplicate transactions in {selectedSplitReq.from_name}'s analytics.</li>
+                  <li>Record your {formatCurrency(selectedSplitReq.amount, groupCurrency)} share cleanly in your personal ledger.</li>
+                </ul>
+              </div>
+
+              <form onSubmit={handlePaySplitSubmit} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                    Select Payment Mode
+                  </label>
+                  <select
+                    value={paySplitMethod}
+                    onChange={(e) => setPaySplitMethod(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs font-medium"
+                  >
+                    <option value="upi">Google Pay / PhonePe / Paytm / UPI</option>
+                    <option value="cash">Cash in Hand</option>
+                    <option value="bank_transfer">Direct Bank Transfer / NEFT / IMPS</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="other">Other Payment Mode</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                    Notes / Ref ID (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={paySplitNotes}
+                    onChange={(e) => setPaySplitNotes(e.target.value)}
+                    placeholder="e.g. Sent via GPay UPI ref #987654"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPaySplitModal(false)}
+                    className="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isPayingSplit}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    <Check className="w-4 h-4" />
+                    {isPayingSplit ? "Processing..." : `Confirm Payment (${formatCurrency(selectedSplitReq.amount, groupCurrency)})`}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal: Decline Split Request */}
+      <AnimatePresence>
+        {showDeclineModal && selectedDeclineReq && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <XCircle className="w-5 h-5 text-rose-500" />
+                  Decline Split Request
+                </h3>
+                <button
+                  onClick={() => setShowDeclineModal(false)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-sm cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                You are declining the split share of <strong>{formatCurrency(selectedDeclineReq.amount, groupCurrency)}</strong> for "{selectedDeclineReq.expense_description}". Let {selectedDeclineReq.from_name} know why.
+              </p>
+
+              <form onSubmit={handleDeclineSplitSubmit} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                    Reason for Declining
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={declineNotes}
+                    onChange={(e) => setDeclineNotes(e.target.value)}
+                    placeholder="e.g. I didn't participate in this meal, or the split amount is incorrect."
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowDeclineModal(false)}
+                    className="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isDecliningSplit}
+                    className="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-rose-600/20 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {isDecliningSplit ? "Declining..." : "Confirm Decline"}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}
