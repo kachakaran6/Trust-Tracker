@@ -1,9 +1,20 @@
 import React from "react";
 
+export type BadgeVariant =
+  | "neutral"
+  | "success"
+  | "warning"
+  | "danger"
+  | "info"
+  | "primary"
+  | "purple"; // alias to primary/neutral for backwards safety
+
+export type BadgeSize = "sm" | "md";
+
 export interface BadgeProps {
   children: React.ReactNode;
-  variant?: "primary" | "success" | "warning" | "danger" | "info" | "neutral" | "purple";
-  size?: "sm" | "md";
+  variant?: BadgeVariant;
+  size?: BadgeSize;
   icon?: React.ReactNode;
   className?: string;
 }
@@ -15,27 +26,34 @@ export const Badge: React.FC<BadgeProps> = ({
   icon,
   className = "",
 }) => {
-  const variantStyles = {
-    primary: "bg-sky-500/10 text-primary-600 dark:text-sky-400 border-sky-500/20",
-    success: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-    warning: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-    danger: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
-    info: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
-    purple: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
-    neutral: "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
+  const variantStyles: Record<BadgeVariant, string> = {
+    neutral:
+      "bg-[var(--surface-muted)] text-[var(--text-muted)] border border-[var(--border)]",
+    success:
+      "bg-[var(--success-subtle)] text-[var(--success)] border border-[var(--success)]/20",
+    warning:
+      "bg-[var(--warning-subtle)] text-[var(--warning)] border border-[var(--warning)]/20",
+    danger:
+      "bg-[var(--danger-subtle)] text-[var(--danger)] border border-[var(--danger)]/20",
+    info:
+      "bg-[var(--info-subtle)] text-[var(--info)] border border-[var(--info)]/20",
+    primary:
+      "bg-[var(--primary-subtle)] text-[var(--primary)] border border-[var(--primary)]/20",
+    purple:
+      "bg-[var(--surface-muted)] text-[var(--text)] border border-[var(--border)]",
   };
 
-  const sizeStyles = {
-    sm: "px-2 py-0.5 text-xs",
+  const sizeStyles: Record<BadgeSize, string> = {
+    sm: "px-2 py-0.5 text-xs font-medium",
     md: "px-2.5 py-1 text-xs font-semibold",
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1 font-medium rounded-full border ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      className={`inline-flex items-center gap-1 rounded-full ${variantStyles[variant]} ${sizeStyles[size]} ${className}`.trim()}
     >
-      {icon && <span className="flex-shrink-0">{icon}</span>}
-      <span>{children}</span>
+      {icon && <span className="shrink-0">{icon}</span>}
+      <span className="truncate">{children}</span>
     </span>
   );
 };
