@@ -1,6 +1,6 @@
 /**
- * Universal Currency & Locale Management Utility for Trust-Tracker
- * Supports auto-detection, comprehensive international currencies, and localized formatting.
+ * Universal Currency & Locale Management Utility for TrustTracker
+ * Supports auto-detection, international currencies, and clean localized formatting.
  */
 
 export interface CurrencyInfo {
@@ -12,34 +12,34 @@ export interface CurrencyInfo {
 }
 
 export const CURRENCIES: CurrencyInfo[] = [
-  { code: "USD", name: "US Dollar", symbol: "$", locale: "en-US", flag: "🇺🇸" },
-  { code: "INR", name: "Indian Rupee", symbol: "₹", locale: "en-IN", flag: "🇮🇳" },
-  { code: "EUR", name: "Euro", symbol: "€", locale: "de-DE", flag: "🇪🇺" },
-  { code: "GBP", name: "British Pound", symbol: "£", locale: "en-GB", flag: "🇬🇧" },
-  { code: "JPY", name: "Japanese Yen", symbol: "¥", locale: "ja-JP", flag: "🇯🇵" },
-  { code: "CAD", name: "Canadian Dollar", symbol: "CA$", locale: "en-CA", flag: "🇨🇦" },
-  { code: "AUD", name: "Australian Dollar", symbol: "AU$", locale: "en-AU", flag: "🇦🇺" },
-  { code: "AED", name: "UAE Dirham", symbol: "AED", locale: "ar-AE", flag: "🇦🇪" },
-  { code: "SAR", name: "Saudi Riyal", symbol: "SAR", locale: "ar-SA", flag: "🇸🇦" },
-  { code: "SGD", name: "Singapore Dollar", symbol: "SG$", locale: "en-SG", flag: "🇸🇬" },
-  { code: "CHF", name: "Swiss Franc", symbol: "CHF", locale: "de-CH", flag: "🇨🇭" },
-  { code: "CNY", name: "Chinese Yuan", symbol: "¥", locale: "zh-CN", flag: "🇨🇳" },
-  { code: "NZD", name: "New Zealand Dollar", symbol: "NZ$", locale: "en-NZ", flag: "🇳🇿" },
-  { code: "HKD", name: "Hong Kong Dollar", symbol: "HK$", locale: "zh-HK", flag: "🇭🇰" },
-  { code: "KRW", name: "South Korean Won", symbol: "₩", locale: "ko-KR", flag: "🇰🇷" },
-  { code: "BRL", name: "Brazilian Real", symbol: "R$", locale: "pt-BR", flag: "🇧🇷" },
-  { code: "MXN", name: "Mexican Peso", symbol: "MX$", locale: "es-MX", flag: "🇲🇽" },
-  { code: "ZAR", name: "South African Rand", symbol: "R", locale: "en-ZA", flag: "🇿🇦" },
-  { code: "SEK", name: "Swedish Krona", symbol: "kr", locale: "sv-SE", flag: "🇸🇪" },
-  { code: "NOK", name: "Norwegian Krone", symbol: "kr", locale: "nb-NO", flag: "🇳🇴" },
-  { code: "DKK", name: "Danish Krone", symbol: "kr", locale: "da-DK", flag: "🇩🇰" },
-  { code: "PLN", name: "Polish Zloty", symbol: "zł", locale: "pl-PL", flag: "🇵🇱" },
-  { code: "THB", name: "Thai Baht", symbol: "฿", locale: "th-TH", flag: "🇹🇭" },
-  { code: "MYR", name: "Malaysian Ringgit", symbol: "RM", locale: "ms-MY", flag: "🇲🇾" },
-  { code: "IDR", name: "Indonesian Rupiah", symbol: "Rp", locale: "id-ID", flag: "🇮🇩" },
-  { code: "PHP", name: "Philippine Peso", symbol: "₱", locale: "en-PH", flag: "🇵🇭" },
-  { code: "TRY", name: "Turkish Lira", symbol: "₺", locale: "tr-TR", flag: "🇹🇷" },
-  { code: "RUB", name: "Russian Ruble", symbol: "₽", locale: "ru-RU", flag: "🇷🇺" },
+  { code: "INR", name: "Indian Rupee", symbol: "₹", locale: "en-IN" },
+  { code: "USD", name: "US Dollar", symbol: "$", locale: "en-US" },
+  { code: "EUR", name: "Euro", symbol: "€", locale: "de-DE" },
+  { code: "GBP", name: "British Pound", symbol: "£", locale: "en-GB" },
+  { code: "JPY", name: "Japanese Yen", symbol: "¥", locale: "ja-JP" },
+  { code: "CAD", name: "Canadian Dollar", symbol: "CA$", locale: "en-CA" },
+  { code: "AUD", name: "Australian Dollar", symbol: "AU$", locale: "en-AU" },
+  { code: "AED", name: "UAE Dirham", symbol: "AED", locale: "ar-AE" },
+  { code: "SAR", name: "Saudi Riyal", symbol: "SAR", locale: "ar-SA" },
+  { code: "SGD", name: "Singapore Dollar", symbol: "SG$", locale: "en-SG" },
+  { code: "CHF", name: "Swiss Franc", symbol: "CHF", locale: "de-CH" },
+  { code: "CNY", name: "Chinese Yuan", symbol: "¥", locale: "zh-CN" },
+  { code: "NZD", name: "New Zealand Dollar", symbol: "NZ$", locale: "en-NZ" },
+  { code: "HKD", name: "Hong Kong Dollar", symbol: "HK$", locale: "zh-HK" },
+  { code: "KRW", name: "South Korean Won", symbol: "₩", locale: "ko-KR" },
+  { code: "BRL", name: "Brazilian Real", symbol: "R$", locale: "pt-BR" },
+  { code: "MXN", name: "Mexican Peso", symbol: "MX$", locale: "es-MX" },
+  { code: "ZAR", name: "South African Rand", symbol: "R", locale: "en-ZA" },
+  { code: "SEK", name: "Swedish Krona", symbol: "kr", locale: "sv-SE" },
+  { code: "NOK", name: "Norwegian Krone", symbol: "kr", locale: "nb-NO" },
+  { code: "DKK", name: "Danish Krone", symbol: "kr", locale: "da-DK" },
+  { code: "PLN", name: "Polish Zloty", symbol: "zł", locale: "pl-PL" },
+  { code: "THB", name: "Thai Baht", symbol: "฿", locale: "th-TH" },
+  { code: "MYR", name: "Malaysian Ringgit", symbol: "RM", locale: "ms-MY" },
+  { code: "IDR", name: "Indonesian Rupiah", symbol: "Rp", locale: "id-ID" },
+  { code: "PHP", name: "Philippine Peso", symbol: "₱", locale: "en-PH" },
+  { code: "TRY", name: "Turkish Lira", symbol: "₺", locale: "tr-TR" },
+  { code: "RUB", name: "Russian Ruble", symbol: "₽", locale: "ru-RU" },
 ];
 
 export const CURRENCY_MAP = new Map<string, CurrencyInfo>(
@@ -51,7 +51,6 @@ export const CURRENCY_MAP = new Map<string, CurrencyInfo>(
  */
 export function detectUserCurrency(): string {
   try {
-    // 1. Check browser timezone
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
     const tzLower = timeZone.toLowerCase();
 
@@ -79,7 +78,6 @@ export function detectUserCurrency(): string {
     if (tzLower.includes("johannesburg")) return "ZAR";
     if (tzLower.includes("zurich")) return "CHF";
 
-    // 2. Check navigator language / locale
     const navLangs = navigator.languages || [navigator.language || ""];
     for (const lang of navLangs) {
       const code = lang.toUpperCase();
@@ -102,14 +100,14 @@ export function detectUserCurrency(): string {
     console.warn("Error detecting currency:", err);
   }
 
-  return "USD";
+  return "INR";
 }
 
 /**
  * Get the currency symbol for a given currency code.
  */
 export function getCurrencySymbol(currencyCode?: string): string {
-  if (!currencyCode) return "$";
+  if (!currencyCode) return "₹";
   const code = currencyCode.toUpperCase();
   const info = CURRENCY_MAP.get(code);
   if (info) return info.symbol;
@@ -139,7 +137,7 @@ export function formatCurrency(
 ): string {
   const num = typeof amount === "number" ? amount : typeof amount === "string" ? parseFloat(amount) : 0;
   const safeNum = isNaN(num) ? 0 : num;
-  const code = (currencyCode || "USD").toUpperCase();
+  const code = (currencyCode || "INR").toUpperCase();
   const info = CURRENCY_MAP.get(code);
 
   const locale = info?.locale || (code === "INR" ? "en-IN" : code === "USD" ? "en-US" : undefined);
