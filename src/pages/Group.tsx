@@ -1,35 +1,28 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGroups } from "../hooks/useGroup";
 import { useAuth } from "../contexts/AuthContext";
-import { CURRENCIES, formatCurrency, getCurrencySymbol } from "../utils/currency";
-import { Dropdown } from "../components/ui/Dropdown";
-import {
-  Users,
-  Plus,
-  UserPlus,
-  ArrowRight,
-  ShieldCheck,
-  Sparkles,
-  Copy,
-  Check,
-  Share2,
-  Wallet,
-  DollarSign,
-  TrendingUp,
-} from "lucide-react";
+import { CURRENCIES, getCurrencySymbol } from "../utils/currency";
+import { formatMoney } from "../lib/format";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
 import { usePageHeader } from "../contexts/PageHeaderContext";
+import { PageHeader } from "../components/ui/PageHeader";
+import { Card } from "../components/ui/Card";
+import { Button, IconButton } from "../components/ui/Button";
+import { Input, Select, Textarea } from "../components/ui/Input";
+import { EmptyState } from "../components/ui/EmptyState";
+import { Modal } from "../components/ui/Modal";
+import { Icons } from "../components/ui/icons";
 
 export default function Groups() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { setPageHeader } = usePageHeader();
 
-  useEffect(() => {
+  React.useEffect(() => {
     setPageHeader("Groups & Splits");
   }, [setPageHeader]);
+
   const { groups, loading, createGroup, joinGroup } = useGroups();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -47,12 +40,6 @@ export default function Groups() {
     }
   }, [user?.currency]);
 
-  const currencyOptions = CURRENCIES.map((c) => ({
-    value: c.code,
-    label: `${c.flag || ""} ${c.code} (${c.symbol}) - ${c.name}`,
-    badge: c.symbol,
-  }));
-
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createName.trim()) return;
@@ -69,8 +56,9 @@ export default function Groups() {
       setCreateName("");
       setCreateDesc("");
       navigate(`/group/${newGroup.id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create group");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create group";
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -80,7 +68,6 @@ export default function Groups() {
     e.preventDefault();
     if (!joinCode.trim()) return;
 
-    // Handle full invite link pasted
     let cleanCode = joinCode.trim();
     if (cleanCode.includes("/join-group/")) {
       cleanCode = cleanCode.split("/join-group/").pop() || cleanCode;
@@ -95,8 +82,9 @@ export default function Groups() {
       setShowJoinModal(false);
       setJoinCode("");
       navigate(`/group/${res.group.id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to join group");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to join group";
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -112,269 +100,236 @@ export default function Groups() {
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      <div className="flex items-center justify-end gap-2.5 mb-2">
-          <button
+    <div className="space-y-6">
+      <PageHeader
+        title="Groups & Shared Expenses"
+        description="Divide flatmate rent, dinner tabs, and shared trips with transparent ledger simplification."
+        secondaryActions={
+          <Button
+            variant="secondary"
+            icon={<Icons.UserPlus size={16} />}
             onClick={() => setShowJoinModal(true)}
-            className="flex items-center gap-2 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer"
           >
-            <UserPlus className="w-4 h-4" />
             Join Group
-          </button>
-          <button
+          </Button>
+        }
+        action={
+          <Button
+            variant="primary"
+            icon={<Icons.Add size={16} />}
             onClick={() => {
               setCreateCurrency(user?.currency || "INR");
               setShowCreateModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-500 active:scale-[0.98] text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-primary-500/20 transition cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
             Create Group
-          </button>
-      </div>
+          </Button>
+        }
+      />
 
       {/* Groups Grid */}
       {loading ? (
         <div className="flex items-center justify-center min-h-[30vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]" />
         </div>
       ) : groups.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-10 text-center shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-sky-50 dark:bg-sky-950/50 text-sky-500 flex items-center justify-center mx-auto mb-3">
-            <Users className="w-7 h-7" />
-          </div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">No Shared Groups Yet</h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto mt-1 mb-5">
-            Create a group for trips, flatmates, dining outings, or projects to split expenses smoothly and auto-calculate who owes whom!
-          </p>
-          <div className="flex justify-center gap-3">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm cursor-pointer"
-            >
-              Create Your First Group
-            </button>
-          </div>
-        </div>
+        <EmptyState
+          icon={<Icons.Groups size={24} />}
+          title="No shared groups yet"
+          description="Create a shared group for flatmates, trips, or dining outings to automatically track debts and balances."
+          action={
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Icons.UserPlus size={16} />}
+                onClick={() => setShowJoinModal(true)}
+              >
+                Join with Code
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Icons.Add size={16} />}
+                onClick={() => setShowCreateModal(true)}
+              >
+                Create Group
+              </Button>
+            </div>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {groups.map((group) => {
-            const groupCurrency = group.currency || user?.currency || "USD";
-            const isCopied = copiedId === group.id;
+            const hasPendingAction = (group.myPendingSplitCount || 0) > 0;
+            const netBal = group.myNetBalance || 0;
 
             return (
-              <motion.div
+              <div
                 key={group.id}
-                whileHover={{ y: -2 }}
                 onClick={() => navigate(`/group/${group.id}`)}
-                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-sky-400/50 transition flex flex-col justify-between cursor-pointer group"
+                className="bg-[var(--surface)] border border-[var(--border)] rounded-md p-5 shadow-xs hover:bg-[var(--surface-muted)] transition-colors flex flex-col justify-between cursor-pointer space-y-4"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-2 mb-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-primary-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
-                      {group.name.charAt(0).toUpperCase()}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-base text-[var(--text)] tracking-tight truncate">
+                        {group.name}
+                      </h3>
+                      <p className="text-xs text-[var(--text-muted)] line-clamp-2 mt-0.5">
+                        {group.description || "Shared expense group"}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="px-2 py-0.5 bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 rounded-md text-xs font-mono font-bold border border-sky-100 dark:border-sky-900">
-                        {groupCurrency}
-                      </span>
-                      {group.my_role === "admin" && (
-                        <span className="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md text-[10px] font-bold">
-                          ADMIN
-                        </span>
-                      )}
-                    </div>
+
+                    <span className="px-2 py-0.5 bg-[var(--surface-muted)] text-[var(--text-muted)] rounded-full text-[11px] font-mono shrink-0">
+                      {group.currency || "INR"}
+                    </span>
                   </div>
 
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-sky-400 transition">
-                    {group.name}
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">
-                    {group.description || "Shared group expense ledger"}
-                  </p>
+                  {/* Balance / Status row */}
+                  <div className="mt-3 pt-3 border-t border-[var(--border)] flex justify-between items-center text-xs">
+                    <div>
+                      <p className="text-[11px] text-[var(--text-muted)]">Your Balance</p>
+                      <p
+                        className={`font-semibold tabular-nums mt-0.5 ${
+                          netBal > 0.01
+                            ? "text-[var(--success)]"
+                            : netBal < -0.01
+                            ? "text-[var(--danger)]"
+                            : "text-[var(--text)]"
+                        }`}
+                      >
+                        {netBal > 0.01
+                          ? `+${formatMoney(netBal, group.currency)}`
+                          : netBal < -0.01
+                          ? `-${formatMoney(Math.abs(netBal), group.currency)}`
+                          : "Settled (₹0.00)"}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-[11px] text-[var(--text-muted)]">Members</p>
+                      <p className="font-medium text-[var(--text)] mt-0.5">
+                        {group.member_count || group.members?.length || 1}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Total Group Spending</span>
-                    <span className="font-bold text-slate-900 dark:text-white text-sm">
-                      {formatCurrency(group.total_spent || 0, groupCurrency)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Members</span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">
-                      {group.member_count || 1} {group.member_count === 1 ? "person" : "people"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1">
+                {/* Footer Invite Code Strip */}
+                <div className="pt-2 flex items-center justify-between border-t border-[var(--border)] text-xs">
+                  <div className="flex items-center gap-1.5 font-mono text-[11px] text-[var(--text-muted)]">
+                    <span>CODE: {group.code}</span>
                     <button
+                      type="button"
                       onClick={(e) => copyInviteLink(e, group.code, group.id)}
-                      className="flex items-center gap-1.5 text-xs text-sky-600 hover:text-sky-700 dark:text-sky-400 font-semibold cursor-pointer"
+                      title="Copy invite link"
+                      className="p-1 hover:text-[var(--text)] rounded-xs transition-colors"
                     >
-                      {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5" />}
-                      <span>{isCopied ? "Link Copied!" : "Share Invite Link"}</span>
+                      {copiedId === group.id ? (
+                        <Icons.Check size={13} className="text-[var(--success)]" />
+                      ) : (
+                        <Icons.Copy size={13} />
+                      )}
                     </button>
-
-                    <span className="text-xs font-semibold text-slate-400 flex items-center gap-1 group-hover:text-primary-600 dark:group-hover:text-sky-400 transition">
-                      View Group <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
                   </div>
+
+                  {hasPendingAction && (
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-[var(--warning)] text-white">
+                      Action needed
+                    </span>
+                  )}
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
       )}
 
-      {/* Modal: Create Group */}
-      <AnimatePresence>
-        {showCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4"
+      {/* Create Group Modal */}
+      <Modal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Create New Shared Group"
+      >
+        <form onSubmit={handleCreate} className="space-y-4">
+          <Input
+            label="Group Name"
+            required
+            placeholder="e.g. Goa Trip 2026, 4BHK Flatmates"
+            value={createName}
+            onChange={(e) => setCreateName(e.target.value)}
+          />
+
+          <Textarea
+            label="Description (Optional)"
+            placeholder="Brief note about group purpose"
+            value={createDesc}
+            onChange={(e) => setCreateDesc(e.target.value)}
+          />
+
+          <Select
+            label="Base Group Currency"
+            value={createCurrency}
+            onChange={(e) => setCreateCurrency(e.target.value)}
+          >
+            {CURRENCIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.code} ({c.symbol}) - {c.name}
+              </option>
+            ))}
+          </Select>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border)]">
+            <Button
+              variant="secondary"
+              onClick={() => setShowCreateModal(false)}
             >
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Users className="w-5 h-5 text-sky-500" />
-                  Create New Split Group
-                </h3>
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-sm cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Group Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={createName}
-                    onChange={(e) => setCreateName(e.target.value)}
-                    placeholder="e.g. Goa Trip 2026, Apartment 4B, Friday Dinner"
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Description (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={createDesc}
-                    onChange={(e) => setCreateDesc(e.target.value)}
-                    placeholder="Shared accommodation and expenses"
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-
-                <div>
-                  <Dropdown
-                    label="Group Currency"
-                    options={currencyOptions}
-                    value={createCurrency}
-                    onChange={setCreateCurrency}
-                    searchable
-                    searchPlaceholder="Search currency..."
-                  />
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20 transition cursor-pointer disabled:opacity-50"
-                  >
-                    {isSubmitting ? "Creating..." : "Create Group"}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Modal: Join Group */}
-      <AnimatePresence>
-        {showJoinModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4"
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={isSubmitting}
             >
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <UserPlus className="w-5 h-5 text-sky-500" />
-                  Join Group with Link or Code
-                </h3>
-                <button
-                  onClick={() => setShowJoinModal(false)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-sm cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <form onSubmit={handleJoin} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                    Group Code or Invite Link
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value)}
-                    placeholder="e.g. 7A8B9C or https://.../join-group/7A8B9C"
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary-500"
-                  />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Ask your friend or group admin for their 6-character group code or paste the invite link here.
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowJoinModal(false)}
-                    className="px-4 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-5 py-2.5 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20 transition cursor-pointer disabled:opacity-50"
-                  >
-                    {isSubmitting ? "Joining..." : "Join Group"}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
+              Create Group
+            </Button>
           </div>
-        )}
-      </AnimatePresence>
+        </form>
+      </Modal>
+
+      {/* Join Group Modal */}
+      <Modal
+        open={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        title="Join Group with Invite Code"
+      >
+        <form onSubmit={handleJoin} className="space-y-4">
+          <Input
+            label="Invite Code or Link"
+            required
+            placeholder="e.g. 8-character code or full link"
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value)}
+          />
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border)]">
+            <Button
+              variant="secondary"
+              onClick={() => setShowJoinModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={isSubmitting}
+            >
+              Join Group
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
