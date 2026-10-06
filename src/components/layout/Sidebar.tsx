@@ -1,165 +1,150 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { api } from "../../lib/api";
-import {
-  LayoutDashboard,
-  CreditCard,
-  BarChart2,
-  PiggyBank,
-  TrendingUp,
-  Settings,
-  X,
-  Shield,
-  Users,
-  Notebook,
-  Landmark,
-  RefreshCw,
-  Handshake,
-  ShieldCheck,
-} from "lucide-react";
+import { Icons } from "../ui/icons";
 
 interface SidebarProps {
   open: boolean;
   setOpen: (open: boolean) => void;
+  pendingSplitCount?: number;
 }
 
-function Sidebar({ open, setOpen }: SidebarProps) {
+export const Sidebar: React.FC<SidebarProps> = ({
+  open,
+  setOpen,
+  pendingSplitCount = 0,
+}) => {
   const { user } = useAuth();
-  const isSuperAdmin = user?.role === "super_admin";
-  const [pendingSplitCount, setPendingSplitCount] = useState<number>(0);
-
-  useEffect(() => {
-    if (!user) return;
-    api.groups
-      .getMySplitRequests()
-      .then((reqs) => {
-        const count = (reqs || []).filter(
-          (r) => r.is_incoming && (r.status === "pending" || r.status === "accepted")
-        ).length;
-        setPendingSplitCount(count);
-      })
-      .catch(() => {});
-  }, [user]);
-
   if (!user) return null;
 
-  const mainSections = [
+  const isSuperAdmin = user?.role === "super_admin";
+
+  const navSections = [
     {
       title: "Overview",
       items: [
-        { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={16} /> },
-        { name: "Transactions", path: "/transactions", icon: <CreditCard size={16} /> },
-        { name: "Analytics", path: "/analytics", icon: <BarChart2 size={16} /> },
-        { name: "Budget", path: "/budget", icon: <PiggyBank size={16} /> },
-        { name: "Predictions", path: "/predictions", icon: <TrendingUp size={16} /> },
-        { name: "Diary Entry", path: "/manualentry", icon: <Notebook size={16} /> },
+        { name: "Dashboard", path: "/dashboard", icon: <Icons.Dashboard size={18} /> },
+        { name: "Transactions", path: "/transactions", icon: <Icons.Transactions size={18} /> },
+        { name: "Analytics", path: "/analytics", icon: <Icons.Analytics size={18} /> },
+        { name: "Budget", path: "/budget", icon: <Icons.Budget size={18} /> },
+        { name: "Spending Forecast", path: "/predictions", icon: <Icons.Forecast size={18} /> },
+        { name: "Diary Entry", path: "/manualentry", icon: <Icons.Diary size={18} /> },
       ],
     },
     {
-      title: "Shared & Splitting",
+      title: "Shared & Liabilities",
       items: [
-        { name: "Groups & Splits", path: "/group", icon: <Users size={16} /> },
+        {
+          name: "Groups & Splits",
+          path: "/group",
+          icon: <Icons.Groups size={18} />,
+          badge: pendingSplitCount > 0 ? pendingSplitCount : undefined,
+        },
+        { name: "Loans & EMIs", path: "/loans", icon: <Icons.Loans size={18} /> },
+        { name: "Subscriptions", path: "/subscriptions", icon: <Icons.Subscriptions size={18} /> },
+        { name: "Debts & Lenders", path: "/debts", icon: <Icons.Debts size={18} /> },
       ],
     },
     {
-      title: "Liabilities",
+      title: "System",
       items: [
-        { name: "Loans & EMIs", path: "/loans", icon: <Landmark size={16} /> },
-        { name: "Subscriptions", path: "/subscriptions", icon: <RefreshCw size={16} /> },
-        { name: "Debts & Lenders", path: "/debts", icon: <Handshake size={16} /> },
-      ],
-    },
-    {
-      title: "Preferences",
-      items: [
-        { name: "Settings", path: "/settings", icon: <Settings size={16} /> },
+        { name: "Settings", path: "/settings", icon: <Icons.Settings size={18} /> },
       ],
     },
   ];
 
   return (
-    <div
-      className={`fixed inset-y-0 left-0 z-40 w-56 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out ${open ? "translate-x-0 shadow-xl" : "-translate-x-full"
-        } md:translate-x-0 md:static flex flex-col`}
+    <aside
+      className={`fixed inset-y-0 left-0 z-40 w-60 bg-[var(--surface)] border-r border-[var(--border)] transition-transform duration-200 ease-out ${
+        open ? "translate-x-0 shadow-lg" : "-translate-x-full"
+      } md:translate-x-0 md:static flex flex-col shrink-0`}
     >
-      {/* Brand */}
-      <div className="flex items-center justify-between h-14 px-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-sky-500 flex items-center justify-center text-white shrink-0">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
-          <span className="font-bold text-sm text-slate-900 dark:text-white tracking-tight">
-            Trust<span className="text-sky-500">Tracker</span>
-          </span>
-        </div>
-        <button
-          onClick={() => setOpen(false)}
-          className="md:hidden text-slate-400 hover:text-slate-600 dark:hover:text-white"
+      {/* Brand Header */}
+      <div className="flex items-center justify-between h-14 px-5 border-b border-[var(--border)] shrink-0">
+        <NavLink
+          to="/dashboard"
+          className="flex items-center gap-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] rounded-sm"
         >
-          <X size={18} />
+          <div className="w-7 h-7 rounded-sm bg-[var(--primary)] flex items-center justify-center text-white shrink-0">
+            <Icons.Admin size={16} />
+          </div>
+          <span className="font-semibold text-base text-[var(--text)] tracking-tight">
+            Trust<span className="text-[var(--primary)]">Tracker</span>
+          </span>
+        </NavLink>
+
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label="Close navigation"
+          className="md:hidden p-1 text-[var(--text-muted)] hover:text-[var(--text)] rounded-sm cursor-pointer"
+        >
+          <Icons.Close size={18} />
         </button>
       </div>
 
-      {/* Nav Links — thin scrollbar */}
-      <nav
-        className="flex-1 px-2 py-3 space-y-4 overflow-y-auto"
-        style={{ scrollbarWidth: "thin", scrollbarColor: "#cbd5e1 transparent" }}
-      >
-        {mainSections.map((section) => (
-          <div key={section.title} className="space-y-0.5">
-            <span className="px-2 text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+      {/* Navigation Links */}
+      <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto" aria-label="Sidebar Navigation">
+        {navSections.map((section) => (
+          <div key={section.title} className="space-y-1">
+            <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
               {section.title}
             </span>
-            {section.items.map((link) => (
-              <NavLink
-                key={link.path}
-                to={link.path}
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center justify-between px-2.5 py-2 text-xs font-medium rounded-lg transition-all duration-150 ${isActive
-                    ? "bg-sky-500 text-white"
-                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-                  }`
-                }
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="flex-shrink-0 opacity-80">{link.icon}</span>
-                  <span className="truncate">{link.name}</span>
-                </div>
-                {link.path === "/group" && pendingSplitCount > 0 && (
-                  <span className="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-amber-500 text-white shadow-sm shrink-0">
-                    {pendingSplitCount}
-                  </span>
-                )}
-              </NavLink>
-            ))}
+            <div className="space-y-0.5 pt-1">
+              {section.items.map((item) => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center justify-between px-3 py-2 text-xs font-medium rounded-sm transition-colors duration-150 ${
+                      isActive
+                        ? "bg-[var(--primary-subtle)] text-[var(--primary)] font-semibold"
+                        : "text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-muted)]"
+                    }`
+                  }
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="shrink-0">{item.icon}</span>
+                    <span className="truncate">{item.name}</span>
+                  </div>
+                  {item.badge !== undefined && (
+                    <span className="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[var(--warning)] text-white shadow-xs shrink-0">
+                      {item.badge}
+                    </span>
+                  )}
+                </NavLink>
+              ))}
+            </div>
           </div>
         ))}
 
         {isSuperAdmin && (
-          <div className="space-y-0.5">
-            <span className="px-2 text-[10px] font-semibold uppercase tracking-widest text-purple-400">
-              Admin
+          <div className="space-y-1 pt-1 border-t border-[var(--border)]">
+            <span className="px-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+              Administration
             </span>
-            <NavLink
-              to="/admin"
-              onClick={() => setOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium rounded-lg transition-all ${isActive
-                  ? "bg-purple-600 text-white"
-                  : "text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40"
-                }`
-              }
-            >
-              <Shield size={16} />
-              <span>Super Admin</span>
-            </NavLink>
+            <div className="space-y-0.5 pt-1">
+              <NavLink
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-sm transition-colors ${
+                    isActive
+                      ? "bg-[var(--primary-subtle)] text-[var(--primary)] font-semibold"
+                      : "text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-muted)]"
+                  }`
+                }
+              >
+                <Icons.Admin size={18} />
+                <span>Super Admin</span>
+              </NavLink>
+            </div>
           </div>
         )}
       </nav>
-    </div>
+    </aside>
   );
-}
+};
 
 export default Sidebar;
