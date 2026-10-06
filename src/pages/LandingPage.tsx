@@ -1,17 +1,23 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { ThemeToggle } from "../components/ui/ThemeToggle";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
 import { Icons } from "../components/ui/icons";
+import { isStandalone } from "../lib/pwa";
 
 export default function LandingPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+
+  // If launched in installed PWA standalone mode, skip landing page immediately
+  if (!isLoading && isStandalone()) {
+    return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
+  }
 
   const features = [
     {
