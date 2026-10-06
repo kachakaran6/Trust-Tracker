@@ -1,7 +1,10 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api";
-import { Eye, EyeOff, Lock, ArrowRight } from "lucide-react";
+import { Card } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Icons } from "../components/ui/icons";
 import { toast } from "sonner";
 
 export default function UpdatePassword() {
@@ -27,67 +30,66 @@ export default function UpdatePassword() {
       await api.auth.updatePassword({ currentPassword, newPassword });
       toast.success("Password updated successfully!");
       setTimeout(() => navigate("/settings"), 1000);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update password");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to update password";
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4 text-white">
-      <form
-        onSubmit={handleUpdate}
-        className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-3xl shadow-2xl p-8 space-y-4"
-      >
-        <div className="text-center mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto mb-2">
-            <Lock className="w-6 h-6" />
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-4">
+      <Card className="w-full max-w-md p-6 sm:p-8 space-y-5">
+        <div className="text-center mb-2">
+          <div className="w-12 h-12 rounded-xl bg-[var(--primary-subtle)] text-[var(--primary)] flex items-center justify-center mx-auto mb-2">
+            <Icons.Shield size={24} />
           </div>
-          <h2 className="text-2xl font-bold">Update Your Password</h2>
-          <p className="text-xs text-slate-400 mt-1">Enter your current password and choose a new one.</p>
+          <h2 className="text-xl font-semibold text-[var(--text)]">Update Your Password</h2>
+          <p className="text-xs text-[var(--text-muted)] mt-1">
+            Enter your current password and choose a new one.
+          </p>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Current Password</label>
-          <input
+        <form onSubmit={handleUpdate} className="space-y-4">
+          <Input
+            label="Current Password"
             type="password"
             required
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-700 rounded-xl text-sm"
           />
-        </div>
 
-        <div>
-          <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">New Password</label>
           <div className="relative">
-            <input
+            <Input
+              label="New Password"
               type={showPassword ? "text" : "password"}
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2.5 pr-10 bg-slate-900/60 border border-slate-700 rounded-xl text-sm"
+              placeholder="At least 6 characters"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200"
+              className="absolute right-3 top-7 text-[var(--text-muted)] hover:text-[var(--text)] cursor-pointer"
+              tabIndex={-1}
             >
-              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              {showPassword ? <Icons.EyeOff size={16} /> : <Icons.Eye size={16} />}
             </button>
           </div>
-        </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-        >
-          {loading ? "Updating..." : "Update Password"}
-          <ArrowRight className="w-4 h-4" />
-        </button>
-      </form>
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={loading}
+            className="w-full justify-center"
+            icon={<Icons.Forward size={16} />}
+          >
+            {loading ? "Updating..." : "Update Password"}
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 }
