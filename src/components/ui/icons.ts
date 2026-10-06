@@ -14,6 +14,7 @@ import {
   Repeat,
   Handshake,
   Settings,
+  Shield,
   ShieldCheck,
   Plus,
   Pencil,
@@ -56,6 +57,7 @@ import {
   Target,
   Lock,
   Smartphone,
+  HelpCircle,
   LucideProps,
 } from "lucide-react";
 
@@ -86,7 +88,7 @@ function createIcon(Component: React.ComponentType<LucideProps>, defaultSize = 1
   return WrappedIcon;
 }
 
-export const Icons = {
+const BaseIcons: Record<string, React.FC<IconProps>> = {
   // Navigation & Core Features
   Dashboard: createIcon(LayoutDashboard),
   Transactions: createIcon(ArrowLeftRight),
@@ -101,31 +103,42 @@ export const Icons = {
   Debts: createIcon(Handshake),
   Settings: createIcon(Settings),
   Admin: createIcon(ShieldCheck),
+  Shield: createIcon(Shield),
+  ShieldCheck: createIcon(ShieldCheck),
 
   // Actions
   Add: createIcon(Plus),
+  Plus: createIcon(Plus),
   Edit: createIcon(Pencil),
+  Pencil: createIcon(Pencil),
   Delete: createIcon(Trash2),
+  Trash: createIcon(Trash2),
   Download: createIcon(Download),
   Export: createIcon(Download),
   Copy: createIcon(Copy),
   Share: createIcon(Share2),
   ExternalLink: createIcon(ExternalLink),
   Refresh: createIcon(RefreshCw),
+  Repeat: createIcon(Repeat),
   Remind: createIcon(Bell),
+  Bell: createIcon(Bell),
   LogOut: createIcon(LogOut),
+  Settle: createIcon(Wallet),
 
   // Navigation / Controls
   Menu: createIcon(Menu),
   Close: createIcon(X),
   Back: createIcon(ArrowLeft),
+  ArrowLeft: createIcon(ArrowLeft),
   ArrowRight: createIcon(ArrowRight),
+  Forward: createIcon(ArrowRight),
   ArrowUpRight: createIcon(ArrowUpRight),
   ArrowDownRight: createIcon(ArrowDownRight),
   ChevronDown: createIcon(ChevronDown),
   ChevronUp: createIcon(ChevronUp),
   ChevronLeft: createIcon(ChevronLeft),
   ChevronRight: createIcon(ChevronRight),
+  Expand: createIcon(ChevronDown),
   MoreVertical: createIcon(MoreVertical),
   MoreHorizontal: createIcon(MoreHorizontal),
 
@@ -147,6 +160,7 @@ export const Icons = {
   Alert: createIcon(AlertCircle),
   Warning: createIcon(AlertTriangle),
   Info: createIcon(Info),
+  Pending: createIcon(Clock),
   TrendingUp: createIcon(TrendingUp),
   TrendingDown: createIcon(TrendingDown),
 
@@ -158,9 +172,26 @@ export const Icons = {
   Calendar: createIcon(Calendar),
   Clock: createIcon(Clock),
   FileText: createIcon(FileText),
+  Receipt: createIcon(FileText),
   Wallet: createIcon(Wallet),
   Target: createIcon(Target),
   Smartphone: createIcon(Smartphone),
 };
+
+const FallbackIcon = createIcon(HelpCircle);
+
+/**
+ * Proxy wrapper ensuring that an unmapped icon name will NEVER return undefined
+ * (which causes React Error #130) and instead gracefully renders a fallback.
+ */
+export const Icons = new Proxy(BaseIcons, {
+  get(target, prop: string) {
+    if (prop in target) {
+      return target[prop];
+    }
+    // Return safe fallback component for undefined icon lookups
+    return FallbackIcon;
+  },
+}) as Record<string, React.FC<IconProps>> & typeof BaseIcons;
 
 export default Icons;
