@@ -3,19 +3,40 @@ export default {
   darkMode: "class",
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
+    screens: {
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+    },
     extend: {
       colors: {
         primary: {
-          50: "#EFF6FF",
-          100: "#DBEAFE",
-          200: "#BFDBFE",
-          300: "#93C5FD",
-          400: "#60A5FA",
-          500: "#3B82F6",
-          600: "#2563EB",
-          700: "#1D4ED8",
-          800: "#1E40AF",
-          900: "#1E3A8A",
+          50: "#F0F9FF",
+          100: "#E0F2FE",
+          200: "#BAE6FD",
+          300: "#7DD3FC",
+          400: "#38BDF8",
+          500: "#0EA5E9",
+          600: "#0284C7",
+          700: "#0369A1",
+          800: "#075985",
+          900: "#0C4A6E",
+          DEFAULT: "var(--primary)",
+          hover: "var(--primary-hover)",
+          subtle: "var(--primary-subtle)",
+        },
+        surface: {
+          DEFAULT: "var(--surface)",
+          muted: "var(--surface-muted)",
+        },
+        app: {
+          bg: "var(--bg)",
+          surface: "var(--surface)",
+          muted: "var(--surface-muted)",
+          border: "var(--border)",
+          text: "var(--text)",
+          subtext: "var(--text-muted)",
         },
         success: {
           50: "#ECFDF5",
@@ -28,6 +49,9 @@ export default {
           700: "#047857",
           800: "#065F46",
           900: "#064E3B",
+          DEFAULT: "var(--success)",
+          hover: "var(--success-hover)",
+          subtle: "var(--success-subtle)",
         },
         warning: {
           50: "#FFFBEB",
@@ -40,6 +64,9 @@ export default {
           700: "#B45309",
           800: "#92400E",
           900: "#78350F",
+          DEFAULT: "var(--warning)",
+          hover: "var(--warning-hover)",
+          subtle: "var(--warning-subtle)",
         },
         danger: {
           50: "#FEF2F2",
@@ -52,32 +79,38 @@ export default {
           700: "#B91C1C",
           800: "#991B1B",
           900: "#7F1D1D",
+          DEFAULT: "var(--danger)",
+          hover: "var(--danger-hover)",
+          subtle: "var(--danger-subtle)",
         },
       },
-      fontFamily: {
-        sans: ["Manrope", "sans-serif"],
-      },
-      transitionTimingFunction: {
-        fluid: "cubic-bezier(0.32, 0.72, 0, 1)",
-      },
-      animation: {
-        "fade-in": "fadeIn 0.3s ease-in-out",
-        "slide-up": "slideUp 0.4s ease-out",
-        "pulse-slow": "pulse 3s infinite",
-      },
-      keyframes: {
-        fadeIn: {
-          "0%": { opacity: 0 },
-          "100%": { opacity: 1 },
-        },
-        slideUp: {
-          "0%": { transform: "translateY(20px)", opacity: 0 },
-          "100%": { transform: "translateY(0)", opacity: 1 },
-        },
+      borderRadius: {
+        sm: "var(--radius-sm, 8px)",
+        md: "var(--radius-md, 12px)",
+        lg: "var(--radius-lg, 16px)",
+        full: "var(--radius-full, 9999px)",
       },
       boxShadow: {
-        card: "0 2px 8px rgba(0, 0, 0, 0.08)",
-        "card-hover": "0 4px 12px rgba(0, 0, 0, 0.12)",
+        sm: "var(--shadow-sm)",
+        md: "var(--shadow-md)",
+        lg: "var(--shadow-lg)",
+      },
+      fontFamily: {
+        sans: [
+          '"Plus Jakarta Sans"',
+          "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "sans-serif",
+        ],
+      },
+      transitionTimingFunction: {
+        out: "cubic-bezier(0, 0, 0.2, 1)",
+      },
+      transitionDuration: {
+        DEFAULT: "150ms",
+        fast: "150ms",
+        normal: "200ms",
       },
     },
   },
