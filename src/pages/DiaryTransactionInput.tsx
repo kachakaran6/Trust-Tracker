@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTransactions } from "../contexts/TransactionsContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { api } from "../lib/api";
-import { Sparkles, ArrowRight, Check, Trash2, Calendar, Tag, DollarSign } from "lucide-react";
+import { formatCategory } from "../lib/format";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
 import { usePageHeader } from "../contexts/PageHeaderContext";
+import { PageHeader } from "../components/ui/PageHeader";
+import { Card } from "../components/ui/Card";
+import { Button, IconButton } from "../components/ui/Button";
+import { Textarea, Input, Select } from "../components/ui/Input";
+import { Icons } from "../components/ui/icons";
 
 interface ParsedTransaction {
   amount: number;
@@ -21,7 +25,7 @@ export default function DiaryTransactionInput() {
   const { setPageHeader } = usePageHeader();
 
   useEffect(() => {
-    setPageHeader("AI Diary & Receipt Parser");
+    setPageHeader("Diary Entry");
   }, [setPageHeader]);
 
   const [text, setText] = useState("");
@@ -39,13 +43,14 @@ export default function DiaryTransactionInput() {
       setIsParsing(true);
       const res = await api.ai.parseDiary(text);
       if (!res.transactions || res.transactions.length === 0) {
-        toast.warning("No transactions could be extracted. Try including amounts like '$25 for dinner'");
+        toast.warning("No transactions could be extracted. Include amounts like 'Spent ₹450 for groceries'");
         return;
       }
       setParsedItems(res.transactions);
       toast.success(`Extracted ${res.transactions.length} transaction${res.transactions.length > 1 ? "s" : ""}!`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to parse text");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to parse text";
+      toast.error(message);
     } finally {
       setIsParsing(false);
     }
@@ -65,11 +70,12 @@ export default function DiaryTransactionInput() {
           date: item.date,
         });
       }
-      toast.success(`Successfully saved ${parsedItems.length} transactions!`);
+      toast.success(`Saved ${parsedItems.length} transactions!`);
       setText("");
       setParsedItems([]);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to save transactions");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to save transactions";
+      toast.error(message);
     } finally {
       setIsSaving(false);
     }
@@ -79,129 +85,142 @@ export default function DiaryTransactionInput() {
     setParsedItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleUpdateItem = (index: number, field: keyof ParsedTransaction, value: any) => {
+  const handleUpdateItem = (
+    index: number,
+    field: keyof ParsedTransaction,
+    value: string | number | null
+  ) => {
     setParsedItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+    <div className="max-w-4xl mx-auto space-y-6">
+      <PageHeader
+        title="Diary & Natural Language Entry"
+        description="Type or paste unstructured daily logs, receipts, or notes. The system extracts amounts, categories, dates, and types automatically."
+      />
 
       {/* Input Box */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-6 shadow-sm">
-        <textarea
-          rows={4}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Example: Spent $45.50 on groceries at Walmart, paid $12.00 for Uber to office, earned $350 from freelance design project."
-          className="w-full p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        />
+      <Card>
+        <div className="space-y-4">
+          <Textarea
+            rows={5}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Example: Spent ₹450 on groceries at supermarket, paid ₹120 for auto to office, received ₹25,000 freelance design milestone."
+          />
 
-        <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <div className="text-xs text-slate-400 flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-sky-400" />
-            AI extracts amounts, categories, types, and descriptions automatically
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-2">
+            <span className="text-xs text-[var(--text-muted)]">
+              Paste multi-line text or single paragraph sentences.
+            </span>
+            <Button
+              variant="primary"
+              onClick={handleParse}
+              disabled={isParsing || !text.trim()}
+              isLoading={isParsing}
+              icon={<Icons.ArrowRight size={16} />}
+            >
+              Parse Transactions
+            </Button>
           </div>
-          <button
-            onClick={handleParse}
-            disabled={isParsing || !text.trim()}
-            className="w-full sm:w-auto px-6 py-2.5 bg-primary-600 hover:bg-primary-500 active:scale-[0.98] text-white rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
-          >
-            {isParsing ? "Extracting..." : "Parse Transactions"}
-            <ArrowRight className="w-4 h-4" />
-          </button>
         </div>
-      </div>
+      </Card>
 
       {/* Extracted Preview List */}
-      <AnimatePresence>
-        {parsedItems.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-6 shadow-sm space-y-4"
-          >
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-700/60">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Extracted Transactions ({parsedItems.length})
-              </h3>
-              <button
-                onClick={handleSaveAll}
-                disabled={isSaving}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
+      {parsedItems.length > 0 && (
+        <Card
+          title={`Extracted Transactions (${parsedItems.length})`}
+          action={
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Icons.Check size={16} />}
+              onClick={handleSaveAll}
+              isLoading={isSaving}
+            >
+              Save All to Ledger
+            </Button>
+          }
+        >
+          <div className="space-y-3 pt-2">
+            {parsedItems.map((item, idx) => (
+              <div
+                key={idx}
+                className="p-3.5 bg-[var(--surface-muted)] border border-[var(--border)] rounded-sm flex flex-col md:flex-row gap-3 items-center justify-between"
               >
-                <Check className="w-4 h-4" />
-                {isSaving ? "Saving..." : "Save All to Account"}
-              </button>
-            </div>
+                <div className="flex items-center gap-2.5 w-full md:w-auto">
+                  <Select
+                    value={item.type}
+                    onChange={(e) =>
+                      handleUpdateItem(idx, "type", e.target.value as "income" | "expense")
+                    }
+                    className="w-28 text-xs"
+                  >
+                    <option value="expense">Expense</option>
+                    <option value="income">Income</option>
+                  </Select>
 
-            <div className="space-y-3">
-              {parsedItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-700/60 rounded-2xl flex flex-col md:flex-row gap-3 items-center justify-between"
-                >
-                  <div className="flex items-center gap-3 w-full md:w-auto">
-                    <select
-                      value={item.type}
-                      onChange={(e) => handleUpdateItem(idx, "type", e.target.value)}
-                      className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200"
-                    >
-                      <option value="expense">Expense</option>
-                      <option value="income">Income</option>
-                    </select>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={item.amount}
+                    onChange={(e) =>
+                      handleUpdateItem(idx, "amount", parseFloat(e.target.value) || 0)
+                    }
+                    className="w-28 text-xs"
+                  />
+                </div>
 
-                    <div className="relative flex-1 md:w-36">
-                      <DollarSign className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400" />
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={item.amount}
-                        onChange={(e) => handleUpdateItem(idx, "amount", parseFloat(e.target.value) || 0)}
-                        className="w-full pl-7 pr-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-900 dark:text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <input
-                    type="text"
+                <div className="flex-1 w-full md:w-auto">
+                  <Input
                     value={item.description}
-                    onChange={(e) => handleUpdateItem(idx, "description", e.target.value)}
+                    onChange={(e) =>
+                      handleUpdateItem(idx, "description", e.target.value)
+                    }
                     placeholder="Description"
-                    className="w-full md:flex-1 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white"
+                    className="text-xs"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+                  <Select
+                    value={item.category_id || ""}
+                    onChange={(e) =>
+                      handleUpdateItem(idx, "category_id", e.target.value || null)
+                    }
+                    className="w-36 text-xs"
+                  >
+                    <option value="">Uncategorized</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {formatCategory(c.name)}
+                      </option>
+                    ))}
+                  </Select>
+
+                  <Input
+                    type="date"
+                    value={item.date ? item.date.slice(0, 10) : ""}
+                    onChange={(e) => handleUpdateItem(idx, "date", e.target.value)}
+                    className="w-32 text-xs"
                   />
 
-                  <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                    <select
-                      value={item.category_id || ""}
-                      onChange={(e) => handleUpdateItem(idx, "category_id", e.target.value || null)}
-                      className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-800 dark:text-slate-200 max-w-[140px]"
-                    >
-                      <option value="">Select Category</option>
-                      {categories
-                        .filter((c) => c.type === item.type)
-                        .map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </option>
-                        ))}
-                    </select>
-
-                    <button
-                      onClick={() => handleRemoveItem(idx)}
-                      className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg transition cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <IconButton
+                    aria-label="Remove extracted item"
+                    variant="danger-ghost"
+                    size="sm"
+                    icon={<Icons.Delete size={15} />}
+                    onClick={() => handleRemoveItem(idx)}
+                  />
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
