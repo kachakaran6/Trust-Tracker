@@ -2,14 +2,19 @@ import React, { useState, useEffect } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { CURRENCIES, detectUserCurrency } from "../utils/currency";
-import { Dropdown } from "../components/ui/Dropdown";
-import { Mail, Lock, User as UserIcon, Eye, EyeOff, ShieldCheck, ArrowRight, Sparkles, Globe } from "lucide-react";
+import { Card } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Input, Select } from "../components/ui/Input";
+import { Icons } from "../components/ui/icons";
 import { toast } from "sonner";
 
 export default function Register() {
   const { register, isAuthenticated, isLoading } = useAuth();
   const [searchParams] = useSearchParams();
-  const redirectTarget = searchParams.get("redirect") || sessionStorage.getItem("tt_join_redirect") || "/dashboard";
+  const redirectTarget =
+    searchParams.get("redirect") ||
+    sessionStorage.getItem("tt_join_redirect") ||
+    "/dashboard";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -31,9 +36,8 @@ export default function Register() {
   }
 
   const currencyOptions = CURRENCIES.map((c) => ({
+    label: `${c.code} (${c.symbol}) - ${c.name}`,
     value: c.code,
-    label: `${c.flag || ""} ${c.code} (${c.symbol}) - ${c.name}`,
-    badge: c.symbol,
   }));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,144 +68,93 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 text-white">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex items-center justify-center p-3 bg-sky-500/20 border border-sky-500/30 rounded-2xl shadow-xl backdrop-blur-md mb-4">
-          <ShieldCheck className="w-10 h-10 text-sky-400" />
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-2">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--primary-subtle)] text-[var(--primary)] mb-2">
+          <Icons.Shield size={24} />
         </div>
-        <h2 className="text-3xl font-extrabold tracking-tight text-white">
-          Create Account
-        </h2>
-        <p className="mt-2 text-sm text-slate-400">
-          Join Trust-Tracker and manage loans, subscriptions, shared splits & daily expenses
+        <h1 className="text-2xl font-semibold tracking-tight text-[var(--text)]">
+          Create a TrustTracker Account
+        </h1>
+        <p className="text-xs text-[var(--text-muted)]">
+          Track expenses, split group bills, and monitor subscriptions.
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 py-8 px-6 shadow-2xl rounded-3xl sm:px-10">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <Card className="p-6 sm:p-8 space-y-5">
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
-                Full Name
-              </label>
-              <div className="mt-1 relative rounded-xl shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <UserIcon className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Alex Morgan"
-                  className="block w-full pl-11 pr-4 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
-                />
-              </div>
-            </div>
+            <Input
+              label="Full Name"
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Alex Morgan"
+            />
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
-                Email Address
-              </label>
-              <div className="mt-1 relative rounded-xl shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="alex@example.com"
-                  className="block w-full pl-11 pr-4 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
-                />
-              </div>
-            </div>
+            <Input
+              label="Email Address"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="alex@example.com"
+            />
 
-            {/* Currency Auto-detection field */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
-                  Primary Currency
-                </label>
-                <span className="text-[11px] text-sky-400 font-medium flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" /> Auto-detected
-                </span>
-              </div>
-              <Dropdown
-                options={currencyOptions}
-                value={currency}
-                onChange={setCurrency}
-                searchable
-                searchPlaceholder="Search currency..."
+            <Select
+              label="Primary Currency"
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              options={currencyOptions}
+            />
+
+            <div className="relative">
+              <Input
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 6 characters"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-7 text-[var(--text-muted)] hover:text-[var(--text)] cursor-pointer"
+                tabIndex={-1}
+              >
+                {showPassword ? <Icons.EyeOff size={16} /> : <Icons.Eye size={16} />}
+              </button>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
-                Password
-              </label>
-              <div className="mt-1 relative rounded-xl shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
-                  className="block w-full pl-11 pr-11 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
+            <Input
+              label="Confirm Password"
+              type={showPassword ? "text" : "password"}
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter password"
+            />
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
-                Confirm Password
-              </label>
-              <div className="mt-1 relative rounded-xl shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
-                </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat your password"
-                  className="block w-full pl-11 pr-4 py-3 bg-slate-900/60 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
-                />
-              </div>
-            </div>
-
-            <button
+            <Button
+              variant="primary"
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex justify-center items-center gap-2 mt-4 py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-primary-600 hover:bg-primary-500 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 transition-all cursor-pointer"
+              className="w-full justify-center"
+              icon={<Icons.Forward size={16} />}
             >
-              {isSubmitting ? "Creating account..." : "Sign Up"}
-              <ArrowRight className="w-4 h-4" />
-            </button>
+              {isSubmitting ? "Creating account..." : "Create Account"}
+            </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-slate-400">
+          <div className="pt-2 text-center text-xs text-[var(--text-muted)] border-t border-[var(--border)]">
             Already have an account?{" "}
-            <Link
-              to={redirectTarget ? `/login?redirect=${encodeURIComponent(redirectTarget)}` : "/login"}
-              className="font-semibold text-sky-400 hover:text-sky-300"
-            >
+            <Link to="/login" className="font-semibold text-[var(--primary)] hover:underline">
               Sign in
             </Link>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

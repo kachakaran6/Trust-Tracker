@@ -1,25 +1,27 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
-import { formatCurrency as globalFormatCurrency } from "../utils/currency";
+import { formatMoney, formatDate, formatCategory } from "../lib/format";
 import {
-  PlusCircle,
-  MinusCircle,
-  TrendingUp,
-  TrendingDown,
-  ArrowLeft,
-  Download,
-  Share2,
-  Calendar,
-  PieChart as PieChartIcon
-} from "lucide-react";
-import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
-} from 'recharts';
-import { format, parseISO } from 'date-fns';
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 import { toast } from "sonner";
+import { PageHeader } from "../components/ui/PageHeader";
+import { Card } from "../components/ui/Card";
+import { StatCard } from "../components/ui/StatCard";
+import { Button } from "../components/ui/Button";
+import { EmptyState } from "../components/ui/EmptyState";
+import { Icons } from "../components/ui/icons";
 
 interface Transaction {
   amount: number;
@@ -32,7 +34,7 @@ interface Transaction {
 
 export default function SessionAnalytics() {
   const { user } = useAuth();
-  const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
+  const formatCurrency = (val: number) => formatMoney(val, user?.currency);
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<Transaction[]>([]);
@@ -53,19 +55,19 @@ export default function SessionAnalytics() {
           transactions = sData.data;
         }
 
-        // Sanitize and filter empty records
         const sanitized = transactions
-          .filter(t => t && (t.amount || t.description))
-          .map(t => ({
+          .filter((t) => t && (t.amount || t.description))
+          .map((t) => ({
             ...t,
-            type: (t.type === 'income' ? 'income' : 'expense') as "income" | "expense",
+            type: (t.type === "income" ? "income" : "expense") as "income" | "expense",
             amount: Number(t.amount) || 0,
             date: t.date || new Date().toISOString(),
           }));
 
         setData(sanitized);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to load session";
+        setError(message);
       } finally {
         setLoading(false);
       }
@@ -76,242 +78,180 @@ export default function SessionAnalytics() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]" />
       </div>
     );
   }
 
   if (error || data.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-            Session Expired
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            The data session was either not found or has expired (sessions last 30 minutes).
-          </p>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-          >
-            <ArrowLeft className="w-4 h-4" /> Go to Back Home
-          </Link>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg)] px-4">
+        <EmptyState
+          icon={<Icons.Alert size={28} className="text-[var(--danger)]" />}
+          title="Session Expired or Not Found"
+          description="This temporary analytics snapshot was either not found or has expired (sessions last 30 minutes)."
+          action={
+            <Link to="/dashboard">
+              <Button variant="primary" icon={<Icons.Back size={16} />}>
+                Back to Dashboard
+              </Button>
+            </Link>
+          }
+        />
       </div>
     );
   }
 
-  // Analytics Processing
   const totalIncome = data
-    .filter(t => t.type === 'income')
+    .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const totalExpense = data
-    .filter(t => t.type === 'expense')
+    .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const netBalance = totalIncome - totalExpense;
 
-  // Category Breakdown
-  const categoryData = data.reduce((acc: any, t) => {
-    if (t.type === 'expense') {
-      const cat = t.category_name || "Misc";
-      acc[cat] = (acc[cat] || 0) + Number(t.amount);
+  const categoryMap: Record<string, number> = {};
+  data.forEach((t) => {
+    if (t.type === "expense") {
+      const cat = formatCategory(t.category_name || "Uncategorized");
+      categoryMap[cat] = (categoryMap[cat] || 0) + Number(t.amount);
     }
-    return acc;
-  }, {});
+  });
 
-  const pieChartData = Object.keys(categoryData).map(name => ({
+  const categoryData = Object.entries(categoryMap).map(([name, value]) => ({
     name,
-    value: categoryData[name]
-  })).sort((a, b) => b.value - a.value);
+    value,
+  }));
 
-  // Daily Trends (Bar Chart)
-  const dailyData = data.reduce((acc: any, t) => {
-    if (!t.date) return acc;
-    const day = format(parseISO(t.date), 'MMM dd');
-    if (!acc[day]) acc[day] = { name: day, income: 0, expense: 0 };
-    if (t.type === 'income') acc[day].income += Number(t.amount || 0);
-    else if (t.type === 'expense') acc[day].expense += Number(t.amount || 0);
-    return acc;
-  }, {});
+  const PALETTE = ["#0284C7", "#059669", "#D97706", "#DC2626", "#475569"];
 
-  const barChartData = Object.values(dailyData).slice(-7); // Last 7 unique days
-
-  const COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success("Link copied to clipboard!");
-  };
-
-  const downloadJSON = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `trust_tracker_session_${id?.slice(0, 8)}.json`;
+  const handleDownload = () => {
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(data, null, 2)
+    )}`;
+    const a = document.createElement("a");
+    a.href = jsonString;
+    a.download = `trusttracker_session_${id?.slice(0, 8)}.json`;
     a.click();
   };
 
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Session URL copied to clipboard!");
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-4 sm:p-6 lg:p-8 space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <PageHeader
+          title="Shared Session Analytics"
+          description="Ephemeral read-only analytics snapshot (valid for 30 minutes from creation)."
+          secondaryActions={
+            <Button
+              variant="secondary"
+              icon={<Icons.Download size={16} />}
+              onClick={handleDownload}
+            >
+              Export JSON
+            </Button>
+          }
+          action={
+            <Button
+              variant="primary"
+              icon={<Icons.Share size={16} />}
+              onClick={handleShare}
+            >
+              Share Link
+            </Button>
+          }
+        />
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-blue-600 font-semibold mb-1">
-              <TrendingUp className="w-5 h-5" /> TEMPORARY ANALYSIS
-            </div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
-              Insight Report
-            </h1>
-            <p className="text-sm text-amber-600 font-medium">⚠️ Valid for 30 minutes from creation</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleCopyLink}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl shadow-sm hover:bg-gray-50 transition"
-            >
-              <Share2 className="w-4 h-4 cursor-pointer" /> Share
-            </button>
-            <button
-              onClick={downloadJSON}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl shadow-lg hover:bg-blue-700 transition"
-            >
-              <Download className="w-4 h-4" /> Export
-            </button>
-          </div>
+        {/* Totals */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <StatCard
+            label="Total Income"
+            value={formatCurrency(totalIncome)}
+            variant="success"
+          />
+          <StatCard
+            label="Total Expenses"
+            value={formatCurrency(totalExpense)}
+            variant="danger"
+          />
+          <StatCard
+            label="Net Balance"
+            value={formatMoney(netBalance, user?.currency, { showSign: true })}
+            variant={netBalance >= 0 ? "success" : "danger"}
+          />
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border dark:border-gray-800">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-gray-500 text-sm font-medium">TOTAL REVENUE</span>
-              <PlusCircle className="text-green-500 w-5 h-5 opacity-80" />
-            </div>
-            <div className="text-3xl font-bold text-green-600">{formatCurrency(totalIncome)}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border dark:border-gray-800">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-gray-500 text-sm font-medium">TOTAL SPENDING</span>
-              <MinusCircle className="text-red-500 w-5 h-5 opacity-80" />
-            </div>
-            <div className="text-3xl font-bold text-red-600">{formatCurrency(totalExpense)}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border dark:border-gray-800">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-gray-500 text-sm font-medium">NET SAVINGS</span>
-              <Calendar className="text-blue-500 w-5 h-5 opacity-80" />
-            </div>
-            <div className={`text-3xl font-bold ${netBalance >= 0 ? "text-blue-600" : "text-amber-600"}`}>
-              {formatCurrency(netBalance)}
-            </div>
-          </div>
-        </div>
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card title="Spending Distribution">
+            {categoryData.length === 0 ? (
+              <p className="text-xs text-[var(--text-muted)] py-12 text-center">
+                No expense categories found in this session.
+              </p>
+            ) : (
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {categoryData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={PALETTE[index % PALETTE.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--surface)",
+                        borderColor: "var(--border)",
+                        borderRadius: "8px",
+                        color: "var(--text)",
+                      }}
+                      formatter={(val) => [formatCurrency(Number(val)), ""]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </Card>
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-          {/* Spending Behavior (Pie Chart) */}
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border dark:border-gray-800">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2 mb-6">
-              <PieChartIcon className="w-5 h-5 text-indigo-500" /> Spending Distribution
-            </h3>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
+          <Card title="Session Transaction Records">
+            <div className="max-h-64 overflow-y-auto divide-y divide-[var(--border)]">
+              {data.map((t, idx) => (
+                <div key={idx} className="py-2.5 flex items-center justify-between text-xs sm:text-sm">
+                  <div>
+                    <p className="font-medium text-[var(--text)]">{t.description || "Expense"}</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">
+                      {formatCategory(t.category_name)} · {formatDate(t.date)}
+                    </p>
+                  </div>
+                  <span
+                    className={`font-semibold tabular-nums ${
+                      t.type === "income" ? "text-[var(--success)]" : "text-[var(--danger)]"
+                    }`}
                   >
-                    {pieChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend verticalAlign="bottom" height={36} />
-                </PieChart>
-              </ResponsiveContainer>
+                    {formatMoney(t.amount, user?.currency, { showSign: true })}
+                  </span>
+                </div>
+              ))}
             </div>
-          </div>
-
-          {/* Daily Cashflow (Bar Chart) */}
-          <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl shadow-sm border dark:border-gray-800">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2 mb-6">
-              <TrendingUp className="w-5 h-5 text-green-500" /> Recent Cashflow (7 Days)
-            </h3>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barChartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.1} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                  <Tooltip cursor={{ fill: 'transparent' }} />
-                  <Legend verticalAlign="top" align="right" height={36} />
-                  <Bar dataKey="income" fill="#10B981" radius={[4, 4, 0, 0]} barSize={20} />
-                  <Bar dataKey="expense" fill="#EF4444" radius={[4, 4, 0, 0]} barSize={20} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
+          </Card>
         </div>
-
-        {/* Recent Activity Table */}
-        <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border dark:border-gray-800 overflow-hidden">
-          <div className="p-6 border-b dark:border-gray-800">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">Sample Records</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-gray-50 dark:bg-gray-800/50">
-                <tr>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y dark:divide-gray-800">
-                {data.slice(0, 10).map((t, i) => (
-                  <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/20 transition">
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {format(parseISO(t.date), 'MMM dd, yyyy')}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-800 dark:text-gray-200">{t.description}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${t.type === 'income' ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                        }`}>
-                        {t.type.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className={`px-6 py-4 text-sm font-bold text-right ${t.type === 'income' ? "text-green-600" : "text-red-600"
-                      }`}>
-                      {formatCurrency(t.amount)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {data.length > 10 && (
-            <div className="p-4 text-center bg-gray-50 dark:bg-gray-800/20 text-xs text-gray-500">
-              Showing top 10 of {data.length} records. Download report to see all.
-            </div>
-          )}
-        </div>
-
       </div>
     </div>
   );

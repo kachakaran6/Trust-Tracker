@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTransactions } from "../contexts/TransactionsContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
-import { format, parseISO, subMonths, addMonths, startOfMonth } from "date-fns";
+import { formatMoney, formatCategory } from "../lib/format";
+import { format, subMonths, addMonths, startOfMonth } from "date-fns";
 import {
   BarChart,
   Bar,
@@ -11,39 +12,35 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
   PieChart,
   Pie,
   Cell,
   LineChart,
   Line,
 } from "recharts";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-
-import { formatCurrency as globalFormatCurrency } from "../utils/currency";
 import { usePageHeader } from "../contexts/PageHeaderContext";
+import { PageHeader } from "../components/ui/PageHeader";
+import { StatCard } from "../components/ui/StatCard";
+import { Card } from "../components/ui/Card";
+import { IconButton } from "../components/ui/Button";
+import { EmptyState } from "../components/ui/EmptyState";
+import { Icons } from "../components/ui/icons";
 
-function Analytics() {
+export default function Analytics() {
   const { user } = useAuth();
   const { setPageHeader } = usePageHeader();
   const { getTransactionsByMonth, getMonthlySummary } = useTransactions();
   const { getCategoryById } = useCategories();
 
-  useEffect(() => { setPageHeader("Analytics"); }, [setPageHeader]);
+  useEffect(() => {
+    setPageHeader("Analytics");
+  }, [setPageHeader]);
 
-  // State for selected month
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-  // Get transactions and summary for the selected month
   const monthlyTransactions = getTransactionsByMonth(selectedMonth);
   const monthlySummary = getMonthlySummary(selectedMonth);
 
-  // Format currency using user's preferred currency
-  const formatCurrency = (value: number) => {
-    return globalFormatCurrency(value, user?.currency);
-  };
-
-  // Change month functions
   const goToPreviousMonth = () => {
     setSelectedMonth((prev) => subMonths(prev, 1));
   };
@@ -55,47 +52,43 @@ function Analytics() {
     }
   };
 
-  // Generate data for category breakdown pie chart
   const generateCategoryData = () => {
     return Object.entries(monthlySummary.categories)
-      .filter(([_, data]) => data.total > 0)
+      .filter(([, data]) => data.total > 0)
       .map(([categoryId, data]) => {
         const category = getCategoryById(categoryId);
         return {
-          name: category?.name || "Unknown Category",
+          name: formatCategory(category?.name),
           value: data.total,
-          color: category?.color || "#6B7280",
-          type: category?.type || "expense", // default to "expense" if unknown
+          color: category?.color || "#0284C7",
+          type: category?.type || "expense",
         };
       });
   };
 
-  // Generate data for daily spending bar chart
   const generateDailyData = () => {
-    const dailySpending = new Map();
+    const dailySpending = new Map<string, number>();
 
     monthlyTransactions.forEach((transaction) => {
       if (transaction.type === "expense") {
-        const day = transaction.date.substring(8, 10); // Extract day from YYYY-MM-DD
+        const dateStr = transaction.date || transaction.created_at;
+        const day = dateStr.substring(8, 10);
         const currentTotal = dailySpending.get(day) || 0;
         dailySpending.set(day, currentTotal + transaction.amount);
       }
     });
 
-    // Convert to array and sort by day
     return Array.from(dailySpending.entries())
       .map(([day, amount]) => ({ day, amount }))
       .sort((a, b) => Number(a.day) - Number(b.day));
   };
 
-  // Generate year-to-date monthly trends
   const generateYearlyTrend = () => {
     const months = [];
-    let currentMonth = startOfMonth(new Date());
+    const currentM = startOfMonth(new Date());
 
-    // Get data for the last 6 months
     for (let i = 0; i < 6; i++) {
-      const month = subMonths(currentMonth, i);
+      const month = subMonths(currentM, i);
       const summary = getMonthlySummary(month);
 
       months.unshift({
@@ -109,394 +102,291 @@ function Analytics() {
     return months;
   };
 
-  // Prepare chart data
   const categoryData = generateCategoryData();
   const expenseData = categoryData.filter((item) => item.type === "expense");
   const incomeData = categoryData.filter((item) => item.type === "income");
   const dailyData = generateDailyData();
   const yearlyTrendData = generateYearlyTrend();
 
-  // Custom tooltip for charts
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 shadow-md rounded-md border border-gray-200">
-          <p className="font-medium">{label}</p>
-          {payload.map((item: any, index: number) => (
-            <p key={index} style={{ color: item.color }}>
-              {item.name}: {formatCurrency(item.value)}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Category colors for pie chart
-  const COLORS = [
-    "#3B82F6",
-    "#10B981",
-    "#F59E0B",
-    "#EF4444",
-    "#8B5CF6",
-    "#EC4899",
-    "#14B8A6",
-    "#F97316",
+  const CATEGORICAL_PALETTE = [
+    "#0284C7",
+    "#059669",
+    "#D97706",
+    "#DC2626",
+    "#38BDF8",
+    "#475569",
+    "#64748B",
+    "#0369A1",
   ];
+
+  const formatCurrency = (val: number) => formatMoney(val, user?.currency);
 
   return (
     <div className="space-y-6">
+      <PageHeader
+        title="Visual Analytics"
+        description="Detailed breakdown of your spending habits, daily pace, and categorical trends."
+        action={
+          <div className="flex items-center gap-2 bg-[var(--surface)] border border-[var(--border)] rounded-sm p-1 shadow-xs">
+            <IconButton
+              aria-label="Previous month"
+              variant="ghost"
+              size="sm"
+              icon={<Icons.ChevronLeft size={16} />}
+              onClick={goToPreviousMonth}
+            />
+            <span className="text-xs sm:text-sm font-semibold text-[var(--text)] px-2 min-w-[110px] text-center">
+              {format(selectedMonth, "MMMM yyyy")}
+            </span>
+            <IconButton
+              aria-label="Next month"
+              variant="ghost"
+              size="sm"
+              icon={<Icons.ChevronRight size={16} />}
+              onClick={goToNextMonth}
+              disabled={addMonths(selectedMonth, 1) > new Date()}
+            />
+          </div>
+        }
+      />
 
-      {/* Month selector */}
-      <div className="flex items-center justify-center space-x-4 mb-6 text-gray-800 dark:text-gray-200">
-        <button
-          onClick={goToPreviousMonth}
-          className="btn-outline p-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
-        >
-          <ChevronLeft size={20} />
-        </button>
+      {/* Monthly Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+        <StatCard
+          label="Monthly Income"
+          value={formatCurrency(monthlySummary.totalIncome)}
+          helperText={`Recorded for ${format(selectedMonth, "MMMM yyyy")}`}
+          variant="success"
+        />
 
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          {format(selectedMonth, "MMMM yyyy")}
-        </h2>
+        <StatCard
+          label="Monthly Expenses"
+          value={formatCurrency(monthlySummary.totalExpense)}
+          helperText={`Recorded for ${format(selectedMonth, "MMMM yyyy")}`}
+          variant="danger"
+        />
 
-        <button
-          onClick={goToNextMonth}
-          className="btn-outline p-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={addMonths(selectedMonth, 1) > new Date()}
-        >
-          <ChevronRight size={20} />
-        </button>
+        <StatCard
+          label="Monthly Net Cashflow"
+          value={formatMoney(monthlySummary.balance, user?.currency, { showSign: true })}
+          helperText="Income minus expenses"
+          variant={monthlySummary.balance >= 0 ? "success" : "danger"}
+        />
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Income */}
-        <div className="card p-6 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-          <div className="text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-              Income
-            </p>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-              {formatCurrency(monthlySummary.totalIncome)}
-            </p>
-          </div>
-        </div>
-
-        {/* Expenses */}
-        <div
-          className="card p-6 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
-          style={{ animationDelay: "0.1s" }}
-        >
-          <div className="text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-              Expenses
-            </p>
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-              {formatCurrency(monthlySummary.totalExpense)}
-            </p>
-          </div>
-        </div>
-
-        {/* Balance */}
-        <div
-          className="card p-6 animate-fade-in bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
-          style={{ animationDelay: "0.2s" }}
-        >
-          <div className="text-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-              Balance
-            </p>
-            <p
-              className={`text-2xl font-bold ${
-                monthlySummary.balance >= 0
-                  ? "text-blue-600 dark:text-blue-400"
-                  : "text-red-600 dark:text-red-400"
-              }`}
-            >
-              {formatCurrency(monthlySummary.balance)}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Category breakdown pie chart */}
-      <div className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-          Expenses by Category
-        </h2>
-        {expenseData.length === 0 ? (
-          <div className="h-80 flex items-center justify-center text-gray-500 dark:text-gray-400">
-            <p>No spending data available for this month</p>
-          </div>
-        ) : (
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={expenseData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  paddingAngle={2}
-                  dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name} (${(percent * 100).toFixed(0)}%)`
-                  }
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.color || COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    borderColor: "#ccc",
-                    color: "#000",
-                  }}
-                  formatter={(value) => formatCurrency(value as number)}
-                />
-                <Legend
-                  wrapperStyle={{ color: "#4B5563", darkColor: "#D1D5DB" }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
-
-      {/* Income category */}
-      <div className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mt-4">
-        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-          Income by Category
-        </h2>
-        {incomeData.length === 0 ? (
-          <div className="h-80 flex items-center justify-center text-gray-500 dark:text-gray-400">
-            <p>No income data available for this month</p>
-          </div>
-        ) : (
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={incomeData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  paddingAngle={2}
-                  dataKey="value"
-                  label={({ name, percent }) =>
-                    `${name} (${(percent * 100).toFixed(0)}%)`
-                  }
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.color || COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    borderColor: "#ccc",
-                    color: "#000",
-                  }}
-                  formatter={(value) => formatCurrency(value as number)}
-                />
-                <Legend
-                  wrapperStyle={{ color: "#4B5563", darkColor: "#D1D5DB" }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
-
-      {/* Daily spending bar chart */}
-      <div
-        className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
-        style={{ animationDelay: "0.1s" }}
-      >
-        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-          Daily Spending
-        </h2>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={dailyData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="#e5e7eb"
-                dark:stroke="#374151"
+      {/* Categories Grid (Expense vs Income) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Expenses by Category */}
+        <Card title="Expenses by Category">
+          {expenseData.length === 0 ? (
+            <div className="py-12">
+              <EmptyState
+                icon={<Icons.Analytics size={22} />}
+                title="No expense data"
+                description={`No expenses recorded for ${format(selectedMonth, "MMMM yyyy")}.`}
               />
-              <XAxis dataKey="day" stroke="#4B5563" dark:stroke="#D1D5DB" />
+            </div>
+          ) : (
+            <div className="h-72 w-full flex flex-col items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={expenseData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={95}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {expenseData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.color || CATEGORICAL_PALETTE[index % CATEGORICAL_PALETTE.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--surface)",
+                      borderColor: "var(--border)",
+                      borderRadius: "8px",
+                      color: "var(--text)",
+                    }}
+                    formatter={(value) => [formatCurrency(Number(value)), ""]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-2 justify-center pt-2">
+                {expenseData.map((item, idx) => (
+                  <div key={item.name} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{
+                        backgroundColor:
+                          item.color || CATEGORICAL_PALETTE[idx % CATEGORICAL_PALETTE.length],
+                      }}
+                    />
+                    <span className="font-medium text-[var(--text)]">{item.name}</span>
+                    <span>({formatCurrency(item.value)})</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* Income by Category */}
+        <Card title="Income by Category">
+          {incomeData.length === 0 ? (
+            <div className="py-12">
+              <EmptyState
+                icon={<Icons.Analytics size={22} />}
+                title="No income data"
+                description={`No income streams recorded for ${format(selectedMonth, "MMMM yyyy")}.`}
+              />
+            </div>
+          ) : (
+            <div className="h-72 w-full flex flex-col items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={incomeData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={95}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {incomeData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.color || CATEGORICAL_PALETTE[index % CATEGORICAL_PALETTE.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--surface)",
+                      borderColor: "var(--border)",
+                      borderRadius: "8px",
+                      color: "var(--text)",
+                    }}
+                    formatter={(value) => [formatCurrency(Number(value)), ""]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-2 justify-center pt-2">
+                {incomeData.map((item, idx) => (
+                  <div key={item.name} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{
+                        backgroundColor:
+                          item.color || CATEGORICAL_PALETTE[idx % CATEGORICAL_PALETTE.length],
+                      }}
+                    />
+                    <span className="font-medium text-[var(--text)]">{item.name}</span>
+                    <span>({formatCurrency(item.value)})</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Daily Spending Bar Chart */}
+      <Card title={`Daily Spending Breakdown (${format(selectedMonth, "MMMM yyyy")})`}>
+        {dailyData.length === 0 ? (
+          <div className="py-12">
+            <EmptyState
+              icon={<Icons.Analytics size={22} />}
+              title="No daily spending"
+              description="No expense transactions logged in this calendar month."
+            />
+          </div>
+        ) : (
+          <div className="h-72 w-full pt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dailyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.15} stroke="var(--border)" />
+                <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={12} tickLine={false} />
+                <YAxis
+                  stroke="var(--text-muted)"
+                  fontSize={12}
+                  tickLine={false}
+                  tickFormatter={(val) => formatCurrency(val).replace(/\.\d+/, "")}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--surface)",
+                    borderColor: "var(--border)",
+                    borderRadius: "8px",
+                    color: "var(--text)",
+                  }}
+                  formatter={(value) => [formatCurrency(Number(value)), "Spent"]}
+                  labelFormatter={(lbl) => `Day ${lbl}`}
+                />
+                <Bar dataKey="amount" fill="#0284C7" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </Card>
+
+      {/* 6-Month Cashflow Trajectory */}
+      <Card title="Trailing 6-Month Cashflow Performance">
+        <div className="h-72 w-full pt-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={yearlyTrendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.15} stroke="var(--border)" />
+              <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} />
               <YAxis
-                tickFormatter={(value) =>
-                  formatCurrency(value).replace(/\.\d+/, "")
-                }
-                stroke="#4B5563"
-                dark:stroke="#D1D5DB"
+                stroke="var(--text-muted)"
+                fontSize={12}
+                tickLine={false}
+                tickFormatter={(val) => formatCurrency(val).replace(/\.\d+/, "")}
               />
               <Tooltip
-                formatter={(value) => formatCurrency(value as number)}
-                labelFormatter={(value) => `Day ${value}`}
                 contentStyle={{
-                  backgroundColor: "white",
-                  borderColor: "#ccc",
-                  color: "#000",
+                  backgroundColor: "var(--surface)",
+                  borderColor: "var(--border)",
+                  borderRadius: "8px",
+                  color: "var(--text)",
                 }}
-              />
-              <Bar dataKey="amount" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Monthly trends line chart */}
-      <div
-        className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mt-4"
-        style={{ animationDelay: "0.2s" }}
-      >
-        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-          Monthly Trends
-        </h2>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={yearlyTrendData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="#e5e7eb"
-                dark:stroke="#374151"
-              />
-              <XAxis dataKey="name" stroke="#4B5563" dark:stroke="#D1D5DB" />
-              <YAxis
-                tickFormatter={(value) =>
-                  formatCurrency(value).replace(/\.\d+/, "")
-                }
-                stroke="#4B5563"
-                dark:stroke="#D1D5DB"
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                wrapperStyle={{ color: "#4B5563", darkColor: "#D1D5DB" }}
+                formatter={(val) => [formatCurrency(Number(val)), ""]}
               />
               <Line
                 type="monotone"
+                name="Income"
                 dataKey="income"
-                stroke="#10B981"
+                stroke="#059669"
                 strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
+                dot={{ r: 3 }}
               />
               <Line
                 type="monotone"
+                name="Expenses"
                 dataKey="expenses"
-                stroke="#EF4444"
+                stroke="#DC2626"
                 strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
+                dot={{ r: 3 }}
               />
               <Line
                 type="monotone"
+                name="Net Balance"
                 dataKey="balance"
-                stroke="#3B82F6"
+                stroke="#0284C7"
                 strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
+                strokeDasharray="4 4"
+                dot={{ r: 3 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
-
-      {/* Key insights */}
-      <div
-        className="card p-6 animate-slide-up bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mt-4"
-        style={{ animationDelay: "0.3s" }}
-      >
-        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-          Key Insights
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border border-blue-100 dark:border-blue-700">
-            <h3 className="font-medium mb-2 text-gray-900 dark:text-gray-100">
-              Top Spending Categories
-            </h3>
-            <ul className="space-y-2 text-gray-700 dark:text-gray-200">
-              {categoryData.slice(0, 3).map((category, index) => (
-                <li key={index} className="flex items-center justify-between">
-                  <span>{category.name}</span>
-                  <span className="font-medium">
-                    {formatCurrency(category.value)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="bg-green-50 dark:bg-green-900 p-4 rounded-lg border border-green-100 dark:border-green-700">
-            <h3 className="font-medium mb-2 text-gray-900 dark:text-gray-100">
-              Spending Trend
-            </h3>
-            <p className="text-sm text-gray-700 dark:text-gray-200">
-              {monthlySummary.totalExpense >
-              (yearlyTrendData[yearlyTrendData.length - 2]?.expenses || 0)
-                ? `Your spending increased by ${formatCurrency(
-                    monthlySummary.totalExpense -
-                      (yearlyTrendData[yearlyTrendData.length - 2]?.expenses ||
-                        0)
-                  )} compared to last month.`
-                : `Your spending decreased by ${formatCurrency(
-                    (yearlyTrendData[yearlyTrendData.length - 2]?.expenses ||
-                      0) - monthlySummary.totalExpense
-                  )} compared to last month.`}
-            </p>
-            <div className="mt-2">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                vs. Previous Month
-              </div>
-              <div className="flex items-center">
-                <div
-                  className={`h-2 rounded-full ${
-                    monthlySummary.totalExpense >
-                    (yearlyTrendData[yearlyTrendData.length - 2]?.expenses || 0)
-                      ? "bg-red-500 dark:bg-red-600"
-                      : "bg-green-500 dark:bg-green-600"
-                  }`}
-                  style={{
-                    width: `${Math.min(
-                      (Math.abs(
-                        monthlySummary.totalExpense -
-                          (yearlyTrendData[yearlyTrendData.length - 2]
-                            ?.expenses || 0)
-                      ) /
-                        monthlySummary.totalExpense) *
-                        100,
-                      100
-                    )}%`,
-                  }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      </Card>
     </div>
   );
 }
-
-export default Analytics;

@@ -3,10 +3,11 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { groupService } from "../services/groupService";
 import { GroupInvitePreview } from "../types";
-import { formatCurrency } from "../utils/currency";
-import { Users, ShieldCheck, ArrowRight, LogIn, UserPlus, Sparkles, CheckCircle2 } from "lucide-react";
+import { Card } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Badge } from "../components/ui/Badge";
+import { Icons } from "../components/ui/icons";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 
 export default function JoinGroup() {
   const { code } = useParams<{ code: string }>();
@@ -30,8 +31,9 @@ export default function JoinGroup() {
       .then((data) => {
         setPreview(data);
       })
-      .catch((err) => {
-        setError(err.message || "Failed to load group invite details.");
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : "Failed to load group invite details";
+        setError(message);
       })
       .finally(() => {
         setLoading(false);
@@ -42,7 +44,6 @@ export default function JoinGroup() {
     if (!code) return;
 
     if (!isAuthenticated) {
-      // Store redirect target
       sessionStorage.setItem("tt_join_redirect", `/join-group/${code}`);
       navigate(`/login?redirect=/join-group/${code}`);
       return;
@@ -53,8 +54,9 @@ export default function JoinGroup() {
       const res = await groupService.joinGroup(code);
       toast.success(res.message || "Joined group successfully!");
       navigate(`/group/${res.group.id}`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to join group");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to join group";
+      toast.error(message);
     } finally {
       setJoining(false);
     }
@@ -62,70 +64,63 @@ export default function JoinGroup() {
 
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500" />
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--primary)]" />
       </div>
     );
   }
 
   if (error || !preview) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 flex items-center justify-center p-4 text-white">
-        <div className="max-w-md w-full bg-slate-800/80 border border-slate-700/60 rounded-3xl p-8 text-center backdrop-blur-xl shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center mx-auto mb-4">
-            <Users className="w-8 h-8" />
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8 text-center space-y-4">
+          <div className="w-12 h-12 rounded-xl bg-[var(--danger-subtle)] text-[var(--danger)] flex items-center justify-center mx-auto">
+            <Icons.Groups size={24} />
           </div>
-          <h2 className="text-2xl font-bold">Invite Link Expired or Invalid</h2>
-          <p className="text-sm text-slate-400 mt-2 mb-6">{error || "This group invite link could not be found."}</p>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-500 text-white font-bold rounded-xl shadow-lg shadow-primary-600/30 transition"
+          <h2 className="text-xl font-semibold text-[var(--text)]">Invite Link Expired or Invalid</h2>
+          <p className="text-xs text-[var(--text-muted)]">{error || "This group invite link could not be found."}</p>
+          <Button
+            variant="primary"
+            onClick={() => navigate("/dashboard")}
           >
-            Go to Trust-Tracker
-          </Link>
-        </div>
+            Go to TrustTracker
+          </Button>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950 flex items-center justify-center p-4 text-white">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-        className="max-w-lg w-full bg-slate-800/80 border border-slate-700/60 rounded-3xl p-8 backdrop-blur-xl shadow-2xl space-y-6"
-      >
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center p-4">
+      <Card className="max-w-md w-full p-6 sm:p-8 space-y-6">
         <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-3xl bg-sky-500/20 border border-sky-500/30 text-sky-400 flex items-center justify-center mx-auto shadow-inner">
-            <Users className="w-8 h-8" />
+          <div className="w-12 h-12 rounded-xl bg-[var(--primary-subtle)] text-[var(--primary)] flex items-center justify-center mx-auto">
+            <Icons.Groups size={24} />
           </div>
-          <span className="inline-block px-3 py-1 bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs font-mono font-bold rounded-full">
-            GROUP INVITATION
-          </span>
-          <h1 className="text-3xl font-extrabold text-white">{preview.name}</h1>
-          <p className="text-sm text-slate-300 max-w-sm mx-auto">
+          <Badge variant="info">Group Invitation</Badge>
+          <h1 className="text-2xl font-semibold text-[var(--text)]">{preview.name}</h1>
+          <p className="text-xs text-[var(--text-muted)] max-w-sm mx-auto">
             {preview.description || "You have been invited to join this shared expense tracking group."}
           </p>
         </div>
 
         {/* Group Highlights Card */}
-        <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 space-y-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">Created by:</span>
-            <span className="font-semibold text-slate-200">{preview.creator_name}</span>
+        <div className="bg-[var(--surface-muted)] border border-[var(--border)] rounded-md p-4 space-y-2.5 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[var(--text-muted)]">Created by:</span>
+            <span className="font-semibold text-[var(--text)]">{preview.creator_name}</span>
           </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">Current Members:</span>
-            <span className="font-semibold text-slate-200">{preview.member_count} members</span>
+          <div className="flex items-center justify-between">
+            <span className="text-[var(--text-muted)]">Current Members:</span>
+            <span className="font-semibold text-[var(--text)]">{preview.member_count} members</span>
           </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">Group Currency:</span>
-            <span className="font-semibold text-sky-300 font-mono">{preview.currency || "USD"}</span>
+          <div className="flex items-center justify-between">
+            <span className="text-[var(--text-muted)]">Currency:</span>
+            <span className="font-semibold font-mono text-[var(--text)]">{preview.currency || "INR"}</span>
           </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">Invite Code:</span>
-            <span className="font-mono font-bold text-white bg-slate-800 px-2.5 py-0.5 rounded-lg border border-slate-700">
+          <div className="flex items-center justify-between">
+            <span className="text-[var(--text-muted)]">Code:</span>
+            <span className="font-mono font-bold text-[var(--primary)] bg-[var(--surface)] px-2 py-0.5 rounded-sm border border-[var(--border)]">
               {preview.code}
             </span>
           </div>
@@ -134,56 +129,49 @@ export default function JoinGroup() {
         {/* User state action */}
         {isAuthenticated ? (
           <div className="space-y-3">
-            <div className="p-3 bg-sky-950/40 border border-sky-500/30 rounded-xl flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs">
+            <div className="p-3 bg-[var(--surface-muted)] border border-[var(--border)] rounded-md flex items-center gap-3 text-xs">
+              <div className="w-7 h-7 rounded-full bg-[var(--primary-subtle)] text-[var(--primary)] flex items-center justify-center font-bold">
                 {user?.name?.charAt(0).toUpperCase() || "U"}
               </div>
-              <div className="text-xs">
-                <p className="text-slate-200 font-medium">Logged in as {user?.name}</p>
-                <p className="text-slate-400">{user?.email}</p>
+              <div>
+                <p className="text-[var(--text)] font-medium">Logged in as {user?.name}</p>
+                <p className="text-[var(--text-muted)] text-[11px]">{user?.email}</p>
               </div>
             </div>
 
-            <button
-              onClick={handleJoin}
+            <Button
+              variant="primary"
               disabled={joining}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary-600 hover:bg-primary-500 active:scale-[0.98] text-white font-bold rounded-2xl shadow-xl shadow-primary-600/30 transition cursor-pointer disabled:opacity-50"
+              onClick={handleJoin}
+              className="w-full justify-center"
+              icon={<Icons.Forward size={16} />}
             >
-              {joining ? (
-                <span>Joining group...</span>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span>Accept Invite & Join Group</span>
-                </>
-              )}
-            </button>
+              {joining ? "Joining..." : "Join Group Now"}
+            </Button>
           </div>
         ) : (
-          <div className="space-y-3">
-            <button
+          <div className="space-y-2.5">
+            <Button
+              variant="primary"
               onClick={handleJoin}
-              className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary-600 hover:bg-primary-500 active:scale-[0.98] text-white font-bold rounded-2xl shadow-xl shadow-primary-600/30 transition cursor-pointer"
+              className="w-full justify-center"
+              icon={<Icons.Forward size={16} />}
             >
-              <LogIn className="w-5 h-5" />
-              <span>Log in to Join Group</span>
-            </button>
-            <Link
-              to={`/register?redirect=/join-group/${code}`}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-slate-700/60 hover:bg-slate-700 text-slate-200 font-semibold rounded-2xl transition"
-            >
-              <UserPlus className="w-4 h-4" />
-              <span>Create New Account</span>
-            </Link>
+              Sign In to Join Group
+            </Button>
+
+            <div className="text-center text-xs text-[var(--text-muted)] pt-2">
+              New to TrustTracker?{" "}
+              <Link
+                to={`/register?redirect=/join-group/${code}`}
+                className="font-semibold text-[var(--primary)] hover:underline"
+              >
+                Create an account
+              </Link>
+            </div>
           </div>
         )}
-
-        <div className="pt-2 text-center">
-          <Link to="/" className="text-xs text-slate-400 hover:text-white transition">
-            Learn more about Trust-Tracker
-          </Link>
-        </div>
-      </motion.div>
+      </Card>
     </div>
   );
 }

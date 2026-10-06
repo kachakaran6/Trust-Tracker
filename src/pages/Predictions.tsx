@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
 import { PredictionResponse } from "../types";
-import { formatCurrency as globalFormatCurrency } from "../utils/currency";
+import { formatMoney, formatCategory } from "../lib/format";
 import {
   LineChart,
   Line,
@@ -12,224 +11,228 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   Legend,
 } from "recharts";
-import {
-  TrendingUp,
-  TrendingDown,
-  Brain,
-  Target,
-  DollarSign,
-  Sparkles,
-  ArrowUpRight,
-  ArrowDownRight,
-  RefreshCw,
-} from "lucide-react";
 import { toast } from "sonner";
 import { usePageHeader } from "../contexts/PageHeaderContext";
+import { PageHeader } from "../components/ui/PageHeader";
+import { StatCard } from "../components/ui/StatCard";
+import { Card } from "../components/ui/Card";
+import { Tabs } from "../components/ui/Tabs";
+import { IconButton } from "../components/ui/Button";
+import { EmptyState } from "../components/ui/EmptyState";
+import { Badge } from "../components/ui/Badge";
+import { Icons } from "../components/ui/icons";
 
 export default function Predictions() {
   const { user } = useAuth();
   const { setPageHeader } = usePageHeader();
-  const [range, setRange] = useState(3);
+  const [range, setRange] = useState<"1" | "3" | "6" | "12">("3");
   const [data, setData] = useState<PredictionResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setPageHeader("Predictive AI Financial Forecasting");
+    setPageHeader("Spending Forecast");
   }, [setPageHeader]);
 
-  const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
+  const formatCurrency = (val: number) => formatMoney(val, user?.currency);
 
   const loadForecast = async (r: number) => {
     try {
       setIsLoading(true);
       const res = await api.predictions.getForecast(r);
       setData(res);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to load forecast data");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to load forecast data";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadForecast(range);
+    loadForecast(parseInt(range, 10));
   }, [range]);
 
-  const combinedChartData = data?.forecast.map((f) => ({
-    month: f.month,
-    Actual: f.actual,
-    Predicted: f.predicted,
-    Confidence: f.confidence,
-  })) || [];
+  const combinedChartData =
+    data?.forecast?.map((f) => ({
+      month: f.month,
+      Actual: f.actual,
+      Forecast: f.predicted,
+    })) || [];
+
+  const hasHistoricalData =
+    data &&
+    data.forecast &&
+    data.forecast.some((f) => f.actual !== null && f.actual !== undefined && f.actual > 0);
+
+  const horizonTabs = [
+    { id: "1" as const, label: "1 Month" },
+    { id: "3" as const, label: "3 Months" },
+    { id: "6" as const, label: "6 Months" },
+    { id: "12" as const, label: "12 Months" },
+  ];
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Forecast range + refresh controls */}
-      <div className="flex items-center justify-end gap-2">
-          {[1, 3, 6, 12].map((m) => (
-            <button
-              key={m}
-              onClick={() => setRange(m)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                range === m
-                  ? "bg-primary-600 text-white shadow-sm font-bold"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-              }`}
-            >
-              {m}M Forecast
-            </button>
-          ))}
-          <button
-            onClick={() => loadForecast(range)}
-            disabled={isLoading}
-            className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl transition cursor-pointer"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-          </button>
-      </div>
-
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Monthly Avg Spending</span>
-            <DollarSign className="w-5 h-5 text-sky-500" />
+    <div className="space-y-6">
+      <PageHeader
+        title="Spending Forecast"
+        description="Linear regression projections based on historical transaction velocity and category pacing."
+        action={
+          <div className="flex items-center gap-2">
+            <Tabs
+              variant="segmented"
+              tabs={horizonTabs}
+              activeTab={range}
+              onChange={(tabId) => setRange(tabId)}
+            />
+            <IconButton
+              aria-label="Refresh forecast"
+              variant="secondary"
+              size="sm"
+              icon={
+                <Icons.Refresh
+                  size={14}
+                  className={isLoading ? "animate-spin" : ""}
+                />
+              }
+              onClick={() => loadForecast(parseInt(range, 10))}
+              disabled={isLoading}
+            />
           </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2">
-            {formatCurrency(data?.avgMonthlyExpense || 0)}
-          </p>
-          <p className="text-xs text-slate-400 mt-1">Based on historical trailing activity</p>
-        </div>
+        }
+      />
 
-        <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Spending Momentum</span>
-            {(data?.monthlyTrendSlope || 0) >= 0 ? (
-              <TrendingUp className="w-5 h-5 text-amber-500" />
-            ) : (
-              <TrendingDown className="w-5 h-5 text-emerald-500" />
-            )}
+      {!hasHistoricalData && !isLoading ? (
+        <EmptyState
+          icon={<Icons.Forecast size={24} />}
+          title="Not enough data yet"
+          description="Spending forecasts require at least 3 months of recorded activity to compute reliable linear trends."
+        />
+      ) : (
+        <>
+          {/* Metrics Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <StatCard
+              label="Monthly Average Spending"
+              value={formatCurrency(data?.avgMonthlyExpense || 0)}
+              helperText="Trailing historical run-rate"
+            />
+
+            <StatCard
+              label="Spending Velocity"
+              value={
+                data?.monthlyTrendSlope
+                  ? formatMoney(data.monthlyTrendSlope, user?.currency, { showSign: true }) + " / mo"
+                  : "0.00 / mo"
+              }
+              helperText="Linear trajectory direction"
+              variant={
+                (data?.monthlyTrendSlope || 0) > 0
+                  ? "danger"
+                  : (data?.monthlyTrendSlope || 0) < 0
+                  ? "success"
+                  : "neutral"
+              }
+            />
+
+            <StatCard
+              label="Forecasting Model"
+              value="Linear Regression"
+              helperText="Paced against trailing cashflows"
+              variant="neutral"
+            />
           </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-2 flex items-center gap-1.5">
-            {(data?.monthlyTrendSlope || 0) >= 0 ? "+" : ""}
-            {formatCurrency(data?.monthlyTrendSlope || 0)}/mo
-          </p>
-          <p className="text-xs text-slate-400 mt-1">Linear trend velocity</p>
-        </div>
 
-        <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Model Engine</span>
-            <Sparkles className="w-5 h-5 text-purple-500" />
-          </div>
-          <p className="text-base font-bold text-slate-900 dark:text-white mt-2 truncate">
-            {data?.modelType || "Regression Engine"}
-          </p>
-          <p className="text-xs text-emerald-500 font-medium mt-1">✓ High Confidence Projection</p>
-        </div>
-      </div>
+          {/* Main Forecast Chart */}
+          <Card title="Historical vs Projected Spend Trajectory">
+            <div className="h-72 w-full pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={combinedChartData}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.15} stroke="var(--border)" />
+                  <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={12} tickLine={false} />
+                  <YAxis
+                    stroke="var(--text-muted)"
+                    fontSize={12}
+                    tickLine={false}
+                    tickFormatter={(val) => formatCurrency(val).replace(/\.\d+/, "")}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "var(--surface)",
+                      borderColor: "var(--border)",
+                      borderRadius: "8px",
+                      color: "var(--text)",
+                    }}
+                    formatter={(value: unknown) => [formatCurrency(Number(value)), ""]}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    name="Actual Spending"
+                    dataKey="Actual"
+                    stroke="#0284C7"
+                    strokeWidth={2.5}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                    connectNulls={false}
+                  />
+                  <Line
+                    type="monotone"
+                    name="Projected Forecast"
+                    dataKey="Forecast"
+                    stroke="#0284C7"
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
+                    dot={{ r: 3 }}
+                    activeDot={{ r: 5 }}
+                    connectNulls={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
 
-      {/* Main Forecast Chart */}
-      <div className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-          <Target className="w-5 h-5 text-sky-500" />
-          Historical vs Predicted Spend Trajectory
-        </h3>
-        <div className="h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={combinedChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-              <XAxis dataKey="month" stroke="#94A3B8" fontSize={12} />
-              <YAxis stroke="#94A3B8" fontSize={12} tickFormatter={(val) => formatCurrency(val).replace(/\.\d+/, "")} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "#1E293B",
-                  borderColor: "#334155",
-                  borderRadius: "12px",
-                  color: "#fff",
-                }}
-                formatter={(value: any) => [formatCurrency(Number(value)), ""]}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="Actual"
-                stroke="#3B82F6"
-                strokeWidth={3}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
-                connectNulls={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="Predicted"
-                stroke="#8B5CF6"
-                strokeWidth={3}
-                strokeDasharray="5 5"
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
-                connectNulls={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Category Forecast Breakdown */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm p-6">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-          Predicted Category Spending Breakdown
-        </h3>
-        {data?.categoryPredictions && data.categoryPredictions.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data.categoryPredictions.map((cat) => (
-              <div
-                key={cat.id}
-                className="p-4 rounded-xl border border-slate-100 dark:border-slate-700/60 bg-slate-50/50 dark:bg-slate-900/40"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                    <span className="font-semibold text-sm text-slate-900 dark:text-white">{cat.name}</span>
-                  </div>
-                  <span
-                    className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${
-                      cat.trend > 0
-                        ? "bg-amber-500/10 text-amber-500"
-                        : "bg-emerald-500/10 text-emerald-500"
-                    }`}
+          {/* Category Forecast Breakdown */}
+          <Card title="Category Spending Projections">
+            {data?.categoryPredictions && data.categoryPredictions.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {data.categoryPredictions.map((cat) => (
+                  <div
+                    key={cat.id}
+                    className="p-3.5 rounded-sm border border-[var(--border)] bg-[var(--surface-muted)] space-y-2"
                   >
-                    {cat.trend > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                    {Math.abs(cat.trend)}%
-                  </span>
-                </div>
-                <div className="flex justify-between items-baseline mt-3">
-                  <div>
-                    <p className="text-xs text-slate-400">Current Avg</p>
-                    <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                      {formatCurrency(cat.currentAverage)}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-xs sm:text-sm text-[var(--text)] truncate">
+                        {formatCategory(cat.name)}
+                      </span>
+                      <Badge
+                        variant={cat.trend > 0 ? "warning" : "success"}
+                        size="sm"
+                      >
+                        {cat.trend > 0 ? `+${cat.trend}%` : `${cat.trend}%`}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-baseline text-xs text-[var(--text-muted)]">
+                      <span>Current Avg: {formatCurrency(cat.currentAverage)}</span>
+                      <span className="font-semibold text-[var(--primary)] tabular-nums">
+                        Est: {formatCurrency(cat.predicted)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-400">Projected</p>
-                    <p className="text-base font-bold text-primary-600 dark:text-sky-400">
-                      {formatCurrency(cat.predicted)}
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-slate-400 text-center py-6">
-            Record a few transactions across different categories to see automated category predictions.
-          </p>
-        )}
-      </div>
+            ) : (
+              <p className="text-xs text-[var(--text-muted)] py-6 text-center">
+                Record transactions across distinct categories to populate category pacing projections.
+              </p>
+            )}
+          </Card>
+        </>
+      )}
     </div>
   );
 }

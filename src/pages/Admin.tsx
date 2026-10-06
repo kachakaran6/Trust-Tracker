@@ -2,39 +2,28 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
 import { AdminUser, AdminStats } from "../types";
-import { format, parseISO } from "date-fns";
-import { toast } from "sonner";
-import {
-  Users,
-  Eye,
-  CheckCircle,
-  Search,
-  Filter,
-  Download,
-  UserCheck,
-  Crown,
-  Trash2,
-  AlertCircle,
-  RefreshCw,
-  TrendingUp,
-  ShieldOff,
-  ArrowUp,
-  ArrowDown,
-  ShieldAlert,
-  X,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { formatCurrency as globalFormatCurrency } from "../utils/currency";
+import { formatMoney, formatDate } from "../lib/format";
 import { usePageHeader } from "../contexts/PageHeaderContext";
+import { PageHeader } from "../components/ui/PageHeader";
+import { Card } from "../components/ui/Card";
+import { StatCard } from "../components/ui/StatCard";
+import { Badge } from "../components/ui/Badge";
+import { Button, IconButton } from "../components/ui/Button";
+import { Input, Select } from "../components/ui/Input";
+import { DataList, Column } from "../components/ui/DataList";
+import { Modal } from "../components/ui/Modal";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { Icons } from "../components/ui/icons";
+import { toast } from "sonner";
 
 export default function Admin() {
   const { user } = useAuth();
   const { setPageHeader } = usePageHeader();
-  const formatCurrency = (val: number) => globalFormatCurrency(val, user?.currency);
 
   useEffect(() => {
     setPageHeader("Admin Command Center");
   }, [setPageHeader]);
+
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -50,9 +39,8 @@ export default function Admin() {
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [sortField, setSortField] = useState<"created_at" | "total_transactions" | "total_amount">("created_at");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
+  const [userToToggleStatus, setUserToToggleStatus] = useState<AdminUser | null>(null);
 
   const isSuperAdmin = user?.role === "super_admin";
 
@@ -66,8 +54,9 @@ export default function Admin() {
       ]);
       setStats(statsData);
       setUsers(usersData);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to load admin data");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to load admin data";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -77,69 +66,63 @@ export default function Admin() {
     loadData();
   }, [loadData]);
 
-  const toggleSort = (field: "created_at" | "total_transactions" | "total_amount") => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortOrder("desc");
-    }
-  };
-
   const handleRoleToggle = async (targetUser: AdminUser) => {
     const newRole = targetUser.user_role === "super_admin" ? "normal" : "super_admin";
     try {
-      setActionLoading(`${targetUser.user_id}-role`);
       await api.admin.updateRole(targetUser.user_id, newRole);
       setUsers((prev) =>
         prev.map((u) => (u.user_id === targetUser.user_id ? { ...u, user_role: newRole } : u))
       );
-      toast.success(`User updated to ${newRole}`);
+      toast.success(`User role updated to ${newRole}`);
       loadData();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update user role");
-    } finally {
-      setActionLoading(null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to update user role";
+      toast.error(message);
     }
   };
 
-  const handleStatusToggle = async (targetUser: AdminUser) => {
-    const newStatus = targetUser.user_status === "active" ? "banned" : "active";
+  const handleConfirmStatusToggle = async () => {
+    if (!userToToggleStatus) return;
+    const newStatus = userToToggleStatus.user_status === "active" ? "banned" : "active";
     try {
-      setActionLoading(`${targetUser.user_id}-status`);
-      await api.admin.updateStatus(targetUser.user_id, newStatus);
+      await api.admin.updateStatus(userToToggleStatus.user_id, newStatus);
       setUsers((prev) =>
-        prev.map((u) => (u.user_id === targetUser.user_id ? { ...u, user_status: newStatus } : u))
+        prev.map((u) => (u.user_id === userToToggleStatus.user_id ? { ...u, user_status: newStatus } : u))
       );
       toast.success(`User status updated to ${newStatus}`);
+      setUserToToggleStatus(null);
       loadData();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update user status");
-    } finally {
-      setActionLoading(null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to update user status";
+      toast.error(message);
     }
   };
 
-  const handleDeleteUser = async (targetUser: AdminUser) => {
-    if (!window.confirm(`Are you sure you want to permanently delete ${targetUser.email}? This will delete all their transactions, categories, and budgets.`)) {
-      return;
-    }
-
+  const handleConfirmDeleteUser = async () => {
+    if (!userToDelete) return;
     try {
-      setActionLoading(`${targetUser.user_id}-delete`);
-      await api.admin.deleteUser(targetUser.user_id);
-      setUsers((prev) => prev.filter((u) => u.user_id !== targetUser.user_id));
-      toast.success(`User ${targetUser.email} permanently deleted.`);
+      await api.admin.deleteUser(userToDelete.user_id);
+      setUsers((prev) => prev.filter((u) => u.user_id !== userToDelete.user_id));
+      toast.success(`User ${userToDelete.email} permanently deleted.`);
+      setUserToDelete(null);
       loadData();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to delete user");
-    } finally {
-      setActionLoading(null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to delete user";
+      toast.error(message);
     }
   };
 
   const exportCSV = () => {
-    const headers = ["User ID", "Email", "Full Name", "Role", "Status", "Total Transactions", "Total Amount", "Joined Date"];
+    const headers = [
+      "User ID",
+      "Email",
+      "Full Name",
+      "Role",
+      "Status",
+      "Total Transactions",
+      "Total Amount",
+      "Joined Date",
+    ];
     const rows = users.map((u) => [
       u.user_id,
       u.email,
@@ -150,371 +133,394 @@ export default function Admin() {
       u.total_amount,
       u.created_at,
     ]);
+
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `trust_tracker_users_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", `trusttracker_users_${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    toast.success("User list exported to CSV!");
   };
-
-  const filteredUsers = users
-    .filter((u) => {
-      const matchesSearch =
-        u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (u.full_name || "").toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = !roleFilter || u.user_role === roleFilter;
-      const matchesStatus = !statusFilter || u.user_status === statusFilter;
-      return matchesSearch && matchesRole && matchesStatus;
-    })
-    .sort((a, b) => {
-      if (sortField === "created_at") {
-        const timeA = new Date(a.created_at).getTime();
-        const timeB = new Date(b.created_at).getTime();
-        return sortOrder === "asc" ? timeA - timeB : timeB - timeA;
-      }
-      if (sortField === "total_transactions") {
-        return sortOrder === "asc" ? a.total_transactions - b.total_transactions : b.total_transactions - a.total_transactions;
-      }
-      return sortOrder === "asc" ? a.total_amount - b.total_amount : b.total_amount - a.total_amount;
-    });
 
   if (!isSuperAdmin) {
     return (
-      <div className="p-8 max-w-xl mx-auto text-center">
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 inline-block mb-4">
-          <ShieldAlert className="w-12 h-12 mx-auto" />
-        </div>
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Admin Access Restricted</h2>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">
-          You need Super Admin privileges to view and manage this administrative control panel.
-        </p>
+      <div className="p-8 text-center max-w-md mx-auto my-12">
+        <Card className="p-8 space-y-3">
+          <Icons.Admin size={32} className="text-[var(--danger)] mx-auto" />
+          <h3 className="text-lg font-semibold text-[var(--text)]">Access Restricted</h3>
+          <p className="text-xs text-[var(--text-muted)]">
+            You need Super Admin privileges to view and manage platform administration.
+          </p>
+        </Card>
       </div>
     );
   }
 
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch =
+      (u.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = !roleFilter || u.user_role === roleFilter;
+    const matchesStatus = !statusFilter || u.user_status === statusFilter;
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  const columns: Column<AdminUser>[] = [
+    {
+      key: "user",
+      header: "User",
+      render: (u) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-md bg-[var(--surface-muted)] border border-[var(--border)] flex items-center justify-center font-semibold text-xs text-[var(--text)]">
+            {(u.full_name || u.email).charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p className="font-medium text-[var(--text)]">{u.full_name || "Anonymous"}</p>
+            <p className="text-xs text-[var(--text-muted)]">{u.email}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "user_role",
+      header: "Role",
+      render: (u) => (
+        <Badge variant={u.user_role === "super_admin" ? "warning" : "neutral"}>
+          {u.user_role === "super_admin" ? "Super Admin" : "User"}
+        </Badge>
+      ),
+    },
+    {
+      key: "user_status",
+      header: "Status",
+      render: (u) => (
+        <Badge variant={u.user_status === "active" ? "success" : "danger"}>
+          {u.user_status === "active" ? "Active" : "Banned"}
+        </Badge>
+      ),
+    },
+    {
+      key: "total_transactions",
+      header: "Transactions",
+      render: (u) => <span className="tabular-nums font-medium">{u.total_transactions}</span>,
+    },
+    {
+      key: "total_amount",
+      header: "Volume",
+      render: (u) => (
+        <span className="tabular-nums font-semibold text-[var(--text)]">
+          {formatMoney(u.total_amount, user?.currency || "INR")}
+        </span>
+      ),
+    },
+    {
+      key: "created_at",
+      header: "Joined",
+      render: (u) => (
+        <span className="text-xs text-[var(--text-muted)]">{formatDate(u.created_at)}</span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      align: "right",
+      render: (u) => (
+        <div className="flex items-center justify-end gap-1">
+          <IconButton
+            variant="ghost"
+            size="sm"
+            ariaLabel="Inspect user details"
+            icon={<Icons.Eye size={14} />}
+            onClick={() => setSelectedUser(u)}
+          />
+          <IconButton
+            variant="ghost"
+            size="sm"
+            ariaLabel={u.user_role === "super_admin" ? "Demote to normal" : "Promote to super admin"}
+            icon={<Icons.Admin size={14} />}
+            onClick={() => handleRoleToggle(u)}
+            disabled={u.user_id === user?.id}
+          />
+          <IconButton
+            variant="ghost"
+            size="sm"
+            ariaLabel={u.user_status === "active" ? "Ban user" : "Unban user"}
+            icon={u.user_status === "active" ? <Icons.Close size={14} /> : <Icons.Check size={14} />}
+            onClick={() => setUserToToggleStatus(u)}
+            disabled={u.user_id === user?.id}
+          />
+          <IconButton
+            variant="danger"
+            size="sm"
+            ariaLabel="Delete user"
+            icon={<Icons.Delete size={14} />}
+            onClick={() => setUserToDelete(u)}
+            disabled={u.user_id === user?.id}
+          />
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6 pb-12">
-      {/* Actions bar */}
-      <div className="flex items-center justify-end gap-2">
-          <button
+      <PageHeader
+        title="Admin Command Center"
+        description="Monitor system health, manage accounts, audit transaction volume, and enforce platform moderation."
+        secondaryActions={
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Icons.Repeat size={14} />}
             onClick={loadData}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-medium transition cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
-          </button>
-          <button
+          </Button>
+        }
+        action={
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Icons.Download size={14} />}
             onClick={exportCSV}
-            className="flex items-center gap-2 px-3 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-xl text-sm font-medium transition shadow-sm cursor-pointer"
           >
-            <Download className="w-4 h-4" />
             Export CSV
-          </button>
-      </div>
+          </Button>
+        }
+      />
 
-      {/* Stats Grid */}
+      {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Users</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stats.totalUsers}</p>
-            <p className="text-xs text-emerald-500 font-medium mt-1">+{stats.newUsersThisMonth} this month</p>
-          </div>
-          <div className="p-3 bg-sky-500/10 text-sky-500 rounded-xl">
-            <Users className="w-6 h-6" />
-          </div>
-        </div>
+        <StatCard
+          label="Total Registered Users"
+          value={stats.totalUsers.toString()}
+          helperText={`+${stats.newUsersThisMonth} registered this month`}
+        />
 
-        <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Active / Banned</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-              {stats.activeUsers} <span className="text-sm font-normal text-slate-400">/ {stats.bannedUsers}</span>
-            </p>
-            <p className="text-xs text-slate-400 mt-1">{stats.superAdmins} Super Admins</p>
-          </div>
-          <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">
-            <UserCheck className="w-6 h-6" />
-          </div>
-        </div>
+        <StatCard
+          label="Active / Banned"
+          value={`${stats.activeUsers} / ${stats.bannedUsers}`}
+          helperText={`${stats.superAdmins} Super Admins`}
+        />
 
-        <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Transactions</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{stats.totalTransactions}</p>
-            <p className="text-xs text-slate-400 mt-1">Across all user accounts</p>
-          </div>
-          <div className="p-3 bg-amber-500/10 text-amber-500 rounded-xl">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-        </div>
+        <StatCard
+          label="Total Transactions"
+          value={stats.totalTransactions.toString()}
+          helperText="Across all personal & shared ledgers"
+        />
 
-        <div className="p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Global Volume</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
-              {formatCurrency(stats.totalAmount)}
-            </p>
-            <p className="text-xs text-slate-400 mt-1">Platform-wide tracked spend</p>
-          </div>
-          <div className="p-3 bg-purple-500/10 text-purple-500 rounded-xl">
-            <CheckCircle className="w-6 h-6" />
-          </div>
-        </div>
+        <StatCard
+          label="Platform Volume"
+          value={formatMoney(stats.totalAmount, user?.currency || "INR")}
+          helperText="Total spend recorded platform-wide"
+        />
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-          <input
+      {/* Filters Bar */}
+      <Card className="p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="w-full md:w-80">
+          <Input
             type="text"
             placeholder="Search users by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-white"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-400" />
-            <select
+          <div className="w-40">
+            <Select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-300 focus:outline-none"
-            >
-              <option value="">All Roles</option>
-              <option value="super_admin">Super Admin</option>
-              <option value="normal">Normal</option>
-            </select>
+              options={[
+                { label: "All Roles", value: "" },
+                { label: "Super Admin", value: "super_admin" },
+                { label: "Normal User", value: "normal" },
+              ]}
+            />
           </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-300 focus:outline-none"
-          >
-            <option value="">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="banned">Banned</option>
-          </select>
+          <div className="w-40">
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              options={[
+                { label: "All Statuses", value: "" },
+                { label: "Active", value: "active" },
+                { label: "Banned", value: "banned" },
+              ]}
+            />
+          </div>
         </div>
-      </div>
+      </Card>
 
-      {/* Users Table */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-2xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-            <thead className="bg-slate-50 dark:bg-slate-900/50">
-              <tr>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">User</th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Role</th>
-                <th className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">Status</th>
-                <th
-                  onClick={() => toggleSort("total_transactions")}
-                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-primary-600 dark:hover:text-sky-400"
-                >
-                  <span className="flex items-center gap-1">
-                    Transactions
-                    {sortField === "total_transactions" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                  </span>
-                </th>
-                <th
-                  onClick={() => toggleSort("total_amount")}
-                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-primary-600 dark:hover:text-sky-400"
-                >
-                  <span className="flex items-center gap-1">
-                    Volume
-                    {sortField === "total_amount" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                  </span>
-                </th>
-                <th
-                  onClick={() => toggleSort("created_at")}
-                  className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 cursor-pointer hover:text-primary-600 dark:hover:text-sky-400"
-                >
-                  <span className="flex items-center gap-1">
-                    Joined
-                    {sortField === "created_at" && (sortOrder === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
-                  </span>
-                </th>
-                <th className="px-6 py-3.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60 text-sm">
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
-                    No users matching the filter criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredUsers.map((u) => (
-                  <tr key={u.user_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/20 transition">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold text-sm">
-                          {(u.full_name || u.email).charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-medium text-slate-900 dark:text-white">{u.full_name || "Anonymous"}</p>
-                          <p className="text-xs text-slate-400">{u.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {u.user_role === "super_admin" ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                          <Crown className="w-3 h-3" />
-                          Super Admin
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                          User
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {u.user_status === "active" ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                          <CheckCircle className="w-3 h-3" />
-                          Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-500 border border-red-500/20">
-                          <ShieldOff className="w-3 h-3" />
-                          Banned
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300 font-medium">
-                      {u.total_transactions}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-900 dark:text-white font-semibold">
-                      {formatCurrency(u.total_amount)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-400">
-                      {format(new Date(u.created_at), "MMM d, yyyy")}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => setSelectedUser(u)}
-                          title="Inspect Details"
-                          className="p-2 text-slate-400 hover:text-primary-600 dark:hover:text-sky-400 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleRoleToggle(u)}
-                          disabled={actionLoading === `${u.user_id}-role` || u.user_id === user?.id}
-                          title={u.user_role === "super_admin" ? "Demote to Normal" : "Promote to Super Admin"}
-                          className="p-2 text-slate-400 hover:text-amber-500 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
-                        >
-                          <Crown className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleStatusToggle(u)}
-                          disabled={actionLoading === `${u.user_id}-status` || u.user_id === user?.id}
-                          title={u.user_status === "active" ? "Ban User" : "Unban User"}
-                          className={`p-2 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer ${
-                            u.user_status === "active" ? "text-slate-400 hover:text-red-500" : "text-emerald-500"
-                          }`}
-                        >
-                          <ShieldOff className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(u)}
-                          disabled={actionLoading === `${u.user_id}-delete` || u.user_id === user?.id}
-                          title="Permanently Delete User"
-                          className="p-2 text-slate-400 hover:text-red-500 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* User Details Modal */}
-      <AnimatePresence>
-        {selectedUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 w-full max-w-lg shadow-2xl relative"
-            >
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center font-bold text-xl">
-                  {(selectedUser.full_name || selectedUser.email).charAt(0).toUpperCase()}
+      {/* Data List */}
+      <DataList
+        data={filteredUsers}
+        columns={columns}
+        keyExtractor={(u) => u.user_id}
+        isLoading={isLoading}
+        emptyState={{
+          icon: <Icons.Admin size={24} />,
+          title: "No users found",
+          description: "No registered users match your search and filter criteria.",
+        }}
+        renderMobileCard={(u) => (
+          <div className="p-4 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-md bg-[var(--surface-muted)] border border-[var(--border)] flex items-center justify-center font-semibold text-xs text-[var(--text)]">
+                  {(u.full_name || u.email).charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                    {selectedUser.full_name || "Anonymous User"}
-                  </h3>
-                  <p className="text-sm text-slate-400">{selectedUser.email}</p>
+                  <p className="font-semibold text-sm text-[var(--text)]">{u.full_name || "Anonymous"}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{u.email}</p>
                 </div>
               </div>
 
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
-                  <span className="text-slate-400">User ID</span>
-                  <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{selectedUser.user_id}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
-                  <span className="text-slate-400">Role</span>
-                  <span className="font-semibold text-primary-600 dark:text-sky-400 capitalize">{selectedUser.user_role}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
-                  <span className="text-slate-400">Account Status</span>
-                  <span className={`font-semibold capitalize ${selectedUser.user_status === "active" ? "text-emerald-500" : "text-red-500"}`}>
-                    {selectedUser.user_status}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
-                  <span className="text-slate-400">Total Transactions</span>
-                  <span className="font-semibold text-slate-800 dark:text-white">{selectedUser.total_transactions}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
-                  <span className="text-slate-400">Total Tracked Volume</span>
-                  <span className="font-semibold text-slate-800 dark:text-white">{formatCurrency(selectedUser.total_amount)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
-                  <span className="text-slate-400">Registered On</span>
-                  <span className="text-slate-600 dark:text-slate-300">{format(new Date(selectedUser.created_at), "PPpp")}</span>
-                </div>
+              <div className="flex items-center gap-1">
+                <Badge variant={u.user_role === "super_admin" ? "warning" : "neutral"}>
+                  {u.user_role === "super_admin" ? "Admin" : "User"}
+                </Badge>
+                <Badge variant={u.user_status === "active" ? "success" : "danger"}>
+                  {u.user_status}
+                </Badge>
               </div>
+            </div>
 
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => setSelectedUser(null)}
-                  className="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold transition cursor-pointer"
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
+            <div className="flex items-center justify-between text-xs pt-2 border-t border-[var(--border)]">
+              <span className="text-[var(--text-muted)]">
+                {u.total_transactions} txs • {formatMoney(u.total_amount, user?.currency || "INR")}
+              </span>
+              <span className="text-[var(--text-muted)]">{formatDate(u.created_at)}</span>
+            </div>
+
+            <div className="flex items-center justify-end gap-1 pt-2 border-t border-[var(--border)]">
+              <IconButton
+                variant="ghost"
+                size="sm"
+                ariaLabel="View details"
+                icon={<Icons.Eye size={14} />}
+                onClick={() => setSelectedUser(u)}
+              />
+              <IconButton
+                variant="ghost"
+                size="sm"
+                ariaLabel="Toggle role"
+                icon={<Icons.Admin size={14} />}
+                onClick={() => handleRoleToggle(u)}
+                disabled={u.user_id === user?.id}
+              />
+              <IconButton
+                variant="ghost"
+                size="sm"
+                ariaLabel="Toggle status"
+                icon={u.user_status === "active" ? <Icons.Close size={14} /> : <Icons.Check size={14} />}
+                onClick={() => setUserToToggleStatus(u)}
+                disabled={u.user_id === user?.id}
+              />
+              <IconButton
+                variant="danger"
+                size="sm"
+                ariaLabel="Delete user"
+                icon={<Icons.Delete size={14} />}
+                onClick={() => setUserToDelete(u)}
+                disabled={u.user_id === user?.id}
+              />
+            </div>
           </div>
         )}
-      </AnimatePresence>
+      />
+
+      {/* User Details Modal */}
+      <Modal
+        isOpen={!!selectedUser}
+        onClose={() => setSelectedUser(null)}
+        title="User Account Details"
+        maxWidth="max-w-md"
+      >
+        {selectedUser && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 pb-3 border-b border-[var(--border)]">
+              <div className="w-10 h-10 rounded-md bg-[var(--surface-muted)] border border-[var(--border)] flex items-center justify-center font-bold text-sm text-[var(--text)]">
+                {(selectedUser.full_name || selectedUser.email).charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h4 className="font-semibold text-base text-[var(--text)]">
+                  {selectedUser.full_name || "Anonymous User"}
+                </h4>
+                <p className="text-xs text-[var(--text-muted)]">{selectedUser.email}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-[var(--border)]">
+                <span className="text-[var(--text-muted)]">User ID</span>
+                <span className="font-mono text-[var(--text)]">{selectedUser.user_id}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[var(--border)]">
+                <span className="text-[var(--text-muted)]">Role</span>
+                <Badge variant={selectedUser.user_role === "super_admin" ? "warning" : "neutral"}>
+                  {selectedUser.user_role}
+                </Badge>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[var(--border)]">
+                <span className="text-[var(--text-muted)]">Account Status</span>
+                <Badge variant={selectedUser.user_status === "active" ? "success" : "danger"}>
+                  {selectedUser.user_status}
+                </Badge>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[var(--border)]">
+                <span className="text-[var(--text-muted)]">Total Transactions</span>
+                <span className="font-semibold tabular-nums text-[var(--text)]">
+                  {selectedUser.total_transactions}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-[var(--border)]">
+                <span className="text-[var(--text-muted)]">Total Tracked Spend</span>
+                <span className="font-semibold tabular-nums text-[var(--text)]">
+                  {formatMoney(selectedUser.total_amount, user?.currency || "INR")}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-[var(--text-muted)]">Registration Date</span>
+                <span className="text-[var(--text)]">{formatDate(selectedUser.created_at)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Confirm Ban / Unban Dialog */}
+      <ConfirmDialog
+        isOpen={!!userToToggleStatus}
+        onClose={() => setUserToToggleStatus(null)}
+        onConfirm={handleConfirmStatusToggle}
+        title={userToToggleStatus?.user_status === "active" ? "Ban User Account" : "Unban User Account"}
+        message={`Are you sure you want to ${
+          userToToggleStatus?.user_status === "active" ? "ban" : "unban"
+        } ${userToToggleStatus?.email}? ${
+          userToToggleStatus?.user_status === "active"
+            ? "They will be immediately blocked from signing in and accessing data."
+            : "Their access permissions will be restored."
+        }`}
+        confirmText={userToToggleStatus?.user_status === "active" ? "Ban Account" : "Unban Account"}
+        variant={userToToggleStatus?.user_status === "active" ? "danger" : "primary"}
+      />
+
+      {/* Confirm Delete User Dialog */}
+      <ConfirmDialog
+        isOpen={!!userToDelete}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={handleConfirmDeleteUser}
+        title="Permanently Delete User"
+        message={`Are you sure you want to permanently delete ${userToDelete?.email}? This will delete all their recorded transactions, group memberships, and budgets. This action cannot be undone.`}
+        confirmText="Delete Account"
+      />
     </div>
   );
 }

@@ -1,341 +1,324 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { useBudget } from "../contexts/BudgetContext";
 import { useCategories } from "../contexts/CategoriesContext";
 import { useAuth } from "../contexts/AuthContext";
-import { formatCurrency as globalFormatCurrency } from "../utils/currency";
+import { formatMoney, formatCategory } from "../lib/format";
 import { format, addMonths } from "date-fns";
-import { PlusCircle, Pencil, Trash } from "lucide-react";
 import { usePageHeader } from "../contexts/PageHeaderContext";
+import { PageHeader } from "../components/ui/PageHeader";
+import { StatCard } from "../components/ui/StatCard";
+import { Card } from "../components/ui/Card";
+import { Button, IconButton } from "../components/ui/Button";
+import { Input, Select } from "../components/ui/Input";
+import { ProgressBar } from "../components/ui/ProgressBar";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { Modal } from "../components/ui/Modal";
+import { Icons } from "../components/ui/icons";
+import { Budget as BudgetType } from "../types";
 
-function Budget() {
+export default function Budget() {
   const { user } = useAuth();
   const { setPageHeader } = usePageHeader();
   const { budgets, addBudget, updateBudget, deleteBudget, getBudgetSummary } =
     useBudget();
   const { getExpenseCategories, getCategoryById } = useCategories();
 
-  useEffect(() => { setPageHeader("Budget Planning"); }, [setPageHeader]);
+  useEffect(() => {
+    setPageHeader("Budget Planning");
+  }, [setPageHeader]);
 
   const [isAddingBudget, setIsAddingBudget] = useState(false);
-  const [isEditingBudget, setIsEditingBudget] = useState(false);
-  const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
+  const [editingBudget, setEditingBudget] = useState<BudgetType | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const [budgetForm, setBudgetForm] = useState({
-    categoryId: "",
-    amount: "",
-    month: format(new Date(), "yyyy-MM"),
-  });
-
-  const expenseCategories = getExpenseCategories();
   const currentMonth = format(new Date(), "yyyy-MM");
   const nextMonth = format(addMonths(new Date(), 1), "yyyy-MM");
+  const expenseCategories = getExpenseCategories();
+
+  const [formCategory, setFormCategory] = useState("");
+  const [formAmount, setFormAmount] = useState("");
+  const [formMonth, setFormMonth] = useState(currentMonth);
 
   const currentMonthSummary = getBudgetSummary(currentMonth);
+  const monthBudgets = budgets.filter((b) => b.month === currentMonth);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setBudgetForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const formatCurrency = (val: number) => formatMoney(val, user?.currency);
 
   const openAddForm = () => {
-    setBudgetForm({
-      categoryId: "",
-      amount: "",
-      month: currentMonth,
-    });
+    setFormCategory(expenseCategories[0]?.id || "");
+    setFormAmount("");
+    setFormMonth(currentMonth);
+    setEditingBudget(null);
     setIsAddingBudget(true);
   };
 
-  const openEditForm = (budget: any) => {
-    setBudgetForm({
-      categoryId: budget.category_id,
-      amount: budget.amount.toString(),
-      month: budget.month,
-    });
-    setEditingBudgetId(budget.id);
-    setIsEditingBudget(true);
-  };
-
-  const closeForm = () => {
-    setIsAddingBudget(false);
-    setIsEditingBudget(false);
-    setEditingBudgetId(null);
+  const openEditForm = (b: BudgetType) => {
+    setEditingBudget(b);
+    setFormCategory(b.category_id);
+    setFormAmount(String(b.amount));
+    setFormMonth(b.month);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const amount = parseFloat(budgetForm.amount);
-    if (!amount || !budgetForm.categoryId || !budgetForm.month) return;
+    const amount = parseFloat(formAmount);
+    if (!amount || !formCategory || !formMonth) return;
 
-    if (editingBudgetId) {
-      await updateBudget(editingBudgetId, {
-        category_id: budgetForm.categoryId,
+    if (editingBudget) {
+      await updateBudget(editingBudget.id, {
+        category_id: formCategory,
         amount,
-        month: budgetForm.month,
+        month: formMonth,
       });
+      setEditingBudget(null);
     } else {
       await addBudget({
-        category_id: budgetForm.categoryId,
+        category_id: formCategory,
         amount,
-        month: budgetForm.month,
+        month: formMonth,
       });
-    }
-
-    closeForm();
-  };
-
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this budget?")) {
-      await deleteBudget(id);
+      setIsAddingBudget(false);
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return globalFormatCurrency(value, user?.currency);
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    try {
+      setIsDeleting(true);
+      await deleteBudget(deleteTargetId);
+      setDeleteTargetId(null);
+    } catch (err) {
+      console.error("Failed to delete budget:", err);
+    } finally {
+      setIsDeleting(false);
+    }
   };
-
-  // const formatPercentage = (value: number) => Math.round(value) + "%";
-
-  const getStatusColor = (percentage: number) => {
-    if (percentage >= 90) return "bg-danger-500";
-    if (percentage >= 75) return "bg-warning-500";
-    return "bg-success-500";
-  };
-
-  const formatPercentage = (value: number) => `${value.toFixed(0)}%`;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
-        <span />
-        <button
-          onClick={openAddForm}
-          className="btn-primary bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-        >
-          <PlusCircle size={16} className="mr-1" />
-          Add Budget
-        </button>
-      </div>
+      <PageHeader
+        title="Budgets & Spending Limits"
+        description="Set category spending thresholds to keep your cashflow in check and receive pace alerts."
+        action={
+          <Button
+            variant="primary"
+            icon={<Icons.Add size={16} />}
+            onClick={openAddForm}
+          >
+            Add Budget
+          </Button>
+        }
+      />
 
-      {(isAddingBudget || isEditingBudget) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 animate-slide-up border border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-              {editingBudgetId ? "Edit Budget" : "Add New Budget"}
-            </h2>
+      {/* Summary Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Total Budget"
+          value={formatCurrency(currentMonthSummary.totalBudget)}
+          helperText={`Allocated for ${format(new Date(), "MMMM yyyy")}`}
+          variant="neutral"
+        />
 
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="categoryId"
-                    className="form-label text-gray-700 dark:text-gray-300"
-                  >
-                    Category
-                  </label>
-                  <select
-                    id="categoryId"
-                    name="categoryId"
-                    required
-                    className="select-field bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
-                    value={budgetForm.categoryId}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select a category</option>
-                    {expenseCategories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+        <StatCard
+          label="Spent So Far"
+          value={formatCurrency(currentMonthSummary.totalSpent)}
+          helperText={`${Math.round(currentMonthSummary.percentage)}% consumed`}
+          variant={currentMonthSummary.percentage >= 100 ? "danger" : currentMonthSummary.percentage >= 80 ? "warning" : "neutral"}
+        />
 
-                <div>
-                  <label
-                    htmlFor="amount"
-                    className="form-label text-gray-700 dark:text-gray-300"
-                  >
-                    Budget Amount
-                  </label>
-                  <input
-                    id="amount"
-                    name="amount"
-                    type="number"
-                    min="1"
-                    required
-                    className="input-field bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
-                    placeholder="0"
-                    value={budgetForm.amount}
-                    onChange={handleInputChange}
-                  />
-                </div>
+        <StatCard
+          label="Remaining Balance"
+          value={formatCurrency(currentMonthSummary.remaining)}
+          helperText="Available spending buffer"
+          variant={currentMonthSummary.remaining < 0 ? "danger" : "success"}
+        />
 
-                <div>
-                  <label
-                    htmlFor="month"
-                    className="form-label text-gray-700 dark:text-gray-300"
-                  >
-                    Month
-                  </label>
-                  <select
-                    id="month"
-                    name="month"
-                    required
-                    className="select-field bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
-                    value={budgetForm.month}
-                    onChange={handleInputChange}
-                  >
-                    <option value={currentMonth}>
-                      {format(new Date(currentMonth + "-01"), "MMMM yyyy")}{" "}
-                      (Current)
-                    </option>
-                    <option value={nextMonth}>
-                      {format(new Date(nextMonth + "-01"), "MMMM yyyy")} (Next)
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end mt-6 space-x-3">
-                <button
-                  type="button"
-                  onClick={closeForm}
-                  className="btn-outline text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
-                >
-                  {editingBudgetId ? "Update" : "Add"} Budget
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Budget Summary */}
-      <div className="card p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-        <div className="flex justify-between mb-4">
+        <Card padding="sm" className="flex flex-col justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Overall Budget
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Month of {format(new Date(currentMonth + "-01"), "MMMM yyyy")}
+            <p className="text-xs sm:text-sm font-medium text-[var(--text-muted)]">
+              Overall Pace
+            </p>
+            <p className="text-xl sm:text-2xl font-semibold tracking-tight mt-1 text-[var(--text)] tabular-nums">
+              {Math.round(currentMonthSummary.percentage)}%
             </p>
           </div>
-          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            {formatCurrency(currentMonthSummary.totalSpent)} /{" "}
-            {formatCurrency(currentMonthSummary.totalBudget)}
-          </p>
-        </div>
-
-        <div className="relative pt-1">
-          <div className="flex justify-between text-sm mb-2 text-gray-700 dark:text-gray-300">
-            <span>{formatPercentage(currentMonthSummary.percentage)} used</span>
-            <span>
-              {formatCurrency(currentMonthSummary.remaining)} remaining
-            </span>
+          <div className="mt-2">
+            <ProgressBar value={currentMonthSummary.percentage} max={100} />
           </div>
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div
-              style={{
-                width: `${Math.min(currentMonthSummary.percentage, 100)}%`,
-              }}
-              className={`h-full ${getStatusColor(
-                currentMonthSummary.percentage
-              )}`}
-            ></div>
-          </div>
-        </div>
+        </Card>
       </div>
 
-      {/* Category Budgets */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-          Category Budgets
+      {/* Budgets List Grid */}
+      <div className="space-y-4">
+        <h2 className="text-base font-semibold text-[var(--text)]">
+          Category Budgets ({monthBudgets.length})
         </h2>
-        <div className="grid gap-4">
-          {Object.entries(currentMonthSummary.categories).map(
-            ([categoryId, data]) => {
-              const category = getCategoryById(categoryId);
-              if (!category) return null;
 
-              const matchedBudget = budgets.find(
-                (b) => b.category_id === categoryId && b.month === currentMonth
-              );
+        {monthBudgets.length === 0 ? (
+          <EmptyState
+            icon={<Icons.Budget size={24} />}
+            title="No budgets configured"
+            description="Create category budgets to track spending progress in real-time."
+            action={
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Icons.Add size={16} />}
+                onClick={openAddForm}
+              >
+                Add Your First Budget
+              </Button>
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {monthBudgets.map((b) => {
+              const category = getCategoryById(b.category_id);
+              const spent = b.spent || 0;
+              const pct = (spent / (b.amount || 1)) * 100;
+              const remaining = b.amount - spent;
 
               return (
-                <div
-                  key={categoryId}
-                  className="card p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
-                >
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className="w-10 h-10 flex items-center justify-center rounded-full font-medium"
-                        style={{
-                          backgroundColor: category.color + "20",
-                          color: category.color,
-                        }}
-                      >
-                        {category.name.charAt(0)}
+                <Card key={b.id} padding="md" className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-[var(--surface-muted)] border border-[var(--border)] flex items-center justify-center text-xs font-bold text-[var(--text)] shrink-0">
+                        {category?.name ? category.name.charAt(0).toUpperCase() : "B"}
                       </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                          {category.name}
-                        </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {formatCurrency(data.spent)} of{" "}
-                          {formatCurrency(data.budget)} used
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm text-[var(--text)] truncate">
+                          {formatCategory(category?.name)}
+                        </p>
+                        <p className="text-[11px] text-[var(--text-muted)]">
+                          {format(new Date(b.month + "-01"), "MMMM yyyy")}
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      {matchedBudget && (
-                        <>
-                          <button
-                            onClick={() => openEditForm(matchedBudget)}
-                            className="btn-sm btn-outline text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          >
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(matchedBudget.id)}
-                            className="btn-sm btn-danger"
-                          >
-                            <Trash size={14} />
-                          </button>
-                        </>
-                      )}
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <IconButton
+                        aria-label="Edit budget"
+                        variant="ghost"
+                        size="sm"
+                        icon={<Icons.Edit size={14} />}
+                        onClick={() => openEditForm(b)}
+                      />
+                      <IconButton
+                        aria-label="Delete budget"
+                        variant="danger-ghost"
+                        size="sm"
+                        icon={<Icons.Delete size={14} />}
+                        onClick={() => setDeleteTargetId(b.id)}
+                      />
                     </div>
                   </div>
 
-                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${getStatusColor(data.percentage)}`}
-                      style={{ width: `${Math.min(data.percentage, 100)}%` }}
-                    ></div>
-                  </div>
+                  {/* Progress Bar */}
+                  <ProgressBar
+                    value={spent}
+                    max={b.amount}
+                    showPercentage
+                    label={`${formatCurrency(spent)} of ${formatCurrency(b.amount)}`}
+                  />
 
-                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    <span>{formatPercentage(data.percentage)} used</span>
-                    <span>{formatCurrency(data.remaining)} left</span>
+                  <div className="flex justify-between items-center text-xs pt-1 border-t border-[var(--border)] text-[var(--text-muted)]">
+                    <span>
+                      {remaining >= 0 ? "Remaining: " : "Over budget: "}
+                      <strong
+                        className={`tabular-nums ${
+                          remaining < 0 ? "text-[var(--danger)]" : "text-[var(--text)]"
+                        }`}
+                      >
+                        {formatCurrency(Math.abs(remaining))}
+                      </strong>
+                    </span>
+                    <span className="tabular-nums font-medium">
+                      {Math.round(pct)}% used
+                    </span>
                   </div>
-                </div>
+                </Card>
               );
-            }
-          )}
-        </div>
+            })}
+          </div>
+        )}
       </div>
+
+      {/* Add / Edit Budget Modal */}
+      <Modal
+        open={isAddingBudget || Boolean(editingBudget)}
+        onClose={() => {
+          setIsAddingBudget(false);
+          setEditingBudget(null);
+        }}
+        title={editingBudget ? "Edit Budget Limit" : "Create Category Budget"}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Select
+            label="Expense Category"
+            required
+            value={formCategory}
+            onChange={(e) => setFormCategory(e.target.value)}
+          >
+            <option value="">Select a category</option>
+            {expenseCategories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {formatCategory(cat.name)}
+              </option>
+            ))}
+          </Select>
+
+          <Input
+            label="Budget Amount"
+            type="number"
+            step="0.01"
+            required
+            placeholder="e.g. 5000"
+            value={formAmount}
+            onChange={(e) => setFormAmount(e.target.value)}
+          />
+
+          <Select
+            label="Target Month"
+            value={formMonth}
+            onChange={(e) => setFormMonth(e.target.value)}
+          >
+            <option value={currentMonth}>
+              Current Month ({format(new Date(), "MMMM yyyy")})
+            </option>
+            <option value={nextMonth}>
+              Next Month ({format(addMonths(new Date(), 1), "MMMM yyyy")})
+            </option>
+          </Select>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border)]">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsAddingBudget(false);
+                setEditingBudget(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              {editingBudget ? "Update Budget" : "Save Budget"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={Boolean(deleteTargetId)}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Budget"
+        message="Are you sure you want to remove this category budget? Past transactions will remain intact."
+        confirmLabel="Delete"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
-
-export default Budget;
