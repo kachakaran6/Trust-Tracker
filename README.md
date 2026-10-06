@@ -1,18 +1,26 @@
-# 💸 Trust-Tracker (v2.0)
-### Self-Hosted AI Finance & Group Expense Manager
+# 💸 TrustTracker
+### Self-Hosted Personal Finance, Shared Expense & Group Debt Manager
 **Built with React 18 + Vite + TypeScript + Node.js / Express + PostgreSQL + Docker + Coolify**
 
 ---
 
-## 🚀 What's New in v2.0
+## 🚀 Overview
 
-- 🐘 **Native PostgreSQL Backend**: Replaced direct cloud Supabase lock-in with a high-performance Express REST API + PostgreSQL connection pool with automated schema initialization.
-- 🐳 **Fully Dockerized & Coolify Ready**: Multi-stage `Dockerfile` + `docker-compose.yml` with healthchecks (`/api/health`) for instant 1-click deployment on Coolify, VPS, or Docker hosts.
-- 🤝 **Automated Group Debt Settlement Engine**: Solves multi-person split debts using a greedy Min-Cash-Flow algorithm ("Who owes Whom").
-- 🤖 **AI Diary & Receipt Parser**: Extract structured transactions from free-form natural language text using Google Gemini or the built-in intelligent tokenizer.
-- 📈 **Predictive AI Forecast Engine**: Statistical linear regression & category momentum forecasting based on real spending history.
-- 🛡️ **Admin Command Center**: System-wide analytics, user inspection, role management (Super Admin / Normal), ban toggles, and cascade user deletion.
-- 💎 **100% Strict Type Safety & Clean Architecture**: Removed `any` types, sanitized console logging, standardized toast notifications with Sonner.
+**TrustTracker** is a clean, sleek, unified personal finance platform. It combines day-to-day expense tracking, category budgets, shared group expense splitting with automated debt minimization, loan & EMI amortization schedules, and recurring subscription tracking into a single cohesive interface.
+
+---
+
+## 🎨 UI/UX Design System & Architectural Principles
+
+- **Unified Design Tokens**: Built on a single sky/cyan primary brand (`#0284C7` light / `#38BDF8` dark) and neutral slate surfaces (`#F8FAFC` light / `#0B1120` dark). Zero hard-coded ad-hoc colors or gradients.
+- **Lucide Icons Only**: All icons are curated in `src/components/ui/icons.ts` with consistent 1.75 stroke weight and semantic naming. Zero emoji glyphs or legacy icon bloat.
+- **Shared UI Primitives**: Standardized components in `src/components/ui/` (`Button`, `IconButton`, `Card`, `StatCard`, `PageHeader`, `Tabs`, `Badge`, `Input`, `Select`, `Textarea`, `DataList`, `EmptyState`, `Modal`, `ConfirmDialog`, `ProgressBar`, `Skeleton`).
+- **Responsive Layout**: Fixed left sidebar on desktop (≥1024px) and bottom tab navigation on mobile (<768px) with a single floating quick-add action. Tables adaptively transform into stacked cards on mobile to prevent horizontal scrolling.
+- **Single Source of Truth Formatters**: All currency, dates, and category labels pass through `src/lib/format.ts` (`formatMoney`, `formatDate`, `formatDateTime`, `formatCategory`).
+- **PWA Standalone Launch**: When opened as an installed PWA, TrustTracker launches directly into the app dashboard/login, skipping the landing page with zero flash.
+- **Strict Accessibility**: Full keyboard navigation, visible `:focus-visible` rings, minimum 44px touch targets on mobile, and WCAG AA contrast in both light and dark themes.
+
+For full guidelines, see [docs/design-system.md](docs/design-system.md).
 
 ---
 
@@ -22,8 +30,9 @@
 |---|---|
 | **Frontend** | React 18, Vite, TypeScript, Tailwind CSS, Recharts, Framer Motion, Sonner, Lucide Icons |
 | **Backend** | Node.js, Express, TypeScript, JWT, BcryptJS, Zod |
-| **Database** | PostgreSQL 16 (Self-Hosted / Managed) |
-| **Deployment** | Docker (Multi-stage), Docker Compose, Coolify |
+| **Database** | PostgreSQL 16 (Self-Hosted / Managed connection pool) |
+| **PWA** | Web App Manifest, Service Worker caching, standalone routing |
+| **Deployment** | Multi-stage Dockerfile, Docker Compose, Coolify 1-Click Deploy |
 
 ---
 
@@ -102,34 +111,24 @@ npm run dev
 Trust-Tracker/
 ├── Dockerfile                  # Production multi-stage Docker build
 ├── docker-compose.yml          # App + PostgreSQL container definitions
+├── docs/
+│   ├── design-system.md        # Design system specifications & token guide
+│   └── ui-audit.md             # Baseline UI audit & checklist findings
 ├── server/                     # Express + PostgreSQL Backend
 │   ├── src/
-│   │   ├── db/
-│   │   │   ├── schema.sql      # Auto-migrated PostgreSQL schema
-│   │   │   └── index.ts        # Database connection pool & seeders
-│   │   ├── middleware/
-│   │   │   └── auth.ts         # JWT & Super Admin authentication middleware
-│   │   ├── routes/
-│   │   │   ├── admin.ts        # Admin control panel endpoints
-│   │   │   ├── ai.ts           # AI Diary & Receipt NLP parsing
-│   │   │   ├── analytics.ts    # Temporary session sharing
-│   │   │   ├── auth.ts         # Authentication & password management
-│   │   │   ├── budgets.ts      # Monthly category budgets
-│   │   │   ├── categories.ts   # Category management
-│   │   │   ├── groups.ts       # Groups & Debt Settlement Engine
-│   │   │   ├── predictions.ts  # ML / Regression forecasting
-│   │   │   └── transactions.ts # Transaction CRUD & monthly aggregations
+│   │   ├── db/                 # PostgreSQL connection pool & schema migrations
+│   │   ├── middleware/         # JWT auth & super admin middleware
+│   │   ├── routes/             # REST endpoints (auth, transactions, groups, loans, debts, admin)
 │   │   └── index.ts            # Server entry & static SPA serving
 │   └── tsconfig.json
 ├── src/                        # React 18 + Vite SPA Frontend
-│   ├── components/             # Modular UI components
-│   ├── contexts/               # Auth, Transactions, Categories, Budget Contexts
-│   ├── hooks/                  # Custom hooks (useGroup, useTheme)
-│   ├── lib/
-│   │   └── api.ts              # Unified type-safe REST API client
-│   ├── pages/                  # Dashboard, Analytics, Budget, Group, Admin, etc.
-│   └── types/
-│       └── index.ts            # Central strictly-typed data contracts
+│   ├── components/             # Modular UI components & design system primitives
+│   │   ├── layout/             # Sidebar, Header, BottomNav, Layout
+│   │   └── ui/                 # Button, Card, StatCard, Badge, Input, Tabs, etc.
+│   ├── contexts/               # Auth, Transactions, Categories, Budget, Theme
+│   ├── lib/                    # api.ts, format.ts, pwa.ts
+│   ├── pages/                  # Dashboard, Analytics, Budget, Group, Loans, Subscriptions, Debts, Admin, etc.
+│   └── types/                  # Strictly typed data contracts
 └── package.json
 ```
 
