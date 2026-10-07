@@ -598,43 +598,60 @@ router.get("/:groupId/transactions", requireAuth, async (req: AuthenticatedReque
     );
 
     // Also fetch split request status summary for each transaction
-    const splitReqsRes = await query(
-      `SELECT group_transaction_id, status, COUNT(*) as count, SUM(amount) as sum
-       FROM group_split_requests
-       WHERE group_id = $1
-       GROUP BY group_transaction_id, status`,
-      [groupId]
-    );
-
     const splitMap: Record<string, { totalRequests: number; paidRequests: number; paidSum: number; pendingSum: number }> = {};
-    for (const row of splitReqsRes.rows) {
-      const gtxId = row.group_transaction_id;
-      if (!splitMap[gtxId]) {
-        splitMap[gtxId] = { totalRequests: 0, paidRequests: 0, paidSum: 0, pendingSum: 0 };
+    try {
+      const splitReqsRes = await query(
+        `SELECT group_transaction_id, status, COUNT(*) as count, SUM(amount) as sum
+         FROM group_split_requests
+         WHERE group_id = $1
+         GROUP BY group_transaction_id, status`,
+        [groupId]
+      );
+
+      for (const row of splitReqsRes.rows) {
+        const gtxId = row.group_transaction_id;
+        if (!splitMap[gtxId]) {
+          splitMap[gtxId] = { totalRequests: 0, paidRequests: 0, paidSum: 0, pendingSum: 0 };
+        }
+        const count = parseInt(row.count, 10) || 0;
+        const sum = parseFloat(row.sum) || 0;
+        splitMap[gtxId].totalRequests += count;
+        if (row.status === "paid") {
+          splitMap[gtxId].paidRequests += count;
+          splitMap[gtxId].paidSum += sum;
+        } else {
+          splitMap[gtxId].pendingSum += sum;
+        }
       }
-      const count = parseInt(row.count, 10);
-      const sum = parseFloat(row.sum);
-      splitMap[gtxId].totalRequests += count;
-      if (row.status === "paid") {
-        splitMap[gtxId].paidRequests += count;
-        splitMap[gtxId].paidSum += sum;
-      } else {
-        splitMap[gtxId].pendingSum += sum;
-      }
+    } catch (splitErr) {
+      console.warn("Notice: Failed to load split summaries (table may be pending migration):", splitErr);
     }
 
-    const mapped = result.rows.map((r) => ({
-      ...r,
-      amount: parseFloat(r.amount),
-      category: r.category_id ? r.category : null,
-      split_details: typeof r.split_details === "string" ? JSON.parse(r.split_details) : r.split_details,
-      split_summary: splitMap[r.id] || null,
-    }));
+    const mapped = result.rows.map((r) => {
+      let parsedSplit = r.split_details;
+      if (typeof parsedSplit === "string") {
+        try {
+          parsedSplit = JSON.parse(parsedSplit);
+        } catch {
+          parsedSplit = {};
+        }
+      }
+      return {
+        ...r,
+        amount: parseFloat(r.amount) || 0,
+        category: r.category_id ? r.category : null,
+        split_details: parsedSplit || {},
+        split_summary: splitMap[r.id] || null,
+      };
+    });
 
     res.json(mapped);
-  } catch (err) {
+  } catch (err: any) {
     console.error("Fetch group transactions error:", err);
-    res.status(500).json({ error: "Failed to fetch group transactions." });
+    res.status(500).json({
+      error: "Failed to fetch group transactions.",
+      message: err?.message || String(err),
+    });
   }
 });
 

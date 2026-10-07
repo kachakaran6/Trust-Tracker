@@ -63,6 +63,17 @@ export async function initDatabase(): Promise<void> {
     `);
 
     await pool.query(`ALTER TABLE group_transactions ADD COLUMN IF NOT EXISTS personal_transaction_id UUID REFERENCES transactions(id) ON DELETE SET NULL`);
+    await pool.query(`ALTER TABLE group_transactions ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEFAULT 'expense'`);
+    await pool.query(`ALTER TABLE group_transactions ADD COLUMN IF NOT EXISTS split_type VARCHAR(50) NOT NULL DEFAULT 'equal'`);
+    await pool.query(`ALTER TABLE group_transactions ADD COLUMN IF NOT EXISTS split_details JSONB NOT NULL DEFAULT '{}'`);
+
+    await pool.query(`ALTER TABLE group_categories ADD COLUMN IF NOT EXISTS color VARCHAR(50) NOT NULL DEFAULT '#3B82F6'`);
+    await pool.query(`ALTER TABLE group_categories ADD COLUMN IF NOT EXISTS icon VARCHAR(50) NOT NULL DEFAULT 'Tag'`);
+    await pool.query(`ALTER TABLE group_categories ADD COLUMN IF NOT EXISTS type VARCHAR(50) NOT NULL DEFAULT 'expense'`);
+
+    await pool.query(`ALTER TABLE group_settlements ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) NOT NULL DEFAULT 'cash'`);
+    await pool.query(`ALTER TABLE group_settlements ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'confirmed'`);
+    await pool.query(`ALTER TABLE group_settlements ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ`);
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS group_split_requests (
