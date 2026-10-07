@@ -2,33 +2,39 @@ import React, { useEffect } from "react";
 import { X } from "lucide-react";
 
 export interface ModalProps {
-  open: boolean;
+  open?: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   title?: React.ReactNode;
   description?: React.ReactNode;
   children: React.ReactNode;
   size?: "sm" | "md" | "lg" | "xl";
+  maxWidth?: string;
   className?: string;
   showCloseButton?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
   open,
+  isOpen,
   onClose,
   title,
   description,
   children,
   size = "md",
+  maxWidth,
   className = "",
   showCloseButton = true,
 }) => {
+  const isShown = open !== undefined ? open : (isOpen ?? false);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && open) {
+      if (e.key === "Escape" && isShown) {
         onClose();
       }
     };
-    if (open) {
+    if (isShown) {
       document.body.style.overflow = "hidden";
       window.addEventListener("keydown", handleKeyDown);
     }
@@ -36,9 +42,9 @@ export const Modal: React.FC<ModalProps> = ({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open, onClose]);
+  }, [isShown, onClose]);
 
-  if (!open) return null;
+  if (!isShown) return null;
 
   const sizeClasses = {
     sm: "max-w-md",
@@ -57,7 +63,7 @@ export const Modal: React.FC<ModalProps> = ({
       }}
     >
       <div
-        className={`w-full ${sizeClasses[size]} bg-[var(--surface)] border border-[var(--border)] rounded-t-lg sm:rounded-lg shadow-lg overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh] animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 ${className}`.trim()}
+        className={`w-full ${maxWidth || sizeClasses[size]} bg-[var(--surface)] border border-[var(--border)] rounded-t-lg sm:rounded-lg shadow-lg overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh] animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 ${className}`.trim()}
       >
         {/* Modal Header */}
         {(title || showCloseButton) && (

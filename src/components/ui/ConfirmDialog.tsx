@@ -3,7 +3,8 @@ import { Modal } from "./Modal";
 import { Button } from "./Button";
 
 export interface ConfirmDialogProps {
-  open: boolean;
+  open?: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   onConfirm: () => void;
   title: string;
@@ -16,6 +17,7 @@ export interface ConfirmDialogProps {
 
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   open,
+  isOpen,
   onClose,
   onConfirm,
   title,
@@ -25,8 +27,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   variant = "danger",
   isLoading = false,
 }) => {
+  const isShown = open !== undefined ? open : (isOpen ?? false);
   return (
-    <Modal open={open} onClose={onClose} size="sm" title={title}>
+    <Modal open={isShown} onClose={onClose} size="sm" title={title}>
       <div className="space-y-4">
         <div className="text-sm text-[var(--text-muted)] leading-relaxed">
           {message}
